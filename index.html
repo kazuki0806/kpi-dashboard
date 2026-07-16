@@ -103,12 +103,20 @@
   .hero-note { font-size: 11.5px; color: var(--faint); }
   .hero-chart { margin-top: 10px; overflow-x: auto; }
   .hero-toggle {
-    background: none; border: none; color: var(--accent); font-size: 12px; font-weight: 600;
-    cursor: pointer; padding: 8px 0 0; text-align: left;
+    background: var(--surface); border: 1px solid var(--line); color: var(--accent); font-size: 13px; font-weight: 600;
+    cursor: pointer; padding: 10px 14px; text-align: center; border-radius: 10px; width: 100%;
   }
-  .hero-toggle:hover { text-decoration: underline; }
-  .hero-details { margin-top: 8px; padding-top: 12px; border-top: 1px solid var(--line); display: flex; flex-direction: column; gap: 16px; }
-  .hero-detail-title { font-size: 12px; font-weight: 600; color: var(--muted); }
+  .hero-toggle:hover { border-color: var(--accent); background: var(--accent-soft); }
+  .hero-value {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-variant-numeric: tabular-nums;
+    font-size: 34px; font-weight: 600;
+    display: flex; align-items: baseline; gap: 6px; margin-top: 4px;
+  }
+  .hero-value .unit { font-family: -apple-system, sans-serif; font-size: 14px; font-weight: 500; color: var(--muted); }
+  .hero-sub { font-size: 11.5px; color: var(--faint); margin-top: 2px; }
+  .hero-clickable { cursor: pointer; }
+  .hero-clickable:hover { border-color: var(--accent); }
 
   .grid {
     display: grid;
@@ -241,26 +249,20 @@
     </div>
   </header>
 
-  <div class="hero">
+  <div class="hero hero-clickable" id="impHero">
     <div class="hero-head">
-      <div class="hero-title">日別・平均インプレッションの推移</div>
-      <div class="hero-note">目標ライン 500</div>
+      <div class="hero-title">平均インプレッション（今月）</div>
+      <span class="pill" id="impPill"></span>
     </div>
-    <div class="hero-chart"><svg id="heroChart" style="height:150px; display:block; width:100%"></svg></div>
-    <button type="button" class="hero-toggle" id="heroToggle">詳細を見る（投稿数の棒グラフ） ▾</button>
-    <div class="hero-details" id="heroDetails" hidden>
-      <div>
-        <div class="hero-detail-title">今月の投稿数</div>
-        <div class="hero-chart"><svg id="heroChartMonth" style="height:140px; display:block; width:100%"></svg></div>
-      </div>
-      <div>
-        <div class="hero-detail-title">全期間の投稿数</div>
-        <div class="hero-chart"><svg id="heroChartAll" style="height:140px; display:block; width:100%"></svg></div>
-      </div>
-    </div>
+    <div class="hero-value" id="impHeroValue"></div>
+    <div class="hero-sub" id="impHeroSub"></div>
+    <div class="hero-chart"><svg id="heroChart" style="height:140px; display:block; width:100%"></svg></div>
   </div>
 
-  <div class="grid" id="cardGrid"></div>
+  <div class="grid" id="primaryGrid"></div>
+
+  <button type="button" class="hero-toggle" id="detailsToggle">詳細を見る ▾</button>
+  <div class="grid" id="detailGrid" hidden></div>
 </div>
 
 <div class="modal-overlay" id="modalOverlay">
@@ -284,10 +286,17 @@
   function fmtNum(n) { return (n === null || n === undefined) ? "—" : Number(n).toLocaleString(); }
 
   // ---- データの状態管理（自動集計＋手動読み込みの両方に対応） ----
-  let posts, dailyPosts, totalImp, avgImp, sortedByImp, maxPost, minPost, goalDays, goalRate, generatedAt, cards;
+  let posts, dailyPosts, totalImp, avgImp, sortedByImp, maxPost, minPost, goalDays, goalRate, generatedAt;
+  let primaryCards, detailCards;
   let totalLikes, avgLikes, totalComments, totalReposts, totalShares;
+  let monthAvgImp, monthPostsCount, todayCount, todayDate;
 
   function sumField(field) { return posts.reduce((s,p) => s + (p[field] || 0), 0); }
+
+  function currentMonthPrefix() {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}`;
+  }
 
   function computeState(postsData, genAt) {
     posts = postsData;
@@ -323,7 +332,17 @@
     totalReposts = sumField("reposts");
     totalShares = sumField("shares");
 
-    cards = buildCards();
+    const monthPrefix = currentMonthPrefix();
+    const monthPosts = posts.filter(p => p.date.startsWith(monthPrefix));
+    monthPostsCount = monthPosts.length;
+    monthAvgImp = monthPosts.length ? Math.round(monthPosts.reduce((s,p)=>s+p.imp,0)/monthPosts.length) : null;
+
+    const lastDay = dailyPosts[dailyPosts.length - 1];
+    todayCount = lastDay ? lastDay.count : 0;
+    todayDate = lastDay ? lastDay.date : null;
+
+    primaryCards = buildPrimaryCards();
+    detailCards = buildDetailCards();
   }
 
   function loadStoredData() {
@@ -438,15 +457,31 @@
     el.innerHTML = svg;
   }
 
-  // ---- カード定義 ----
-  function buildCards() {
-    const days = dailyPosts.map(d => d.date);
+  // ---- カード定義：主要4項目（常時表示）とそれ以外（詳細） ----
+  function buildPrimaryCards() {
     return [
       {
-        id: "avg", label: "平均インプレッション<br>(全投稿)", value: avgImp, unit: "imp",
-        sub: `全${posts.length}投稿の平均`, pill: avgImp >= 500 ? {t:"good", l:"目標達成"} : {t:"warn", l:"目標未達"},
-        spark: dailyPosts.slice(-14).map(d=>d.avg), goalY: 500,
+        id: "posts_today", label: "本日の投稿数<br>(目標5件)", value: todayCount, unit: "件",
+        sub: todayDate ? `${fmtDate(todayDate)}時点` : "データなし",
+        pill: todayCount >= 5 ? {t:"good", l:"達成"} : {t:"warn", l:"未達"},
+        spark: dailyPosts.slice(-14).map(d=>d.count), goalY: 5,
       },
+      {
+        id: "chat", label: "オープンチャット<br>参加者数", value: null, unit: "人",
+        sub: "タップして記録", pill: {t:"good", l:"手入力"},
+        spark: [],
+      },
+      {
+        id: "appt", label: "アポ取り数<br>(直近7日合計)", value: null, unit: "件",
+        sub: "タップして記録", pill: {t:"good", l:"手入力"},
+        spark: [],
+      },
+    ];
+  }
+
+  function buildDetailCards() {
+    const days = dailyPosts.map(d => d.date);
+    return [
       {
         id: "total", label: "合計インプレッション<br>(全期間)", value: totalImp, unit: "imp",
         sub: `${days[0]}〜${days[days.length-1]}`, pill: null,
@@ -463,7 +498,7 @@
         spark: dailyPosts.slice(-14).map(d=>d.avg),
       },
       {
-        id: "posts", label: "1日5投稿 達成率", value: goalRate, unit: "%",
+        id: "posts", label: "1日5投稿 達成率<br>(全期間)", value: goalRate, unit: "%",
         sub: `${goalDays}/${dailyPosts.length}日で達成`, pill: goalRate >= 70 ? {t:"good", l:"良好"} : {t:"warn", l:"要注意"},
         spark: dailyPosts.slice(-14).map(d=>d.count), goalY: 5,
       },
@@ -492,39 +527,28 @@
         sub: `全${posts.length}投稿の合計`, pill: null,
         spark: dailyPosts.slice(-14).map(d=>d.shares),
       },
-      {
-        id: "chat", label: "オープンチャット<br>参加者数", value: null, unit: "人",
-        sub: "タップして記録", pill: {t:"good", l:"手入力"},
-        spark: [],
-      },
-      {
-        id: "appt", label: "アポ取り数<br>(直近7日合計)", value: null, unit: "件",
-        sub: "タップして記録", pill: {t:"good", l:"手入力"},
-        spark: [],
-      },
     ];
   }
 
-  function currentMonthPrefix() {
-    const now = new Date();
-    return `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}`;
-  }
-
   function renderHero() {
-    svgLine(document.getElementById("heroChart"), dailyPosts.map(d=>({date:d.date, v:d.avg})), {goalY:500, height:150});
+    const impGoalMet = monthAvgImp !== null && monthAvgImp >= 500;
+    document.getElementById("impPill").className = `pill ${impGoalMet ? "good" : "warn"}`;
+    document.getElementById("impPill").textContent = impGoalMet ? "目標達成" : "目標未達";
+    document.getElementById("impHeroValue").innerHTML = `${monthAvgImp === null ? "—" : fmtNum(monthAvgImp)}<span class="unit">imp</span>`;
+    document.getElementById("impHeroSub").textContent = `${currentMonthPrefix()} ・ ${monthPostsCount}投稿の平均（目標500以上）`;
+
     const monthPrefix = currentMonthPrefix();
     const thisMonth = dailyPosts.filter(d => d.date.startsWith(monthPrefix));
-    svgBars(document.getElementById("heroChartMonth"), (thisMonth.length ? thisMonth : dailyPosts.slice(-1)).map(d=>({date:d.date, v:d.count})), {goalY:5, height:140});
-    svgBars(document.getElementById("heroChartAll"), dailyPosts.map(d=>({date:d.date, v:d.count})), {goalY:5, height:140});
+    svgBars(document.getElementById("heroChart"), (thisMonth.length ? thisMonth : dailyPosts.slice(-14)).map(d=>({date:d.date, v:d.avg})), {goalY:500, height:140});
   }
 
-  function renderCards() {
+  function renderCardGrid(gridId, cardList) {
     const entries = loadEntries().sort((a,b)=>a.date.localeCompare(b.date));
     const lastEntry = entries[entries.length-1];
     const apptTotal7 = entries.slice(-7).reduce((s,e)=>s+(Number(e.appt)||0),0);
 
-    const grid = document.getElementById("cardGrid");
-    grid.innerHTML = cards.map(c => {
+    const grid = document.getElementById(gridId);
+    grid.innerHTML = cardList.map(c => {
       let value = c.value, sub = c.sub, pill = c.pill;
       if (c.id === "chat") { value = lastEntry ? Number(lastEntry.chat) : null; sub = lastEntry ? fmtDate(lastEntry.date)+" 時点" : "タップして記録"; }
       if (c.id === "appt") { value = apptTotal7; sub = `直近7日合計 ${apptTotal7}件`; pill = apptTotal7 > 0 ? {t:"good", l:apptTotal7+"件"} : {t:"warn", l:"未記録"}; }
@@ -542,13 +566,18 @@
     }).join("");
 
     grid.querySelectorAll(".card").forEach((btn, i) => {
-      const c = cards[i];
+      const c = cardList[i];
       const svgEl = btn.querySelector("svg.spark");
       if (c.id === "chat") sparkline(svgEl, entries.map(e=>Number(e.chat)));
       else if (c.id === "appt") sparkline(svgEl, entries.map(e=>Number(e.appt)));
       else sparkline(svgEl, c.spark, {goalY: c.goalY});
       btn.addEventListener("click", () => openModal(c.id));
     });
+  }
+
+  function renderCards() {
+    renderCardGrid("primaryGrid", primaryCards);
+    renderCardGrid("detailGrid", detailCards);
   }
 
   function closeModal() {
@@ -614,7 +643,7 @@
       return;
     }
 
-    if (id === "posts") {
+    if (id === "posts" || id === "posts_today") {
       html = `
         <div class="modal-head">
           <div>
@@ -731,12 +760,14 @@
     }
   }
 
-  document.getElementById("heroToggle").addEventListener("click", () => {
-    const details = document.getElementById("heroDetails");
+  document.getElementById("detailsToggle").addEventListener("click", () => {
+    const details = document.getElementById("detailGrid");
     const willShow = details.hidden;
     details.hidden = !willShow;
-    document.getElementById("heroToggle").textContent = willShow ? "詳細を閉じる ▴" : "詳細を見る（投稿数の棒グラフ） ▾";
+    document.getElementById("detailsToggle").textContent = willShow ? "詳細を閉じる ▴" : "詳細を見る ▾";
   });
+
+  document.getElementById("impHero").addEventListener("click", () => openModal("avg"));
 
   document.getElementById("modalOverlay").addEventListener("click", (e) => {
     if (e.target.id === "modalOverlay") closeModal();
