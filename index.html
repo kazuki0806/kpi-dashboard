@@ -82,7 +82,8 @@
   .update-note { font-size: 12px; color: var(--faint); }
 
   /* ---- 上段：フォロワー + インプレッション ---- */
-  .top-grid { display: grid; grid-template-columns: 1fr 1.9fr; gap: 16px; }
+  .top-grid { display: grid; grid-template-columns: 300px 1fr; gap: 16px; }
+  @media (min-width: 761px) { #followerHero { aspect-ratio: 1 / 1; } }
   @media (max-width: 760px) { .top-grid { grid-template-columns: 1fr; } }
 
   .hero {
@@ -505,13 +506,14 @@
 
   // ---- SVG ----
   function svgLine(el, points, opts) {
-    const {height=150, goalY=null} = opts || {};
+    const {height=150, goalY=null, fit=false} = opts || {};
     const pad = {top: 12, right: 10, bottom: 20, left: 4};
-    const w = Math.max(560, points.length * 26);
+    // fit=true: コンテナ幅に収める（横スクロールさせない）。falseは点数に応じて横に伸ばす
+    const w = fit ? 700 : Math.max(560, points.length * 26);
     const h = height;
     el.setAttribute("viewBox", `0 0 ${w} ${h}`);
     el.setAttribute("preserveAspectRatio", "none");
-    el.style.width = w + "px";
+    el.style.width = fit ? "100%" : w + "px";
     const vals = points.map(p => p.v).filter(v => v !== null && v !== undefined);
     if (!vals.length) {
       el.innerHTML = `<text x="${w/2}" y="${h/2}" font-size="12" fill="var(--faint)" text-anchor="middle">まだデータがありません</text>`;
@@ -819,7 +821,7 @@
     document.getElementById("impPill").textContent = impGoalMet ? "目標達成" : "目標未達";
     document.getElementById("impHeroValue").innerHTML = `${monthAvgImp === null ? "—" : fmtNum(monthAvgImp)}<span class="unit">imp</span>`;
     document.getElementById("impHeroSub").innerHTML = `${currentMonthPrefix()} ・ ${monthPostsCount}投稿の平均（目標500以上） ${deltaBadge(deltaAvg, "前日比")}`;
-    svgLine(document.getElementById("heroChart"), periodSlice(dailyPosts).map(d=>({date:d.date, v:d.avg})), {goalY:500, height:140});
+    svgLine(document.getElementById("heroChart"), periodSlice(dailyPosts).map(d=>({date:d.date, v:d.avg})), {goalY:500, height:140, fit:true});
 
     const followerPill = document.getElementById("followerPill");
     if (followerDelta === null) { followerPill.className = "pill good"; followerPill.textContent = "計測中"; }
@@ -829,7 +831,7 @@
     document.getElementById("followerHeroSub").innerHTML = followers.length
       ? `${fmtDate(followers[followers.length-1].date)}時点 ${deltaBadge(followerDelta, "前日比")}`
       : "データを蓄積中です";
-    svgLine(document.getElementById("followerChart"), periodSlice(followers).map(f=>({date:f.date, v:f.count})), {height:110});
+    svgLine(document.getElementById("followerChart"), periodSlice(followers).map(f=>({date:f.date, v:f.count})), {height:110, fit:true});
   }
 
   // ---- カードグリッド ----
