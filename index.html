@@ -1,0 +1,707 @@
+<title>Threads運用アナリティクス</title>
+<style>
+  :root {
+    --bg: #f6f4ef;
+    --surface: #ffffff;
+    --surface-raised: #fbfaf7;
+    --ink: #201e1b;
+    --muted: #726c63;
+    --faint: #a39d90;
+    --line: #e4e0d6;
+    --accent: #2f5d62;
+    --accent-soft: #dfeaea;
+    --good: #3f7d4f;
+    --good-soft: #e2efe0;
+    --warn: #b87a2e;
+    --warn-soft: #f5e8d6;
+    --bad: #aa4438;
+    --bad-soft: #f5e0dc;
+    --shadow: 0 1px 2px rgba(32,30,27,0.04), 0 8px 24px -12px rgba(32,30,27,0.12);
+    --overlay: rgba(32,30,27,0.4);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #15181a; --surface: #1d2124; --surface-raised: #21262a; --ink: #ece9e2;
+      --muted: #9a968c; --faint: #6b6a64; --line: #2b3134; --accent: #7bbdb7;
+      --accent-soft: #223638; --good: #6fbf8b; --good-soft: #1f3327; --warn: #e0a354;
+      --warn-soft: #362c1c; --bad: #e2776b; --bad-soft: #3a2420;
+      --shadow: 0 1px 2px rgba(0,0,0,0.2), 0 8px 24px -12px rgba(0,0,0,0.5);
+      --overlay: rgba(0,0,0,0.6);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #15181a; --surface: #1d2124; --surface-raised: #21262a; --ink: #ece9e2;
+    --muted: #9a968c; --faint: #6b6a64; --line: #2b3134; --accent: #7bbdb7;
+    --accent-soft: #223638; --good: #6fbf8b; --good-soft: #1f3327; --warn: #e0a354;
+    --warn-soft: #362c1c; --bad: #e2776b; --bad-soft: #3a2420;
+    --shadow: 0 1px 2px rgba(0,0,0,0.2), 0 8px 24px -12px rgba(0,0,0,0.5);
+    --overlay: rgba(0,0,0,0.6);
+  }
+  :root[data-theme="light"] {
+    --bg: #f6f4ef; --surface: #ffffff; --surface-raised: #fbfaf7; --ink: #201e1b;
+    --muted: #726c63; --faint: #a39d90; --line: #e4e0d6; --accent: #2f5d62;
+    --accent-soft: #dfeaea; --good: #3f7d4f; --good-soft: #e2efe0; --warn: #b87a2e;
+    --warn-soft: #f5e8d6; --bad: #aa4438; --bad-soft: #f5e0dc;
+    --shadow: 0 1px 2px rgba(32,30,27,0.04), 0 8px 24px -12px rgba(32,30,27,0.12);
+    --overlay: rgba(32,30,27,0.4);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Noto Sans JP", sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 32px 20px 64px;
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+  }
+  header {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+  .eyebrow {
+    font-size: 11.5px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-weight: 600;
+  }
+  h1 {
+    font-family: Georgia, "Iowan Old Style", "Noto Serif JP", serif;
+    font-size: 24px;
+    font-weight: 600;
+    margin: 0;
+    text-wrap: balance;
+    letter-spacing: -0.01em;
+  }
+  .subtitle { color: var(--muted); font-size: 13px; margin: 0; }
+  .update-row { display: flex; align-items: center; gap: 10px; margin-top: 6px; flex-wrap: wrap; }
+  .update-note { font-size: 11px; color: var(--faint); }
+  .update-btn {
+    background: var(--surface); border: 1px solid var(--line); color: var(--accent);
+    border-radius: 7px; padding: 6px 12px; font-size: 12px; font-weight: 600; cursor: pointer;
+  }
+  .update-btn:hover { border-color: var(--accent); background: var(--accent-soft); }
+
+  .hero {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 18px 20px 14px;
+    box-shadow: var(--shadow);
+  }
+  .hero-head { display:flex; justify-content: space-between; align-items:baseline; gap:8px; flex-wrap:wrap; }
+  .hero-title { font-size: 13.5px; font-weight: 700; }
+  .hero-note { font-size: 11.5px; color: var(--faint); }
+  .hero-chart { margin-top: 10px; overflow-x: auto; }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+  @media (max-width: 520px) { .grid { grid-template-columns: 1fr; } }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 15px 16px 14px;
+    box-shadow: var(--shadow);
+    text-align: left;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    font-family: inherit;
+    color: inherit;
+    transition: transform 0.12s ease, border-color 0.12s ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .card:hover { transform: translateY(-1px); border-color: var(--accent); }
+  .card:active { transform: translateY(0); }
+  .card-head { display:flex; justify-content: space-between; align-items:flex-start; gap:8px; }
+  .card-label { font-size: 12px; color: var(--muted); font-weight: 600; line-height:1.4; }
+  .chev { color: var(--faint); font-size: 13px; margin-top: 2px; }
+  .pill {
+    font-size: 10.5px; font-weight: 700; padding: 2px 7px; border-radius: 999px;
+    white-space: nowrap; letter-spacing: 0.01em;
+  }
+  .pill.good { background: var(--good-soft); color: var(--good); }
+  .pill.warn { background: var(--warn-soft); color: var(--warn); }
+  .card-value {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-variant-numeric: tabular-nums;
+    font-size: 26px; font-weight: 600;
+    display: flex; align-items: baseline; gap: 5px;
+  }
+  .card-value .unit { font-family: -apple-system, sans-serif; font-size: 12px; font-weight: 500; color: var(--muted); }
+  .card-sub { font-size: 11px; color: var(--faint); }
+  .card svg.spark { width: 100%; height: 26px; display:block; }
+
+  /* modal */
+  .modal-overlay {
+    position: fixed; inset: 0; background: var(--overlay);
+    display: none; align-items: flex-end; justify-content: center;
+    z-index: 50; padding: 0;
+  }
+  .modal-overlay.open { display: flex; }
+  @media (min-width: 640px) {
+    .modal-overlay { align-items: center; padding: 24px; }
+  }
+  .modal {
+    background: var(--surface);
+    width: 100%;
+    max-width: 640px;
+    max-height: 88vh;
+    overflow-y: auto;
+    border-radius: 16px 16px 0 0;
+    box-shadow: 0 -8px 40px rgba(0,0,0,0.25);
+    padding: 20px 20px 28px;
+  }
+  @media (min-width: 640px) {
+    .modal { border-radius: 16px; box-shadow: var(--shadow); }
+  }
+  .modal-head { display:flex; justify-content: space-between; align-items:flex-start; gap: 12px; margin-bottom: 4px; }
+  .modal-title { font-size: 17px; font-weight: 700; }
+  .modal-close {
+    background: var(--surface-raised); border: 1px solid var(--line); color: var(--muted);
+    border-radius: 8px; width: 30px; height: 30px; font-size: 15px; cursor: pointer; flex-shrink: 0;
+  }
+  .modal-close:hover { color: var(--ink); }
+  .modal-desc { font-size: 12.5px; color: var(--muted); margin: 2px 0 14px; }
+  .modal-chart { overflow-x: auto; }
+
+  .rank-list { list-style: none; margin: 14px 0 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+  .rank-item {
+    display: grid; grid-template-columns: 22px 1fr auto; gap: 10px; align-items: center;
+    padding: 8px 0; border-bottom: 1px solid var(--line);
+  }
+  .rank-item:last-child { border-bottom: none; }
+  .rank-num { font-size: 11px; color: var(--faint); font-weight: 700; }
+  .rank-text { font-size: 12.5px; line-height: 1.4; }
+  .rank-date { font-size: 10.5px; color: var(--faint); }
+  .rank-imp { font-family: ui-monospace, monospace; font-variant-numeric: tabular-nums; font-size: 13px; font-weight: 600; white-space: nowrap; }
+
+  form.entry {
+    display: grid; grid-template-columns: 1fr 1fr auto; gap: 9px; align-items: end; margin-top: 14px;
+  }
+  @media (max-width: 480px) { form.entry { grid-template-columns: 1fr; } }
+  label { font-size: 11.5px; color: var(--muted); font-weight: 600; display:block; margin-bottom: 4px; }
+  input[type="number"], input[type="date"] {
+    width: 100%; background: var(--surface-raised); border: 1px solid var(--line); border-radius: 7px;
+    padding: 8px 9px; font-size: 13.5px; color: var(--ink); font-variant-numeric: tabular-nums; font-family: inherit;
+  }
+  input:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  button.add {
+    background: var(--accent); color: var(--surface); border: none; border-radius: 7px;
+    padding: 8px 14px; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap;
+  }
+  button.add:hover { opacity: 0.9; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 12.5px; margin-top: 12px; }
+  th {
+    text-align: left; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.04em;
+    color: var(--faint); font-weight: 600; padding: 5px 6px; border-bottom: 1px solid var(--line);
+  }
+  td { padding: 6px; border-bottom: 1px solid var(--line); font-variant-numeric: tabular-nums; }
+  td.num { text-align: right; }
+  tr:last-child td { border-bottom: none; }
+  .empty-row td { color: var(--faint); font-style: italic; text-align: center; padding: 16px 6px; }
+  .del-btn { background: none; border: none; color: var(--faint); cursor: pointer; font-size: 11.5px; padding: 2px 5px; }
+  .del-btn:hover { color: var(--bad); }
+
+  footer { color: var(--faint); font-size: 11px; text-align: center; padding-top: 4px; }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">いけ｜クラウドワークスの裏側</div>
+    <h1>Threads運用アナリティクス</h1>
+    <p class="subtitle">カードをタップすると詳細が開きます</p>
+    <div class="update-row">
+      <span id="lastUpdated" class="update-note"></span>
+      <button type="button" class="update-btn" id="importBtn">最新データを読み込む</button>
+      <input type="file" id="importFile" accept="application/json" hidden>
+    </div>
+  </header>
+
+  <div class="hero">
+    <div class="hero-head">
+      <div class="hero-title">日別・平均インプレッションの推移</div>
+      <div class="hero-note">目標ライン 500</div>
+    </div>
+    <div class="hero-chart"><svg id="heroChart" style="height:150px; display:block; width:100%"></svg></div>
+  </div>
+
+  <div class="grid" id="cardGrid"></div>
+</div>
+
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal" id="modalBody"></div>
+</div>
+
+<script>
+  // ---- 個別投稿の実データ（Notion「SNS投稿ログ」より, 2026-07-16時点のスナップショット） ----
+  const EMBEDDED_GENERATED_AT = "2026-07-16";
+  const EMBEDDED_POSTS = [{"date": "2026-06-15", "imp": 621, "content": "クラウドワークス使ってる人に聞きたい。  今まで何件応募して 何件通りましたか？  自分は600件で2件でした。  あな"}, {"date": "2026-06-15", "imp": 424, "content": "クラウドワークスで 3ヶ月応募しまくって 稼げたの600円だった。  「独学でやれば稼げる」は 半分ウソ。  スキルじゃ"}, {"date": "2026-06-17", "imp": 10, "content": "副業始めた理由、バイトより稼ぐため。  結果、バイトの時給の方が高かった。  時給換算、2円。  笑えないけど、これが現"}, {"date": "2026-06-17", "imp": 166, "content": "3ヶ月・600件応募・600円。  これが自分のスタートです。  クラウドワークスが悪いんじゃなくて 低単価の案件を コ"}, {"date": "2026-06-18", "imp": 102, "content": "600件応募して600円だった頃の自分に言いたい。  「それ、正しい方向に努力してないよ」  量じゃない。 方向が間違っ"}, {"date": "2026-06-18", "imp": 18, "content": "クラウドワークスで稼げない人に聞きたい。  今やってる仕事、何ですか？  データ入力・記事作成・アンケート…  それ、い"}, {"date": "2026-06-19", "imp": 57, "content": "クラウドワークスで採用される人と されない人の違い、1つだけ言うと  「実績の見せ方」が全然違う。  スキルが同じでも、"}, {"date": "2026-06-19", "imp": 49, "content": "「もう少し続けたら稼げるはず」  この思考、自分も1ヶ月持ち続けた。  でも低単価の仕事を続けても 低単価の実績しか積み"}, {"date": "2026-06-23", "imp": 57, "content": "クラウドワークスで結果出てない人の 99%が同じ間違いをしてる。  「スキルが足りない」だと思ってること。  違う。  "}, {"date": "2026-06-23", "imp": 24, "content": "クラウドワークス始めて3ヶ月。  今いくら達成してますか？  ・1万未満 ・1〜5万達成 ・5〜10万達成 ・10万達成"}, {"date": "2026-06-24", "imp": 20, "content": "「3時間かけてやっと提出したら 修正お願いします」  これ、めちゃくちゃわかる。  自分も同じで心折れた。  でも問題は"}, {"date": "2026-06-24", "imp": 150, "content": "クラウドワークスで 最初に取るべき案件、教えます。  「動画編集」一択。  理由は3つ。  ①単価が高い ②需要が減らな"}, {"date": "2026-06-24", "imp": 114, "content": "クラウドワークスで 今月いくら達成しましたか？  自分が600円だった時、 誰かに聞けていたら もっと早く変われてたと思"}, {"date": "2026-06-25", "imp": 23, "content": "独学で1年やっても 結果が出なかった理由、今ならわかる。  「自分が何点か」を 教えてくれる人がいなかったから。  スキ"}, {"date": "2026-06-26", "imp": 12, "content": "今月担当している案件の内訳。  SNS運用　2社 動画編集　月8本 コンサル　1社  全部クラウドワークスが入り口。  "}, {"date": "2026-06-27", "imp": 82, "content": "クラウドワークスで 月1万も達成できなかった頃の話。  応募文、100本以上書いた。 全部スルーされた。  原因は「スキ"}, {"date": "2026-06-27", "imp": 576, "content": "怒ってくれる人がいない環境は危険。  クラウドワークスで600件応募して600円。  誰にも「それ方向違うよ」と 言って"}, {"date": "2026-06-27", "imp": 120, "content": "クラウドワークスで稼げない人の 時給を計算したことある？  自分は2円だった。  バイトの方が100倍マシ。  でも気づ"}, {"date": "2026-06-29", "imp": 27, "content": "クラウドワークスで高単価を取れる人、 正直に言うと「実績」じゃない。  「実績の見せ方」が上手い人が取ってる。  0→1"}, {"date": "2026-06-29", "imp": 30, "content": "正直に言います。  クラウドワークスで データ入力・記事作成・アンケートを 続けても月10万は無理。  単価の天井が低す"}, {"date": "2026-06-29", "imp": 136, "content": "クラウドワークスで 初めて5万達成した時の話。  応募数を増やしたわけじゃない。  応募する「案件の種類」を変えただけ。"}, {"date": "2026-06-30", "imp": 99, "content": "クラウドワークスで 「なんで採用されないんだろう」 って思ってる人へ。  プロフィール文、 「頑張ります」「丁寧にやりま"}, {"date": "2026-06-30", "imp": 110, "content": "クラウドワークスで フィードバックがもらえない理由、 2つあります。  ①クライアントは自分で作れるから  時間がないだ"}, {"date": "2026-06-30", "imp": 196, "content": "今の仕事を辞めたい。 でも何が向いてるかわからない。  だから動けない。  この状態を抜け出す方法は1つで 「辞めても困"}, {"date": "2026-07-01", "imp": 41, "content": "副業で月3万稼ぐのと 月30万稼ぐのは  やることが別競技。  3万は量でいける。 30万は「選ばれる理由」がいる。  "}, {"date": "2026-07-01", "imp": 217, "content": "在宅で稼ぎたいと思って クラウドワークスを始めた。  でも現実は  ・採用されない ・単価が低い ・続けるのがしんどい "}, {"date": "2026-07-01", "imp": 86, "content": "独学1年で稼げなかった人が 教わって1ヶ月で変わる理由。  スキルが上がったからじゃない。  「自分の何がダメか」が 初"}, {"date": "2026-07-02", "imp": 216, "content": "クラウドワークスで 月5万達成した後に気づいたこと。  「もっと早くやればよかった」じゃなくて 「もっと早く教わればよか"}, {"date": "2026-07-02", "imp": 103, "content": "在宅で働きたいと思って 2年間動けなかった。  理由は「何をすればいいか分からない」。  あの2年間があったから今がある"}, {"date": "2026-07-02", "imp": 144, "content": "クラウドワークスで 提案文を100本書いても採用されなかった。  変えたのは1つだけ。  「クライアントが何に困ってるか"}, {"date": "2026-07-02", "imp": 87, "content": "副業で月3万稼ぐのと 月3万を目指し続けるのは  全然違う。  後者は「やってる感」だけがある。  自分が3ヶ月600円"}, {"date": "2026-07-02", "imp": 97, "content": "今の仕事を続けながら 副業で月20万作った人に聞いた。  「何が一番きつかったですか？」  「最初の1件を取るまで」  "}, {"date": "2026-07-03", "imp": 1140, "content": "応募しなくても案件が来る クラウドワークスの使い方があります。  最初にやることは1つだけです。"}, {"date": "2026-07-03", "imp": 3010, "content": "クラウドワークスで 採用率を3倍にした提案文の書き方。  変えたのは冒頭の1行だけです。"}, {"date": "2026-07-03", "imp": 1505, "content": "独学をやめたら 案件が取れるようになった話をします。"}, {"date": "2026-07-03", "imp": 1134, "content": "クラウドワークスで 案件が取れない理由は スキルじゃないです。  3つあります。"}, {"date": "2026-07-03", "imp": 10566, "content": "クラウドワークスで 採用担当をしていたから言います。  100件の応募を見て 開いたのは13件だけでした。  13件に共"}, {"date": "2026-07-05", "imp": 1616, "content": "【保存推奨】 クラウドワークスで 月20万達成した人がやっていたこと5選。"}, {"date": "2026-07-05", "imp": 881, "content": "【保存推奨】 クラウドワークスで採用率が上がる 提案文の書き方5選。"}, {"date": "2026-07-05", "imp": 388, "content": "どうぞ盗んでください。 クラウドワークスで採用される提案文、 全部コピペOKです。 5つ目を使ってる人、ほぼいない。  "}, {"date": "2026-07-05", "imp": 14029, "content": "クラウドワークスで月20万達成するまでに やったこと、全部書く。"}, {"date": "2026-07-05", "imp": 53, "content": "在宅で月20万達成するまでにやったこと、 順番通りに全部書きます。"}, {"date": "2026-07-06", "imp": 2941, "content": "クラウドワークスで採用率83%だった提案文、公開します。"}, {"date": "2026-07-06", "imp": 898, "content": "月収帯別・クラウドワークスの動き方を全部書く。"}, {"date": "2026-07-06", "imp": 511, "content": "クラウドワークスの提案文づくりでAIにやらせてること、全部書く。"}, {"date": "2026-07-06", "imp": 53, "content": "クラウドワークスの案件探しでAIにやらせてること、全部書く。"}, {"date": "2026-07-06", "imp": 532, "content": "クラウドワークスで案件が取れない理由、スキル不足じゃないです。"}, {"date": "2026-07-06", "imp": 48, "content": "クラウドワークスで月20万達成するまでにやった提案文の直し方、全部書く。"}, {"date": "2026-07-06", "imp": 843, "content": "クラウドワークスの提案文だけで月38万達成しました。"}, {"date": "2026-07-08", "imp": 672, "content": "クラウドワークスで単価が上がらない理由、価格設定じゃないです。"}, {"date": "2026-07-08", "imp": 2006, "content": "クラウドワークスで100件応募して、採用されたのは6件でした。"}, {"date": "2026-07-08", "imp": 74, "content": "クラウドワークスで初報酬を受け取るまでにやったこと、全部書く。"}, {"date": "2026-07-08", "imp": 1002, "content": "クラウドワークスで初めての継続案件を取るまでにやったこと、全部書く。"}, {"date": "2026-07-08", "imp": 41, "content": "クラウドワークスで案件が取れなくて、深夜に落ち込んでいた頃の話。"}, {"date": "2026-07-09", "imp": 31, "content": "いきなり月20万を目指しすぎている人が多いです。初心者が本当に目指すべき順番があります。"}, {"date": "2026-07-09", "imp": 2966, "content": "クラウドワークスで初受注なんて簡単で、❶❷❸❹を守るだけです。"}, {"date": "2026-07-09", "imp": 771, "content": "クラウドワークスで信頼されるまでには順番があります。"}, {"date": "2026-07-09", "imp": 979, "content": "クラウドワークスを始めて、最初の3件が一番苦しいです。"}, {"date": "2026-07-09", "imp": 525, "content": "クラウドワークスで伸びない人ほど、色んなジャンルに手を出します。"}, {"date": "2026-07-10", "imp": 492, "content": "クラウドワークスで初めての「良い評価」をもらうのは簡単で、❶❷❸❹を守るだけです。"}, {"date": "2026-07-10", "imp": 27, "content": "クラウドワークスで単価交渉、10回中7回は通ります。"}, {"date": "2026-07-10", "imp": 473, "content": "クラウドワークスのプロフィール、閲覧されるのは平均12秒でした。"}, {"date": "2026-07-10", "imp": 45, "content": "クラウドワークスで通る提案文と通らない提案文、実は違いは1箇所だけです。"}, {"date": "2026-07-10", "imp": 385, "content": "クラウドワークスで採用担当を3年やっていたので言います。通る提案文には❶❷❸があります。"}, {"date": "2026-07-11", "imp": 363, "content": "クラウドワークスは、待つ人には来ない。"}, {"date": "2026-07-11", "imp": 889, "content": "クラウドワークスで最初に受けた案件、覚えていますか？"}, {"date": "2026-07-11", "imp": 529, "content": "クラウドワークスで「安い案件は避けるべき」と言われますが、半分正解で半分間違いです。"}, {"date": "2026-07-11", "imp": 250, "content": "クラウドワークスで、初めて「ありがとうございました」と言われた日のことを覚えています。"}, {"date": "2026-07-12", "imp": 23, "content": "クラウドワークスで一番最初に断られた案件、覚えていますか？"}, {"date": "2026-07-12", "imp": 921, "content": "クラウドワークスで、単価を初めて自分から提示した日のことを覚えています。"}, {"date": "2026-07-12", "imp": 716, "content": "クラウドワークスで、提案文の平均文字数と採用率を比べてみました。"}, {"date": "2026-07-12", "imp": 905, "content": "クラウドワークスで「実績がないと相手にされない」は半分嘘です。"}, {"date": "2026-07-12", "imp": 949, "content": "クラウドワークスで単価を上げるタイミング、実は3つしかありません。"}, {"date": "2026-07-13", "imp": 15, "content": "クラウドワークスで一番大きな損をした案件の話をします。"}, {"date": "2026-07-13", "imp": 47, "content": "クラウドワークスで同じ案件に応募した2人、結果が真逆でした。"}, {"date": "2026-07-13", "imp": 480, "content": "クラウドワークスで、継続案件の平均単価は初回の1.4倍でした。"}, {"date": "2026-07-13", "imp": 492, "content": "クラウドワークスで、同じ提案文なのに通る時と通らない時があります。"}, {"date": "2026-07-13", "imp": 430, "content": "クラウドワークスで初めて紹介をもらった時、やっていたことが3つあります。"}, {"date": "2026-07-14", "imp": 319, "content": "クラウドワークスで「単価交渉が怖い」と相談されました。"}, {"date": "2026-07-15", "imp": 486, "content": "クラウドワークスで、提案文を送るベストな曜日があります。"}, {"date": "2026-07-15", "imp": 357, "content": "クラウドワークスで、断られた提案文と通った提案文を並べて見返しました。"}, {"date": "2026-07-15", "imp": 477, "content": "クラウドワークスで「実績はあるのに単価が上がらない」と相談されました。"}, {"date": "2026-07-15", "imp": 469, "content": "クラウドワークスで継続を切られる人には、共通点が3つあります。"}, {"date": "2026-07-15", "imp": 13, "content": "クラウドワークスで、初めてリピート案件をもらった時の話。"}];
+
+  const STORAGE_KEY = "cw_kpi_manual_entries_v1";
+  const DATA_STORAGE_KEY = "cw_kpi_imported_data_v1";
+  function loadEntries() {
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
+    catch(e) { return []; }
+  }
+  function saveEntries(entries) { localStorage.setItem(STORAGE_KEY, JSON.stringify(entries)); }
+
+  function fmtDate(d) { const [y,m,day] = d.split("-"); return `${m}/${day}`; }
+  function fmtNum(n) { return (n === null || n === undefined) ? "—" : Number(n).toLocaleString(); }
+
+  // ---- データの状態管理（自動集計＋手動読み込みの両方に対応） ----
+  let posts, dailyPosts, totalImp, avgImp, sortedByImp, maxPost, minPost, goalDays, goalRate, generatedAt, cards;
+
+  function computeState(postsData, genAt) {
+    posts = postsData;
+    generatedAt = genAt;
+
+    const byDay = {};
+    posts.forEach(p => {
+      if (!byDay[p.date]) byDay[p.date] = { count: 0, sum: 0 };
+      byDay[p.date].count += 1;
+      byDay[p.date].sum += p.imp;
+    });
+    const days = Object.keys(byDay).sort();
+    dailyPosts = days.map(d => ({
+      date: d, count: byDay[d].count, avg: Math.round(byDay[d].sum / byDay[d].count),
+    }));
+
+    totalImp = posts.reduce((s,p) => s + p.imp, 0);
+    avgImp = Math.round(totalImp / posts.length);
+    sortedByImp = [...posts].sort((a,b) => b.imp - a.imp);
+    maxPost = sortedByImp[0];
+    minPost = sortedByImp[sortedByImp.length - 1];
+    goalDays = dailyPosts.filter(d => d.count >= 5).length;
+    goalRate = Math.round((goalDays / dailyPosts.length) * 100);
+
+    cards = buildCards();
+  }
+
+  function loadStoredData() {
+    try {
+      const raw = localStorage.getItem(DATA_STORAGE_KEY);
+      if (!raw) return null;
+      return JSON.parse(raw);
+    } catch(e) { return null; }
+  }
+
+  function normalizeImport(json) {
+    if (Array.isArray(json)) return { generated_at: new Date().toISOString().slice(0,10), posts: json };
+    if (json && Array.isArray(json.posts)) return { generated_at: json.generated_at || new Date().toISOString().slice(0,10), posts: json.posts };
+    throw new Error("認識できないJSON形式です");
+  }
+
+  // ---- SVG helpers ----
+  function svgLine(el, points, opts) {
+    const {height=150, goalY=null} = opts || {};
+    const pad = {top: 12, right: 10, bottom: 20, left: 4};
+    const w = Math.max(560, points.length * 26);
+    const h = height;
+    el.setAttribute("viewBox", `0 0 ${w} ${h}`);
+    el.setAttribute("preserveAspectRatio", "none");
+    el.style.width = w + "px";
+    const vals = points.map(p => p.v).filter(v => v !== null && v !== undefined);
+    const maxV = Math.max(...vals, goalY || 0) * 1.15 || 1;
+    const xStep = (w - pad.left - pad.right) / Math.max(points.length - 1, 1);
+    const y = v => h - pad.bottom - (v / maxV) * (h - pad.top - pad.bottom);
+    const x = i => pad.left + i * xStep;
+    let svg = "";
+    if (goalY !== null) {
+      const gy = y(goalY);
+      svg += `<line x1="${pad.left}" y1="${gy}" x2="${w-pad.right}" y2="${gy}" stroke="var(--bad)" stroke-width="1" stroke-dasharray="4 3" opacity="0.55"/>`;
+    }
+    svg += `<line x1="${pad.left}" y1="${h-pad.bottom}" x2="${w-pad.right}" y2="${h-pad.bottom}" stroke="var(--line)" stroke-width="1"/>`;
+    let pathD = "", areaD = "", started = false;
+    points.forEach((p,i) => {
+      if (p.v === null || p.v === undefined) { started = false; return; }
+      const cx = x(i), cy = y(p.v);
+      pathD += (started ? "L" : "M") + cx + "," + cy + " ";
+      areaD += (started ? "L" : "M" + cx + "," + (h-pad.bottom) + " L") + cx + "," + cy + " ";
+      started = true;
+    });
+    if (started) areaD += `L${x(points.length-1)},${h-pad.bottom} Z`;
+    svg += `<path d="${areaD}" fill="var(--accent-soft)" stroke="none"/>`;
+    svg += `<path d="${pathD}" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`;
+    points.forEach((p,i) => {
+      if (p.v === null || p.v === undefined) return;
+      const cx = x(i), cy = y(p.v);
+      const isLast = i === points.length - 1;
+      svg += `<circle cx="${cx}" cy="${cy}" r="${isLast ? 3.5 : 2}" fill="var(--accent)"/>`;
+      if (i % Math.ceil(points.length / 10 || 1) === 0 || isLast) {
+        svg += `<text x="${cx}" y="${h-5}" font-size="9.5" fill="var(--faint)" text-anchor="middle">${fmtDate(p.date)}</text>`;
+      }
+    });
+    el.innerHTML = svg;
+  }
+
+  function svgBars(el, points, opts) {
+    const {height=150, goalY=null} = opts || {};
+    const pad = {top: 12, right: 10, bottom: 20, left: 4};
+    const w = Math.max(560, points.length * 26);
+    const h = height;
+    el.setAttribute("viewBox", `0 0 ${w} ${h}`);
+    el.setAttribute("preserveAspectRatio", "none");
+    el.style.width = w + "px";
+    const maxV = Math.max(...points.map(p=>p.v||0), goalY||0) * 1.2 || 1;
+    const xStep = (w - pad.left - pad.right) / points.length;
+    const barW = Math.min(xStep * 0.55, 20);
+    const y = v => h - pad.bottom - (v / maxV) * (h - pad.top - pad.bottom);
+    let svg = "";
+    if (goalY !== null) {
+      const gy = y(goalY);
+      svg += `<line x1="${pad.left}" y1="${gy}" x2="${w-pad.right}" y2="${gy}" stroke="var(--bad)" stroke-width="1" stroke-dasharray="4 3" opacity="0.6"/>`;
+    }
+    svg += `<line x1="${pad.left}" y1="${h-pad.bottom}" x2="${w-pad.right}" y2="${h-pad.bottom}" stroke="var(--line)" stroke-width="1"/>`;
+    points.forEach((p,i) => {
+      const cx = pad.left + i * xStep + xStep/2;
+      const met = goalY !== null ? p.v >= goalY : true;
+      const color = goalY !== null ? (met ? "var(--good)" : "var(--warn)") : "var(--accent)";
+      const barH = h - pad.bottom - y(p.v);
+      svg += `<rect x="${cx - barW/2}" y="${y(p.v)}" width="${barW}" height="${Math.max(barH,1)}" rx="2.5" fill="${color}"/>`;
+      if (i % Math.ceil(points.length / 10 || 1) === 0 || i === points.length-1) {
+        svg += `<text x="${cx}" y="${h-5}" font-size="9.5" fill="var(--faint)" text-anchor="middle">${fmtDate(p.date)}</text>`;
+      }
+    });
+    el.innerHTML = svg;
+  }
+
+  function sparkline(el, values, opts) {
+    const {width=140, height=26, goalY=null} = opts || {};
+    el.setAttribute("viewBox", `0 0 ${width} ${height}`);
+    el.setAttribute("preserveAspectRatio", "none");
+    const vals = values.filter(v => v !== null && v !== undefined);
+    if (!vals.length) { el.innerHTML = ""; return; }
+    const maxV = Math.max(...vals, goalY||0) * 1.1 || 1;
+    const xStep = width / Math.max(values.length - 1, 1);
+    const y = v => height - (v / maxV) * (height - 4) - 2;
+    let d = "", started = false;
+    values.forEach((v,i) => {
+      if (v === null || v === undefined) { started = false; return; }
+      const cx = i * xStep, cy = y(v);
+      d += (started ? "L" : "M") + cx + "," + cy + " ";
+      started = true;
+    });
+    let svg = "";
+    if (goalY !== null) svg += `<line x1="0" y1="${y(goalY)}" x2="${width}" y2="${y(goalY)}" stroke="var(--bad)" stroke-width="1" stroke-dasharray="3 2" opacity="0.5"/>`;
+    svg += `<path d="${d}" fill="none" stroke="var(--accent)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>`;
+    const lastIdx = values.length - 1;
+    if (values[lastIdx] !== null && values[lastIdx] !== undefined) svg += `<circle cx="${lastIdx*xStep}" cy="${y(values[lastIdx])}" r="2.3" fill="var(--accent)"/>`;
+    el.innerHTML = svg;
+  }
+
+  // ---- カード定義 ----
+  function buildCards() {
+    const days = dailyPosts.map(d => d.date);
+    return [
+      {
+        id: "avg", label: "平均インプレッション<br>(全投稿)", value: avgImp, unit: "imp",
+        sub: `全${posts.length}投稿の平均`, pill: avgImp >= 500 ? {t:"good", l:"目標達成"} : {t:"warn", l:"目標未達"},
+        spark: dailyPosts.slice(-14).map(d=>d.avg), goalY: 500,
+      },
+      {
+        id: "total", label: "合計インプレッション<br>(全期間)", value: totalImp, unit: "imp",
+        sub: `${days[0]}〜${days[days.length-1]}`, pill: null,
+        spark: (() => { let c=0; return dailyPosts.map(d => c += d.avg*d.count); })().slice(-14),
+      },
+      {
+        id: "max", label: "最高インプレッション", value: maxPost.imp, unit: "imp",
+        sub: fmtDate(maxPost.date) + " の投稿", pill: {t:"good", l:"ベスト"},
+        spark: dailyPosts.slice(-14).map(d=>d.avg),
+      },
+      {
+        id: "min", label: "最低インプレッション", value: minPost.imp, unit: "imp",
+        sub: fmtDate(minPost.date) + " の投稿", pill: {t:"warn", l:"要改善"},
+        spark: dailyPosts.slice(-14).map(d=>d.avg),
+      },
+      {
+        id: "posts", label: "1日5投稿 達成率", value: goalRate, unit: "%",
+        sub: `${goalDays}/${dailyPosts.length}日で達成`, pill: goalRate >= 70 ? {t:"good", l:"良好"} : {t:"warn", l:"要注意"},
+        spark: dailyPosts.slice(-14).map(d=>d.count), goalY: 5,
+      },
+      {
+        id: "chat", label: "オープンチャット<br>参加者数", value: null, unit: "人",
+        sub: "タップして記録", pill: {t:"good", l:"手入力"},
+        spark: [],
+      },
+      {
+        id: "appt", label: "アポ取り数<br>(直近7日合計)", value: null, unit: "件",
+        sub: "タップして記録", pill: {t:"good", l:"手入力"},
+        spark: [],
+      },
+    ];
+  }
+
+  function renderHero() {
+    svgLine(document.getElementById("heroChart"), dailyPosts.map(d=>({date:d.date, v:d.avg})), {goalY:500, height:150});
+  }
+
+  function renderCards() {
+    const entries = loadEntries().sort((a,b)=>a.date.localeCompare(b.date));
+    const lastEntry = entries[entries.length-1];
+    const apptTotal7 = entries.slice(-7).reduce((s,e)=>s+(Number(e.appt)||0),0);
+
+    const grid = document.getElementById("cardGrid");
+    grid.innerHTML = cards.map(c => {
+      let value = c.value, sub = c.sub, pill = c.pill;
+      if (c.id === "chat") { value = lastEntry ? Number(lastEntry.chat) : null; sub = lastEntry ? fmtDate(lastEntry.date)+" 時点" : "タップして記録"; }
+      if (c.id === "appt") { value = apptTotal7; sub = `直近7日合計 ${apptTotal7}件`; pill = apptTotal7 > 0 ? {t:"good", l:apptTotal7+"件"} : {t:"warn", l:"未記録"}; }
+      return `
+        <button class="card" data-id="${c.id}">
+          <div class="card-head">
+            <div class="card-label">${c.label}</div>
+            ${pill ? `<span class="pill ${pill.t}">${pill.l}</span>` : ""}
+          </div>
+          <div class="card-value">${value === null ? "—" : fmtNum(value)}<span class="unit">${c.unit}</span></div>
+          <svg class="spark"></svg>
+          <div class="card-sub">${sub}</div>
+        </button>
+      `;
+    }).join("");
+
+    grid.querySelectorAll(".card").forEach((btn, i) => {
+      const c = cards[i];
+      const svgEl = btn.querySelector("svg.spark");
+      if (c.id === "chat") sparkline(svgEl, entries.map(e=>Number(e.chat)));
+      else if (c.id === "appt") sparkline(svgEl, entries.map(e=>Number(e.appt)));
+      else sparkline(svgEl, c.spark, {goalY: c.goalY});
+      btn.addEventListener("click", () => openModal(c.id));
+    });
+  }
+
+  function closeModal() {
+    document.getElementById("modalOverlay").classList.remove("open");
+  }
+
+  function openModal(id) {
+    const overlay = document.getElementById("modalOverlay");
+    const body = document.getElementById("modalBody");
+    let html = "";
+
+    if (id === "avg" || id === "total") {
+      const title = id === "avg" ? "平均インプレッションの推移" : "累計インプレッションの推移";
+      html = `
+        <div class="modal-head">
+          <div>
+            <div class="modal-title">${title}</div>
+            <div class="modal-desc">${id === "avg" ? "投稿があった日の1投稿あたり平均" : "日別の投稿インプレッション合計の積み上げ"}</div>
+          </div>
+          <button class="modal-close" id="closeBtn">✕</button>
+        </div>
+        <div class="modal-chart"><svg id="modalChart" style="height:180px; display:block"></svg></div>
+      `;
+      body.innerHTML = html;
+      overlay.classList.add("open");
+      document.getElementById("closeBtn").addEventListener("click", closeModal);
+      if (id === "avg") {
+        svgLine(document.getElementById("modalChart"), dailyPosts.map(d=>({date:d.date, v:d.avg})), {goalY:500, height:180});
+      } else {
+        let cum = 0;
+        const cumPoints = dailyPosts.map(d => ({date:d.date, v: (cum += d.avg*d.count)}));
+        svgLine(document.getElementById("modalChart"), cumPoints, {height:180});
+      }
+      return;
+    }
+
+    if (id === "max" || id === "min") {
+      const ranked = id === "max" ? sortedByImp.slice(0,10) : [...sortedByImp].reverse().slice(0,10);
+      html = `
+        <div class="modal-head">
+          <div>
+            <div class="modal-title">${id === "max" ? "インプレッションが高かった投稿 TOP10" : "インプレッションが低かった投稿 WORST10"}</div>
+            <div class="modal-desc">全${posts.length}投稿から抽出</div>
+          </div>
+          <button class="modal-close" id="closeBtn">✕</button>
+        </div>
+        <ul class="rank-list">
+          ${ranked.map((p,i) => `
+            <li class="rank-item">
+              <span class="rank-num">${i+1}</span>
+              <span>
+                <div class="rank-text">${p.content}</div>
+                <div class="rank-date">${p.date}</div>
+              </span>
+              <span class="rank-imp">${fmtNum(p.imp)}</span>
+            </li>
+          `).join("")}
+        </ul>
+      `;
+      body.innerHTML = html;
+      overlay.classList.add("open");
+      document.getElementById("closeBtn").addEventListener("click", closeModal);
+      return;
+    }
+
+    if (id === "posts") {
+      html = `
+        <div class="modal-head">
+          <div>
+            <div class="modal-title">1日5投稿の達成状況</div>
+            <div class="modal-desc">${goalDays}/${dailyPosts.length}日で達成（${goalRate}%）</div>
+          </div>
+          <button class="modal-close" id="closeBtn">✕</button>
+        </div>
+        <div class="modal-chart"><svg id="modalChart" style="height:180px; display:block"></svg></div>
+      `;
+      body.innerHTML = html;
+      overlay.classList.add("open");
+      document.getElementById("closeBtn").addEventListener("click", closeModal);
+      svgBars(document.getElementById("modalChart"), dailyPosts.map(d=>({date:d.date, v:d.count})), {goalY:5, height:180});
+      return;
+    }
+
+    if (id === "chat" || id === "appt") {
+      const label = id === "chat" ? "オープンチャット参加者数" : "アポ取り数";
+      html = `
+        <div class="modal-head">
+          <div>
+            <div class="modal-title">${label}を記録</div>
+            <div class="modal-desc">この端末のブラウザに保存されます</div>
+          </div>
+          <button class="modal-close" id="closeBtn">✕</button>
+        </div>
+        <div class="modal-chart"><svg id="modalChart" style="height:130px; display:block"></svg></div>
+        <form class="entry" id="entryForm">
+          <div><label for="entryDate">日付</label><input type="date" id="entryDate" required></div>
+          <div><label for="entryVal">${label}</label><input type="number" id="entryVal" min="0" placeholder="例：${id === 'chat' ? '128' : '3'}"></div>
+          <button type="submit" class="add">保存</button>
+        </form>
+        <table>
+          <thead><tr><th>日付</th><th style="text-align:right">${label}</th><th></th></tr></thead>
+          <tbody id="entryTable"></tbody>
+        </table>
+      `;
+      body.innerHTML = html;
+      overlay.classList.add("open");
+      document.getElementById("closeBtn").addEventListener("click", closeModal);
+
+      const field = id === "chat" ? "chat" : "appt";
+      function refreshEntryView() {
+        const entries = loadEntries().sort((a,b)=>a.date.localeCompare(b.date));
+        svgLine(document.getElementById("modalChart"), entries.map(e=>({date:e.date, v: e[field] !== undefined && e[field] !== "" ? Number(e[field]) : null})), {height:130});
+        const tbody = document.getElementById("entryTable");
+        const rev = [...entries].reverse();
+        if (!rev.length) {
+          tbody.innerHTML = `<tr class="empty-row"><td colspan="3">まだ記録がありません</td></tr>`;
+        } else {
+          tbody.innerHTML = rev.map(e => `
+            <tr>
+              <td>${e.date}</td>
+              <td class="num">${e[field] !== undefined && e[field] !== "" ? fmtNum(e[field]) : "—"}</td>
+              <td style="text-align:right"><button class="del-btn" data-date="${e.date}">削除</button></td>
+            </tr>
+          `).join("");
+          tbody.querySelectorAll(".del-btn").forEach(btn => {
+            btn.addEventListener("click", () => {
+              const entries2 = loadEntries();
+              const idx = entries2.findIndex(e => e.date === btn.dataset.date);
+              if (idx >= 0) { delete entries2[idx][field]; saveEntries(entries2); }
+              refreshEntryView();
+              renderCards();
+            });
+          });
+        }
+      }
+      refreshEntryView();
+
+      document.getElementById("entryDate").valueAsDate = new Date();
+      document.getElementById("entryForm").addEventListener("submit", (e) => {
+        e.preventDefault();
+        const date = document.getElementById("entryDate").value;
+        const val = document.getElementById("entryVal").value;
+        if (!date) return;
+        const entries = loadEntries();
+        const idx = entries.findIndex(en => en.date === date);
+        if (idx >= 0) entries[idx][field] = val;
+        else entries.push({date, [field]: val});
+        saveEntries(entries);
+        document.getElementById("entryVal").value = "";
+        refreshEntryView();
+        renderCards();
+      });
+      return;
+    }
+  }
+
+  document.getElementById("modalOverlay").addEventListener("click", (e) => {
+    if (e.target.id === "modalOverlay") closeModal();
+  });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeModal(); });
+
+  function renderUpdatedNote(sourceLabel) {
+    document.getElementById("lastUpdated").textContent = `最終更新: ${generatedAt}（${sourceLabel}）`;
+  }
+
+  function renderAll() {
+    renderHero();
+    renderCards();
+  }
+
+  function applyImported(parsed, sourceLabel) {
+    const normalized = normalizeImport(parsed);
+    localStorage.setItem(DATA_STORAGE_KEY, JSON.stringify(normalized));
+    computeState(normalized.posts, normalized.generated_at);
+    renderUpdatedNote(sourceLabel);
+    renderAll();
+  }
+
+  document.getElementById("importBtn").addEventListener("click", () => {
+    document.getElementById("importFile").click();
+  });
+  document.getElementById("importFile").addEventListener("change", (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const parsed = JSON.parse(reader.result);
+        applyImported(parsed, "読み込んだファイル");
+        alert(`データを更新しました（${generatedAt}時点、${posts.length}投稿）`);
+      } catch (err) {
+        alert("読み込みに失敗しました。export_kpi.pyが書き出したkpi_data.jsonを選んでください。\n\n" + err.message);
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = "";
+  });
+
+  // ---- 初期化：まず即表示（保存データ or 埋め込みスナップショット）、その後に同フォルダのkpi_data.jsonを試す ----
+  const stored = loadStoredData();
+  if (stored && Array.isArray(stored.posts) && stored.posts.length) {
+    computeState(stored.posts, stored.generated_at);
+    renderUpdatedNote("前回読み込んだデータ");
+  } else {
+    computeState(EMBEDDED_POSTS, EMBEDDED_GENERATED_AT);
+    renderUpdatedNote("初期スナップショット");
+  }
+  renderAll();
+
+  // 同じ場所（GitHub Pages等）にkpi_data.jsonが置かれていれば、それを自動取得して上書きする。
+  // ローカルでファイルを直接開いた場合(file://)はfetchがブロックされるため静かに失敗するだけで問題ない。
+  fetch("kpi_data.json", { cache: "no-store" })
+    .then(r => r.ok ? r.json() : Promise.reject())
+    .then(json => {
+      const normalized = normalizeImport(json);
+      localStorage.setItem(DATA_STORAGE_KEY, JSON.stringify(normalized));
+      computeState(normalized.posts, normalized.generated_at);
+      renderUpdatedNote("自動取得");
+      renderAll();
+    })
+    .catch(() => { /* kpi_data.jsonが同じ場所にない場合は何もしない */ });
+</script>
