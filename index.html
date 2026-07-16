@@ -588,7 +588,7 @@
 
     const monthPrefix = currentMonthPrefix();
     const thisMonth = dailyPosts.filter(d => d.date.startsWith(monthPrefix));
-    svgBars(document.getElementById("heroChart"), (thisMonth.length ? thisMonth : dailyPosts.slice(-14)).map(d=>({date:d.date, v:d.avg})), {goalY:500, height:140});
+    svgLine(document.getElementById("heroChart"), (thisMonth.length ? thisMonth : dailyPosts.slice(-14)).map(d=>({date:d.date, v:d.avg})), {goalY:500, height:140});
 
     const followerGoodTrend = followerDelta === null || followerDelta >= 0;
     document.getElementById("followerPill").className = `pill ${followerGoodTrend ? "good" : "warn"}`;
@@ -749,7 +749,7 @@
       body.innerHTML = html;
       overlay.classList.add("open");
       document.getElementById("closeBtn").addEventListener("click", closeModal);
-      svgBars(document.getElementById("modalChart"), dailyPosts.map(d=>({date:d.date, v:d.count})), {goalY:5, height:180});
+      svgLine(document.getElementById("modalChart"), dailyPosts.map(d=>({date:d.date, v:d.count})), {goalY:5, height:180});
       return;
     }
 
@@ -775,7 +775,7 @@
       body.innerHTML = html;
       overlay.classList.add("open");
       document.getElementById("closeBtn").addEventListener("click", closeModal);
-      svgBars(document.getElementById("modalChart"), dailyPosts.map(d=>({date:d.date, v:d[m.field]})), {height:180});
+      svgLine(document.getElementById("modalChart"), dailyPosts.map(d=>({date:d.date, v:d[m.field]})), {height:180});
       return;
     }
 
