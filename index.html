@@ -1,3 +1,10 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
 <title>Threads運用アナリティクス</title>
 <style>
   :root {
@@ -306,7 +313,7 @@
 
   function deltaBadge(delta, label) {
     const labelHtml = label ? `<span class="delta-label">${label}</span>` : "";
-    if (delta === null || delta === undefined) return `${labelHtml}<span class="delta flat">前日比 —</span>`;
+    if (delta === null || delta === undefined) return `${labelHtml}<span class="delta flat">—</span>`;
     if (delta > 0) return `${labelHtml}<span class="delta up">▲${fmtNum(delta)}</span>`;
     if (delta < 0) return `${labelHtml}<span class="delta down">▼${fmtNum(Math.abs(delta))}</span>`;
     return `${labelHtml}<span class="delta flat">±0</span>`;
@@ -334,9 +341,13 @@
   }
 
   function computeState(postsData, genAt, followersData) {
-    posts = postsData;
+    posts = (postsData || []).filter(p => p && p.date && typeof p.imp === "number");
     generatedAt = genAt;
     followers = (followersData || []).slice().sort((a,b) => a.date.localeCompare(b.date));
+    if (!posts.length) {
+      // 投稿データが空でも画面が壊れないよう、最低限の空状態を用意する
+      posts = [{date: new Date().toISOString().slice(0,10), imp: 0, content: "（データなし）", likes: 0, comments: 0, reposts: 0, shares: 0}];
+    }
 
     const byDay = {};
     posts.forEach(p => {
@@ -418,6 +429,10 @@
     el.setAttribute("preserveAspectRatio", "none");
     el.style.width = w + "px";
     const vals = points.map(p => p.v).filter(v => v !== null && v !== undefined);
+    if (!vals.length) {
+      el.innerHTML = `<text x="${w/2}" y="${h/2}" font-size="12" fill="var(--faint)" text-anchor="middle">まだデータがありません</text>`;
+      return;
+    }
     const maxV = Math.max(...vals, goalY || 0) * 1.15 || 1;
     const xStep = (w - pad.left - pad.right) / Math.max(points.length - 1, 1);
     const y = v => h - pad.bottom - (v / maxV) * (h - pad.top - pad.bottom);
@@ -445,37 +460,6 @@
       const isLast = i === points.length - 1;
       svg += `<circle cx="${cx}" cy="${cy}" r="${isLast ? 3.5 : 2}" fill="var(--accent)"/>`;
       if (i % Math.ceil(points.length / 10 || 1) === 0 || isLast) {
-        svg += `<text x="${cx}" y="${h-5}" font-size="9.5" fill="var(--faint)" text-anchor="middle">${fmtDate(p.date)}</text>`;
-      }
-    });
-    el.innerHTML = svg;
-  }
-
-  function svgBars(el, points, opts) {
-    const {height=150, goalY=null} = opts || {};
-    const pad = {top: 12, right: 10, bottom: 20, left: 4};
-    const w = Math.max(560, points.length * 26);
-    const h = height;
-    el.setAttribute("viewBox", `0 0 ${w} ${h}`);
-    el.setAttribute("preserveAspectRatio", "none");
-    el.style.width = w + "px";
-    const maxV = Math.max(...points.map(p=>p.v||0), goalY||0) * 1.2 || 1;
-    const xStep = (w - pad.left - pad.right) / points.length;
-    const barW = Math.min(xStep * 0.55, 20);
-    const y = v => h - pad.bottom - (v / maxV) * (h - pad.top - pad.bottom);
-    let svg = "";
-    if (goalY !== null) {
-      const gy = y(goalY);
-      svg += `<line x1="${pad.left}" y1="${gy}" x2="${w-pad.right}" y2="${gy}" stroke="var(--bad)" stroke-width="1" stroke-dasharray="4 3" opacity="0.6"/>`;
-    }
-    svg += `<line x1="${pad.left}" y1="${h-pad.bottom}" x2="${w-pad.right}" y2="${h-pad.bottom}" stroke="var(--line)" stroke-width="1"/>`;
-    points.forEach((p,i) => {
-      const cx = pad.left + i * xStep + xStep/2;
-      const met = goalY !== null ? p.v >= goalY : true;
-      const color = goalY !== null ? (met ? "var(--good)" : "var(--warn)") : "var(--accent)";
-      const barH = h - pad.bottom - y(p.v);
-      svg += `<rect x="${cx - barW/2}" y="${y(p.v)}" width="${barW}" height="${Math.max(barH,1)}" rx="2.5" fill="${color}"/>`;
-      if (i % Math.ceil(points.length / 10 || 1) === 0 || i === points.length-1) {
         svg += `<text x="${cx}" y="${h-5}" font-size="9.5" fill="var(--faint)" text-anchor="middle">${fmtDate(p.date)}</text>`;
       }
     });
@@ -521,7 +505,7 @@
         spark: [],
       },
       {
-        id: "appt", label: "アポ取り数<br>(直近7日合計)", value: null, unit: "件",
+        id: "appt", label: "アポ取り数<br>(最新入力日)", value: null, unit: "件",
         sub: "タップして記録", pill: {t:"good", l:"手入力"},
         spark: [],
       },
@@ -590,9 +574,17 @@
     const thisMonth = dailyPosts.filter(d => d.date.startsWith(monthPrefix));
     svgLine(document.getElementById("heroChart"), (thisMonth.length ? thisMonth : dailyPosts.slice(-14)).map(d=>({date:d.date, v:d.avg})), {goalY:500, height:140});
 
-    const followerGoodTrend = followerDelta === null || followerDelta >= 0;
-    document.getElementById("followerPill").className = `pill ${followerGoodTrend ? "good" : "warn"}`;
-    document.getElementById("followerPill").textContent = followerGoodTrend ? "増加中" : "減少中";
+    const followerPill = document.getElementById("followerPill");
+    if (followerDelta === null) {
+      followerPill.className = "pill good";
+      followerPill.textContent = "計測中";
+    } else if (followerDelta >= 0) {
+      followerPill.className = "pill good";
+      followerPill.textContent = "増加中";
+    } else {
+      followerPill.className = "pill warn";
+      followerPill.textContent = "減少中";
+    }
     document.getElementById("followerHeroValue").innerHTML = `${latestFollowers === null ? "—" : fmtNum(latestFollowers)}<span class="unit">人</span>`;
     document.getElementById("followerHeroSub").innerHTML = followers.length
       ? `${fmtDate(followers[followers.length-1].date)}時点 ${deltaBadge(followerDelta, "前日比")}`
@@ -612,19 +604,21 @@
 
     const grid = document.getElementById(gridId);
     grid.innerHTML = cardList.map(c => {
-      let value = c.value, sub = c.sub, pill = c.pill, delta = c.delta;
+      let value = c.value, sub = c.sub, pill = c.pill, delta = c.delta, deltaLabel = "前日比";
       if (c.id === "chat") {
         value = lastChat ? Number(lastChat.chat) : null;
         sub = lastChat ? fmtDate(lastChat.date)+" 時点" : "タップして記録";
         delta = (lastChat && prevChat) ? Number(lastChat.chat) - Number(prevChat.chat) : null;
+        deltaLabel = "前回比";
       }
       if (c.id === "appt") {
         value = lastAppt ? Number(lastAppt.appt) : null;
         sub = `直近7日合計 ${apptTotal7}件`;
         pill = lastAppt ? {t:"good", l:fmtDate(lastAppt.date)} : {t:"warn", l:"未記録"};
         delta = (lastAppt && prevAppt) ? Number(lastAppt.appt) - Number(prevAppt.appt) : null;
+        deltaLabel = "前回比";
       }
-      const deltaHtml = delta !== undefined ? `<div class="card-sub">${deltaBadge(delta, "前日比")}</div>` : "";
+      const deltaHtml = delta !== undefined ? `<div class="card-sub">${deltaBadge(delta, deltaLabel)}</div>` : "";
       return `
         <button class="card" data-id="${c.id}">
           <div class="card-head">
@@ -928,3 +922,6 @@
     })
     .catch(() => { /* kpi_data.jsonが同じ場所にない場合は何もしない */ });
 </script>
+
+</body>
+</html>
