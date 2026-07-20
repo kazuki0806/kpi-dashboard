@@ -1148,16 +1148,30 @@
   }
   renderAll();
 
-  fetch("kpi_data.json", { cache: "no-store" })
-    .then(r => r.ok ? r.json() : Promise.reject())
-    .then(json => {
-      const normalized = normalizeImport(json);
-      localStorage.setItem(DATA_STORAGE_KEY, JSON.stringify(normalized));
-      computeState(normalized.posts, normalized.generated_at, normalized.followers);
-      renderUpdatedNote("自動取得");
-      renderAll();
-    })
-    .catch(() => {});
+  // データ取得先の優先順位:
+  // 1) raw.githubusercontent（リポジトリを直接読む。GitHub Pagesのビルド詰まりの影響を受けず常に最新）
+  // 2) 同フォルダの kpi_data.json（ローカルで直接開いた場合などのフォールバック）
+  // キャッシュ回避のためタイムスタンプ付きで取得する
+  const DATA_SOURCES = [
+    "https://raw.githubusercontent.com/kazuki0806/kpi-dashboard/main/kpi_data.json",
+    "kpi_data.json",
+  ];
+
+  function tryFetchData(i) {
+    if (i >= DATA_SOURCES.length) return;
+    const url = DATA_SOURCES[i] + (DATA_SOURCES[i].includes("?") ? "&" : "?") + "t=" + Date.now();
+    fetch(url, { cache: "no-store" })
+      .then(r => r.ok ? r.json() : Promise.reject())
+      .then(json => {
+        const normalized = normalizeImport(json);
+        localStorage.setItem(DATA_STORAGE_KEY, JSON.stringify(normalized));
+        computeState(normalized.posts, normalized.generated_at, normalized.followers);
+        renderUpdatedNote("自動取得");
+        renderAll();
+      })
+      .catch(() => tryFetchData(i + 1));
+  }
+  tryFetchData(0);
 </script>
 
 </body>
