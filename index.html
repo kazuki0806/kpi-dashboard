@@ -91,6 +91,8 @@ body{margin:0;background:var(--bg);color:var(--ink);
 .modal .close{border:0;background:var(--line);color:var(--ink);width:30px;height:30px;border-radius:9px;cursor:pointer;font-size:16px}
 .modal .msub{color:var(--ink3);font-size:12px;margin-bottom:14px}
 .gedit{border:0;background:var(--accent-soft);color:var(--accent);font-size:12px;font-weight:700;padding:5px 12px;border-radius:8px;cursor:pointer;font-family:inherit}
+@keyframes spin{to{transform:rotate(360deg)}}
+.spinning{animation:spin .7s linear infinite}
 @media(max-width:820px){.cards4{grid-template-columns:1fr 1fr}.two,.two2{grid-template-columns:1fr}}
 @media(max-width:480px){.cards4{grid-template-columns:1fr 1fr}.hello{font-size:19px}}
 </style>
@@ -357,7 +359,11 @@ async function load(){
 function applyTheme(t){document.documentElement.setAttribute("data-theme",t);$("#theme").textContent=t==="dark"?"☀":"☾";lsSet("uni_theme",t);}
 applyTheme(lsGet("uni_theme","light"));
 $("#theme").onclick=()=>applyTheme(document.documentElement.getAttribute("data-theme")==="dark"?"light":"dark");
-$("#refresh").onclick=load;
+$("#refresh").onclick=async ()=>{
+  const b=$("#refresh"); b.classList.add("spinning"); b.disabled=true;
+  $("#sub").textContent="最新データを取得中…";
+  try{ await load(); }finally{ b.classList.remove("spinning"); b.disabled=false; }
+};
 
 // input sheet
 $("#openInput").onclick=()=>$("#sheetbg").classList.add("on");
