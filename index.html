@@ -399,9 +399,10 @@ function openDetail(key){
     body= fol.length? `<table class="tbl"><thead><tr><th>日付</th><th style="text-align:right">人数</th><th style="text-align:right">増減</th></tr></thead><tbody>`+
       fol.map((f,i)=>{const pv=fol[i+1];const df=pv?f.count-pv.count:null;const col=df>0?'var(--good)':df<0?'var(--bad)':'var(--ink3)';return `<tr><td>${f.date.slice(5)}</td><td style="text-align:right;font-weight:600">${fmt(f.count)}</td><td style="text-align:right;color:${col}">${df==null?"—":(df>0?"+"+df:df)}</td></tr>`;}).join("")+`</tbody></table>` : `<div class="empty">フォロワー履歴がまだありません</div>`;
   } else if(key==="chat"){
-    title="手入力KPIの履歴"; sub="オプチャ参加・"+a.kpi2;
-    body= man.length? `<table class="tbl"><thead><tr><th>日付</th><th style="text-align:right">オプチャ</th><th style="text-align:right">${a.kpi2}</th></tr></thead><tbody>`+
-      [...man].reverse().map(e=>`<tr><td>${e.date.slice(5)}</td><td style="text-align:right">${e.chat!=null?fmt(e.chat):"—"}</td><td style="text-align:right">${e.appt!=null?fmt(e.appt):"—"}</td></tr>`).join("")+`</tbody></table>` : `<div class="empty">まだ入力がありません。下の「＋今日の数値を入力」から</div>`;
+    title="手入力KPIの履歴"; sub="オプチャ参加・"+a.kpi2+"（×で削除）";
+    body= man.length? `<table class="tbl"><thead><tr><th>日付</th><th style="text-align:right">オプチャ</th><th style="text-align:right">${a.kpi2}</th><th></th></tr></thead><tbody>`+
+      [...man].reverse().map(e=>`<tr><td>${e.date.slice(5)}</td><td style="text-align:right">${e.chat!=null?fmt(e.chat):"—"}</td><td style="text-align:right">${e.appt!=null?fmt(e.appt):"—"}</td><td style="text-align:right"><button data-delchat="${e.date}" title="削除" style="border:0;background:var(--bg);color:var(--bad);width:26px;height:26px;border-radius:7px;cursor:pointer;font-size:15px;font-family:inherit">×</button></td></tr>`).join("")+`</tbody></table>`
+      +`<button id="clearAllChat" style="width:100%;background:none;border:0;color:var(--bad);font-size:13px;margin-top:14px;cursor:pointer;font-family:inherit">この端末の入力を全部消す</button>` : `<div class="empty">まだ入力がありません。下の「＋今日の数値を入力」から</div>`;
   }
   $("#dtitle").textContent=title; $("#dsub").textContent=sub; $("#dbody").innerHTML=body;
   $("#detailbg").classList.add("on");
@@ -467,6 +468,16 @@ $("#clearInput").onclick=()=>{
   $("#in_chat").value=""; $("#in_appt").value="";
   $("#sheetbg").classList.remove("on"); render();
 };
+$("#dbody").addEventListener("click",e=>{
+  const del=e.target.closest("[data-delchat]");
+  if(del){
+    const loc=lsGet("uni_kpi_"+CUR+"_manual",[]).filter(x=>x.date!==del.dataset.delchat);
+    lsSet("uni_kpi_"+CUR+"_manual",loc); render(); openDetail("chat"); return;
+  }
+  if(e.target.closest("#clearAllChat")){
+    localStorage.removeItem("uni_kpi_"+CUR+"_manual"); render(); openDetail("chat");
+  }
+});
 $("#dclose").onclick=()=>$("#detailbg").classList.remove("on");
 $("#detailbg").onclick=e=>{if(e.target===$("#detailbg"))$("#detailbg").classList.remove("on");};
 
