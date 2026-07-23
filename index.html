@@ -149,6 +149,7 @@ body{margin:0;background:var(--bg);color:var(--ink);
     <div class="field"><label>オプチャ参加</label><input id="in_chat" inputmode="numeric" placeholder="0"><span class="prev" id="prev_chat"></span></div>
     <div class="field"><label>アポ / 相談</label><input id="in_appt" inputmode="numeric" placeholder="0"><span class="prev" id="prev_appt"></span></div>
     <button class="save" id="saveInput">保存（今日の日付）</button>
+    <button id="clearInput" style="width:100%;background:none;border:0;color:var(--bad);font-size:13px;margin-top:14px;cursor:pointer;font-family:inherit">この端末で入れた数値を全部消す</button>
   </div>
 </div>
 
@@ -461,6 +462,11 @@ function openGoalEdit(){
   };
 }
 $("#editGoals").onclick=openGoalEdit;
+$("#clearInput").onclick=()=>{
+  localStorage.removeItem("uni_kpi_"+CUR+"_manual");
+  $("#in_chat").value=""; $("#in_appt").value="";
+  $("#sheetbg").classList.remove("on"); render();
+};
 $("#dclose").onclick=()=>$("#detailbg").classList.remove("on");
 $("#detailbg").onclick=e=>{if(e.target===$("#detailbg"))$("#detailbg").classList.remove("on");};
 
