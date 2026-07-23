@@ -191,6 +191,7 @@ const $ = s => document.querySelector(s);
 const fmt = n => (n==null?"—":Number(n).toLocaleString());
 const esc = s => (s==null?"":String(s)).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
 let VIEWPOSTS=[];
+let MANUAL={};
 const today = () => new Date().toISOString().slice(0,10);
 const lsGet = (k,d) => {try{return JSON.parse(localStorage.getItem(k))??d}catch(e){return d}};
 const lsSet = (k,v) => localStorage.setItem(k,JSON.stringify(v));
@@ -233,7 +234,13 @@ function buildTabs(){
   });
 }
 
-function manualEntries(acct){ return lsGet("uni_kpi_"+acct+"_manual", []); }
+function manualEntries(acct){
+  const pub=MANUAL[acct]||[]; const loc=lsGet("uni_kpi_"+acct+"_manual", []);
+  const byDate={};
+  loc.forEach(e=>{byDate[e.date]=e;});
+  pub.forEach(e=>{byDate[e.date]=e;});
+  return Object.values(byDate).sort((a,b)=>a.date<b.date?-1:1);
+}
 function goals(acct){ return Object.assign({}, GOAL_DEFAULT, lsGet("uni_kpi_"+acct+"_goals", {})); }
 
 function statCard(lab,val,unit,badge,key,extra){
@@ -336,6 +343,10 @@ async function load(){
     try{
       const r=await fetch(ACCOUNTS[k].url+"?t="+Date.now(),{cache:"no-store"});
       if(r.ok){const j=await r.json(); if((j.posts||[]).length) DATA[k]=j;}
+    }catch(e){}
+    try{
+      const rm=await fetch("kpi_manual_"+k+".json?t="+Date.now(),{cache:"no-store"});
+      if(rm.ok){const jm=await rm.json(); if(Array.isArray(jm)) MANUAL[k]=jm;}
     }catch(e){}
   }));
   render();
