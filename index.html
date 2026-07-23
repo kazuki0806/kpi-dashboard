@@ -177,8 +177,8 @@ const SAMPLE = { // 実データが空のときのデモ表示（本番でデー
     {date:"2026-07-20",hour:19,imp:660,likes:14,comments:3,content:"金額は相談で応募するな。後回しにされる理由"},
     {date:"2026-07-21",hour:21,imp:1530,likes:58,comments:12,content:"0円で途中終了を持ちかけられたときの一言"},
     {date:"2026-07-22",hour:12,imp:742,likes:19,comments:4,content:"単価が安い案件ほど発注側はヤバい人が多い"},
-    {date:"2026-07-23",hour:12,imp:980,likes:27,comments:6,content:"リピートを決める瞬間は3つあります"},
-    {date:"2026-07-23",hour:20,imp:1120,likes:34,comments:7,content:"提案文300件で返信したのは9件だけ"},
+    {date:"2026-07-23",hour:12,imp:980,likes:27,comments:6,content:"リピートを決める瞬間は3つあります",text:"発注側がリピートを決める瞬間は3つあります。\n\n1つ目は納品が早いこと。2つ目は連絡が短くて分かりやすいこと。そして一番デカいのが、納品のときに次の提案が1行添えてあることです。\n\n「ここも直すともっと良くなります」の一言で、次を探す手間が消える。発注側はいつも、考えなくていい相手を探してます。"},
+    {date:"2026-07-23",hour:20,imp:1120,likes:34,comments:7,content:"提案文300件で返信したのは9件だけ",text:"発注する側として300件の提案文を見てきました。返信したのは、たった9件です。\n\n差はスキルじゃない。291件は「私は〇〇ができます」で始まってた。返信した9件は全部「募集文のここを読みました」から始まってた。\n\n発注側は自分の話を聞いてほしいんじゃない。自分の悩みを分かってる人を探してる。"},
   ],
   followers:[
     {date:"2026-07-19",count:96},{date:"2026-07-20",count:104},{date:"2026-07-21",count:113},
@@ -188,6 +188,8 @@ const SAMPLE = { // 実データが空のときのデモ表示（本番でデー
 
 const $ = s => document.querySelector(s);
 const fmt = n => (n==null?"—":Number(n).toLocaleString());
+const esc = s => (s==null?"":String(s)).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+let VIEWPOSTS=[];
 const today = () => new Date().toISOString().slice(0,10);
 const lsGet = (k,d) => {try{return JSON.parse(localStorage.getItem(k))??d}catch(e){return d}};
 const lsSet = (k,v) => localStorage.setItem(k,JSON.stringify(v));
@@ -243,6 +245,7 @@ function render(){
   const a = ACCOUNTS[CUR];
   const d = DATA[CUR] || SAMPLE;
   const posts = (d.posts||[]).slice().sort((x,y)=>(x.date>y.date?1:-1));
+  VIEWPOSTS = posts;
   const isDemo = d===SAMPLE || d.demo;
   $("#hello").textContent = "おかえりなさい、"+a.name;
   $("#sub").innerHTML = a.handle+" ・ 更新 "+(d.generated_at||"—")+(isDemo?' ・ <b style="color:var(--accent)">サンプル表示（データ接続待ち）</b>':"");
@@ -293,18 +296,19 @@ function render(){
   const tag = totalN<5?'<span class="pill" style="background:var(--line);color:var(--ink2)">暫定・データ少</span>':"";
   $("#winsub").innerHTML = "型別の平均インプレ "+tag;
   $("#wins").innerHTML = winsArr.length? winsArr.map((w,i)=>
-    `<div class="win"><div class="rank">${i+1}</div><div class="n">${w.k}</div><div class="m">平均 ${fmt(w.avg)}｜${w.n}投稿</div></div>`
-  ).join("") : `<div class="empty">分析するには投稿を増やしてください</div>`;
+    `<div class="win" data-type="${w.k}" style="cursor:pointer"><div class="rank">${i+1}</div><div class="n">${w.k}</div><div class="m">平均 ${fmt(w.avg)}｜${w.n}投稿 ›</div></div>`
+  ).join("")+`<div style="font-size:11px;color:var(--ink3);margin-top:8px">型をタップで投稿一覧</div>` : `<div class="empty">分析するには投稿を増やしてください</div>`;
 
   // recent table（1投稿ごと・時刻と本文つき）
   const hhmm = p => (p.date||"").slice(5) + (p.hour!=null?` ${String(p.hour).padStart(2,"0")}:00`:"");
+  const rr = posts.map((p,i)=>({p,i})).slice(-8).reverse();
   $("#recent").innerHTML = posts.length? `<table class="tbl"><thead><tr><th>日時</th><th>内容</th><th style="text-align:right">インプレ</th><th style="text-align:right">いいね</th></tr></thead><tbody>`+
-    posts.slice(-8).reverse().map(p=>`<tr>
+    rr.map(({p,i})=>`<tr data-i="${i}" style="cursor:pointer">
       <td style="white-space:nowrap;color:var(--ink2)">${hhmm(p)}</td>
-      <td><div style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${(p.content||"（内容なし）")}</div><span class="pill" style="margin-top:3px;display:inline-block">${classifyHook(p.content)}</span></td>
+      <td><div style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(p.content||"（内容なし）")}</div><span class="pill" style="margin-top:3px;display:inline-block">${classifyHook(p.content||p.text)}</span></td>
       <td style="text-align:right;font-weight:600">${fmt(p.imp)}</td>
       <td style="text-align:right">${fmt(p.likes)}</td></tr>`).join("")+
-    `</tbody></table>` : `<div class="empty">投稿がまだありません</div>`;
+    `</tbody></table><div style="font-size:11px;color:var(--ink3);margin-top:8px">行をタップで全文表示</div>` : `<div class="empty">投稿がまだありません</div>`;
 
   // goals
   const apptMonth = man.filter(e=>e.date&&e.date.slice(0,7)===tkey.slice(0,7)).reduce((s,e)=>s+(Number(e.appt)||0),0);
@@ -393,6 +397,33 @@ $("#stats").addEventListener("click",e=>{
   const arw=e.target.closest(".arrow"); if(arw){openDetail(arw.dataset.detail);return;}
   const pt=e.target.closest(".ptab"); if(pt){impPeriod=pt.dataset.per;render();}
 });
+// 最近の投稿 → 全文
+function openPost(i){
+  const p=VIEWPOSTS[i]; if(!p)return;
+  const hhmm=(p.date||"").slice(5)+(p.hour!=null?` ${String(p.hour).padStart(2,"0")}:00`:"");
+  $("#dtitle").textContent="投稿の全文";
+  $("#dsub").textContent=hhmm+" ・ 型："+classifyHook(p.content||p.text);
+  $("#dbody").innerHTML=`<div style="display:flex;gap:8px;margin-bottom:14px">`+
+    [["インプレ",fmt(p.imp)],["いいね",fmt(p.likes)],["コメント",fmt(p.comments)]].map(([l,v])=>`<div style="flex:1;background:var(--bg);border-radius:12px;padding:10px;text-align:center"><div style="font-size:11px;color:var(--ink2)">${l}</div><div style="font-size:18px;font-weight:800">${v}</div></div>`).join("")+`</div>`+
+    `<div style="white-space:pre-wrap;line-height:1.8;font-size:14px;background:var(--bg);border-radius:12px;padding:16px">${esc(p.text||p.content||"（本文なし）")}</div>`;
+  $("#detailbg").classList.add("on");
+}
+// 勝ち型 → その型の投稿一覧
+function openTypePosts(key){
+  const list=VIEWPOSTS.filter(p=>classifyHook(p.content||p.text)===key);
+  const a=avg(list.filter(p=>p.imp!=null).map(p=>p.imp));
+  $("#dtitle").textContent="型："+key;
+  $("#dsub").textContent=list.length+"投稿 ・ 平均インプレ "+fmt(a);
+  $("#dbody").innerHTML= list.length? [...list].reverse().map(p=>{
+    const hhmm=(p.date||"").slice(5)+(p.hour!=null?` ${String(p.hour).padStart(2,"0")}:00`:"");
+    return `<div style="background:var(--bg);border-radius:12px;padding:12px;margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--ink3);margin-bottom:6px"><span>${hhmm}</span><span>インプレ ${fmt(p.imp)}・いいね ${fmt(p.likes)}</span></div>
+      <div style="white-space:pre-wrap;line-height:1.6;font-size:13px">${esc(p.text||p.content||"")}</div></div>`;
+  }).join("") : `<div class="empty">この型の投稿がまだありません</div>`;
+  $("#detailbg").classList.add("on");
+}
+$("#recent").addEventListener("click",e=>{const tr=e.target.closest("tr[data-i]");if(tr)openPost(+tr.dataset.i);});
+$("#wins").addEventListener("click",e=>{const w=e.target.closest(".win[data-type]");if(w)openTypePosts(w.dataset.type);});
 $("#dclose").onclick=()=>$("#detailbg").classList.remove("on");
 $("#detailbg").onclick=e=>{if(e.target===$("#detailbg"))$("#detailbg").classList.remove("on");};
 
