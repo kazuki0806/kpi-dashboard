@@ -1,0 +1,1208 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+<title>案件掲載アカウント ダッシュボード</title>
+<style>
+  :root {
+    --bg: #f2f1ec;
+    --surface: #ffffff;
+    --surface-raised: #f8f7f4;
+    --ink: #1f2422;
+    --muted: #6f7570;
+    --faint: #a3a89f;
+    --line: #e5e4dd;
+    --accent: #2e5d50;
+    --accent-soft: #e4ece7;
+    --good: #3f7d4f;
+    --good-soft: #e2efe0;
+    --warn: #b87a2e;
+    --warn-soft: #f5e8d6;
+    --bad: #aa4438;
+    --bad-soft: #f5e0dc;
+    --shadow: 0 1px 2px rgba(31,36,34,0.03), 0 10px 28px -14px rgba(31,36,34,0.14);
+    --overlay: rgba(31,36,34,0.4);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #15181a; --surface: #1d2124; --surface-raised: #22272a; --ink: #ece9e2;
+      --muted: #9a968c; --faint: #6b6a64; --line: #2b3134; --accent: #79b8a6;
+      --accent-soft: #22332e; --good: #6fbf8b; --good-soft: #1f3327; --warn: #e0a354;
+      --warn-soft: #362c1c; --bad: #e2776b; --bad-soft: #3a2420;
+      --shadow: 0 1px 2px rgba(0,0,0,0.2), 0 10px 28px -14px rgba(0,0,0,0.5);
+      --overlay: rgba(0,0,0,0.6);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #15181a; --surface: #1d2124; --surface-raised: #22272a; --ink: #ece9e2;
+    --muted: #9a968c; --faint: #6b6a64; --line: #2b3134; --accent: #79b8a6;
+    --accent-soft: #22332e; --good: #6fbf8b; --good-soft: #1f3327; --warn: #e0a354;
+    --warn-soft: #362c1c; --bad: #e2776b; --bad-soft: #3a2420;
+    --shadow: 0 1px 2px rgba(0,0,0,0.2), 0 10px 28px -14px rgba(0,0,0,0.5);
+    --overlay: rgba(0,0,0,0.6);
+  }
+  :root[data-theme="light"] {
+    --bg: #f2f1ec; --surface: #ffffff; --surface-raised: #f8f7f4; --ink: #1f2422;
+    --muted: #6f7570; --faint: #a3a89f; --line: #e5e4dd; --accent: #2e5d50;
+    --accent-soft: #e4ece7; --good: #3f7d4f; --good-soft: #e2efe0; --warn: #b87a2e;
+    --warn-soft: #f5e8d6; --bad: #aa4438; --bad-soft: #f5e0dc;
+    --shadow: 0 1px 2px rgba(31,36,34,0.03), 0 10px 28px -14px rgba(31,36,34,0.14);
+    --overlay: rgba(31,36,34,0.4);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Noto Sans JP", sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 36px 22px 72px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+  header { display: flex; flex-direction: column; gap: 5px; }
+  .eyebrow {
+    font-size: 12px; letter-spacing: 0.06em; color: var(--accent); font-weight: 700;
+  }
+  h1 {
+    font-family: Georgia, "Iowan Old Style", "Noto Serif JP", serif;
+    font-size: 30px; font-weight: 600; margin: 0; letter-spacing: -0.01em; text-wrap: balance;
+  }
+  .subtitle-row { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; }
+  .subtitle { color: var(--muted); font-size: 13.5px; margin: 0; }
+  .update-note { font-size: 12px; color: var(--faint); }
+
+  /* ---- 上段：フォロワー + インプレッション ---- */
+  .top-grid { display: grid; grid-template-columns: 300px 1fr; gap: 16px; }
+  @media (min-width: 761px) { #followerHero { aspect-ratio: 1 / 1; } }
+  @media (max-width: 760px) { .top-grid { grid-template-columns: 1fr; } }
+
+  .hero {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 22px 24px 18px;
+    box-shadow: var(--shadow);
+    display: flex; flex-direction: column;
+  }
+  .hero.accent { border: 1.5px solid var(--accent); }
+  .hero-clickable { cursor: pointer; transition: transform 0.12s ease; }
+  .hero-clickable:hover { transform: translateY(-1px); }
+  .hero-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+  .hero-title { font-size: 15px; font-weight: 700; }
+  .hero-value {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-variant-numeric: tabular-nums;
+    font-size: 40px; font-weight: 700;
+    display: flex; align-items: baseline; gap: 7px; margin-top: 10px;
+  }
+  .hero-value .unit { font-family: -apple-system, sans-serif; font-size: 14px; font-weight: 500; color: var(--muted); }
+  .hero-sub { font-size: 12px; color: var(--faint); margin-top: 4px; }
+  .hero-chart { margin-top: 12px; overflow-x: auto; flex: 1; display: flex; align-items: flex-end; }
+
+  .tabs { display: inline-flex; gap: 4px; background: var(--surface-raised); border: 1px solid var(--line); border-radius: 8px; padding: 3px; margin-top: 10px; align-self: flex-start; }
+  .tab {
+    border: none; background: none; color: var(--muted); font-size: 12px; font-weight: 600;
+    padding: 4px 12px; border-radius: 6px; cursor: pointer; font-family: inherit;
+  }
+  .tab.active { background: var(--surface); color: var(--accent); box-shadow: 0 1px 2px rgba(0,0,0,0.08); }
+
+  /* ---- カード ---- */
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  @media (max-width: 760px) { .grid { grid-template-columns: 1fr; } }
+  .grid.wide { grid-template-columns: repeat(3, 1fr); }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 20px 22px 16px;
+    box-shadow: var(--shadow);
+    text-align: left; cursor: pointer;
+    display: flex; flex-direction: column; gap: 9px;
+    font-family: inherit; color: inherit;
+    transition: transform 0.12s ease, border-color 0.12s ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .card:hover { transform: translateY(-1px); border-color: var(--accent); }
+  .card-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+  .card-label { font-size: 14px; color: var(--ink); font-weight: 700; line-height: 1.4; }
+  .card-label small { display: block; font-size: 11.5px; color: var(--muted); font-weight: 500; }
+  .pill {
+    font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 999px;
+    white-space: nowrap; letter-spacing: 0.01em;
+  }
+  .pill.good { background: var(--good-soft); color: var(--good); }
+  .pill.warn { background: var(--warn-soft); color: var(--warn); }
+  .pill.flat { background: var(--surface-raised); color: var(--muted); }
+  .delta { font-size: 12px; font-weight: 700; font-variant-numeric: tabular-nums; display: inline-flex; align-items: center; gap: 2px; }
+  .delta.up { color: var(--good); }
+  .delta.down { color: var(--bad); }
+  .delta.flat { color: var(--faint); }
+  .delta-label { font-size: 11px; color: var(--faint); font-weight: 500; margin-right: 3px; }
+  .card-value {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-variant-numeric: tabular-nums;
+    font-size: 32px; font-weight: 700;
+    display: flex; align-items: baseline; gap: 6px;
+  }
+  .card-value .unit { font-family: -apple-system, sans-serif; font-size: 13px; font-weight: 500; color: var(--muted); }
+  .card-sub { font-size: 11.5px; color: var(--faint); }
+  .card svg.spark { width: 100%; height: 34px; display: block; }
+
+  /* ---- パネル（週次・目標・分析） ---- */
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 20px 24px 20px;
+    box-shadow: var(--shadow);
+  }
+  .panel-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
+  .panel-title { font-size: 15px; font-weight: 700; }
+  .panel-note { font-size: 11.5px; color: var(--faint); }
+  .panel-edit {
+    background: none; border: 1px solid var(--line); color: var(--accent); border-radius: 7px;
+    padding: 4px 12px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit;
+  }
+  .panel-edit:hover { border-color: var(--accent); background: var(--accent-soft); }
+
+  .stat-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  @media (max-width: 640px) { .stat-row { grid-template-columns: 1fr; } }
+  .stat {
+    background: var(--surface-raised); border-radius: 12px; padding: 14px 16px;
+    display: flex; flex-direction: column; gap: 4px;
+  }
+  .stat-label { font-size: 12px; color: var(--muted); font-weight: 600; }
+  .stat-value {
+    font-family: ui-monospace, monospace; font-variant-numeric: tabular-nums;
+    font-size: 24px; font-weight: 700; display: flex; align-items: baseline; gap: 5px;
+  }
+  .stat-value .unit { font-family: -apple-system, sans-serif; font-size: 12px; color: var(--muted); font-weight: 500; }
+  .stat-sub { font-size: 11px; color: var(--faint); }
+
+  .goal-row { display: flex; flex-direction: column; gap: 14px; }
+  .goal-item { display: flex; flex-direction: column; gap: 5px; }
+  .goal-head { display: flex; justify-content: space-between; align-items: baseline; font-size: 13px; }
+  .goal-name { font-weight: 600; }
+  .goal-nums { font-variant-numeric: tabular-nums; color: var(--muted); font-size: 12.5px; }
+  .goal-bar { height: 9px; background: var(--surface-raised); border-radius: 999px; overflow: hidden; }
+  .goal-fill { height: 100%; border-radius: 999px; background: var(--accent); transition: width 0.3s ease; }
+  .goal-fill.done { background: var(--good); }
+  .goal-edit-row { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; }
+  .goal-edit-row input {
+    width: 110px; background: var(--surface-raised); border: 1px solid var(--line); border-radius: 7px;
+    padding: 6px 9px; font-size: 13px; color: var(--ink); font-variant-numeric: tabular-nums; font-family: inherit;
+  }
+
+  /* 分析テーブル */
+  .rank-bar-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+  .rank-bar-item { display: grid; grid-template-columns: 130px 1fr auto; gap: 10px; align-items: center; font-size: 12.5px; }
+  @media (max-width: 560px) { .rank-bar-item { grid-template-columns: 100px 1fr auto; } }
+  .rank-bar-name { font-weight: 600; line-height: 1.3; }
+  .rank-bar-name small { display: block; color: var(--faint); font-weight: 500; font-size: 10.5px; }
+  .rank-bar-track { height: 20px; background: var(--surface-raised); border-radius: 6px; overflow: hidden; }
+  .rank-bar-fill { height: 100%; background: var(--accent); border-radius: 6px; min-width: 2px; }
+  .rank-bar-val { font-variant-numeric: tabular-nums; font-weight: 700; font-size: 13px; white-space: nowrap; }
+
+  .hero-toggle {
+    background: var(--surface); border: 1px solid var(--line); color: var(--accent); font-size: 13.5px; font-weight: 700;
+    cursor: pointer; padding: 12px 14px; text-align: center; border-radius: 12px; width: 100%; font-family: inherit;
+  }
+  .hero-toggle:hover { border-color: var(--accent); background: var(--accent-soft); }
+
+  /* modal */
+  .modal-overlay {
+    position: fixed; inset: 0; background: var(--overlay);
+    display: none; align-items: flex-end; justify-content: center; z-index: 50;
+  }
+  .modal-overlay.open { display: flex; }
+  @media (min-width: 640px) { .modal-overlay { align-items: center; padding: 24px; } }
+  .modal {
+    background: var(--surface); width: 100%; max-width: 680px; max-height: 88vh; overflow-y: auto;
+    border-radius: 16px 16px 0 0; box-shadow: 0 -8px 40px rgba(0,0,0,0.25); padding: 20px 22px 28px;
+  }
+  @media (min-width: 640px) { .modal { border-radius: 16px; box-shadow: var(--shadow); } }
+  .modal-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 4px; }
+  .modal-title { font-size: 17px; font-weight: 700; }
+  .modal-close {
+    background: var(--surface-raised); border: 1px solid var(--line); color: var(--muted);
+    border-radius: 8px; width: 30px; height: 30px; font-size: 15px; cursor: pointer; flex-shrink: 0;
+  }
+  .modal-close:hover { color: var(--ink); }
+  .modal-desc { font-size: 12.5px; color: var(--muted); margin: 2px 0 14px; }
+  .modal-chart { overflow-x: auto; }
+
+  .sort-btns { display: flex; gap: 6px; margin: 4px 0 10px; }
+  .sort-btn {
+    background: var(--surface-raised); border: 1px solid var(--line); color: var(--muted); border-radius: 7px;
+    padding: 5px 12px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit;
+  }
+  .sort-btn.active { color: var(--accent); border-color: var(--accent); background: var(--accent-soft); }
+
+  .rank-list { list-style: none; margin: 14px 0 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+  .rank-item {
+    display: grid; grid-template-columns: 24px 1fr auto; gap: 10px; align-items: center;
+    padding: 8px 0; border-bottom: 1px solid var(--line);
+  }
+  .rank-item:last-child { border-bottom: none; }
+  .rank-num { font-size: 11px; color: var(--faint); font-weight: 700; }
+  .rank-text { font-size: 12.5px; line-height: 1.4; }
+  .rank-date { font-size: 10.5px; color: var(--faint); }
+  .rank-imp { font-family: ui-monospace, monospace; font-variant-numeric: tabular-nums; font-size: 13px; font-weight: 700; white-space: nowrap; }
+  .rank-imp small { font-weight: 500; color: var(--faint); }
+
+  form.entry { display: grid; grid-template-columns: 1fr 1fr auto; gap: 9px; align-items: end; margin-top: 14px; }
+  @media (max-width: 480px) { form.entry { grid-template-columns: 1fr; } }
+  label { font-size: 11.5px; color: var(--muted); font-weight: 600; display: block; margin-bottom: 4px; }
+  input[type="number"], input[type="date"] {
+    width: 100%; background: var(--surface-raised); border: 1px solid var(--line); border-radius: 7px;
+    padding: 8px 9px; font-size: 13.5px; color: var(--ink); font-variant-numeric: tabular-nums; font-family: inherit;
+  }
+  input:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  button.add {
+    background: var(--accent); color: var(--surface); border: none; border-radius: 7px;
+    padding: 8px 14px; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; font-family: inherit;
+  }
+  button.add:hover { opacity: 0.9; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 12.5px; margin-top: 12px; }
+  th {
+    text-align: left; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.04em;
+    color: var(--faint); font-weight: 600; padding: 5px 6px; border-bottom: 1px solid var(--line);
+  }
+  td { padding: 6px; border-bottom: 1px solid var(--line); font-variant-numeric: tabular-nums; }
+  td.num { text-align: right; }
+  tr:last-child td { border-bottom: none; }
+  .empty-row td { color: var(--faint); font-style: italic; text-align: center; padding: 16px 6px; }
+  .del-btn { background: none; border: none; color: var(--faint); cursor: pointer; font-size: 11.5px; padding: 2px 5px; }
+  .del-btn:hover { color: var(--bad); }
+</style>
+
+<div class="wrap">
+  <style>
+  .acct-tabs { display:flex; flex-wrap:wrap; gap:8px; margin:14px 0 4px; }
+  .acct-tab { padding:7px 14px; border-radius:999px; border:1px solid var(--border,#ddd);
+    background:transparent; color:inherit; font-size:14px; cursor:pointer; }
+  .acct-tab.active { background:#2f6f4f; color:#fff; border-color:#2f6f4f; }
+</style>
+<header>
+    <div class="eyebrow">案件掲載アカウント（動画編集・SNS運用）</div>
+    <h1>案件掲載アカウント ダッシュボード</h1>
+    <div class="subtitle-row">
+      <p class="subtitle">カードをタップすると詳細が開きます</p>
+      <span id="lastUpdated" class="update-note"></span>
+    </div>
+    <div id="accountTabs" class="acct-tabs"></div>
+  </header>
+
+  <div class="top-grid">
+    <div class="hero hero-clickable" id="followerHero">
+      <div class="hero-head">
+        <div class="hero-title">フォロワー数</div>
+        <span class="pill" id="followerPill"></span>
+      </div>
+      <div class="hero-value" id="followerHeroValue"></div>
+      <div class="hero-sub" id="followerHeroSub"></div>
+      <div class="hero-chart"><svg id="followerChart" style="height:110px; display:block; width:100%"></svg></div>
+    </div>
+    <div class="hero accent hero-clickable" id="impHero">
+      <div class="hero-head">
+        <div class="hero-title">平均インプレッション（今月）</div>
+        <span class="pill" id="impPill"></span>
+      </div>
+      <div class="hero-value" id="impHeroValue"></div>
+      <div class="hero-sub" id="impHeroSub"></div>
+      <div class="tabs" id="periodTabs">
+        <button type="button" class="tab" data-period="7">7日</button>
+        <button type="button" class="tab active" data-period="30">30日</button>
+        <button type="button" class="tab" data-period="all">全期間</button>
+      </div>
+      <div class="hero-chart"><svg id="heroChart" style="height:140px; display:block; width:100%"></svg></div>
+    </div>
+  </div>
+
+  <div class="grid" id="primaryGrid"></div>
+
+  <section class="panel">
+    <div class="panel-head">
+      <div class="panel-title">週次サマリー</div>
+      <div class="panel-note">直近7日 vs その前7日</div>
+    </div>
+    <div class="stat-row" id="weeklyRow"></div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head">
+      <div class="panel-title">今月の目標</div>
+      <button type="button" class="panel-edit" id="goalEditBtn">目標を編集</button>
+    </div>
+    <div class="goal-row" id="goalRow"></div>
+  </section>
+
+  <button type="button" class="hero-toggle" id="detailsToggle">詳細を見る ▾</button>
+
+  <div id="detailsWrap" hidden style="display:flex; flex-direction:column; gap:18px;">
+    <div class="grid" id="detailGrid"></div>
+
+    <section class="panel">
+      <div class="panel-head">
+        <div class="panel-title">フックの型別分析</div>
+        <div class="panel-note">投稿文の冒頭パターン別・平均インプレッション</div>
+      </div>
+      <ul class="rank-bar-list" id="hookList"></ul>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <div class="panel-title">時間帯別の平均インプレッション</div>
+        <div class="panel-note" id="hourNote"></div>
+      </div>
+      <ul class="rank-bar-list" id="hourList"></ul>
+    </section>
+
+    <button type="button" class="hero-toggle" id="postListBtn">投稿一覧を見る（全投稿の並べ替え）</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal" id="modalBody"></div>
+</div>
+
+<script>
+  const EMBEDDED_GENERATED_AT = "2026-08-05 12:54";
+  const EMBEDDED_POSTS = [{"account": "池田", "subAccount": null, "date": "2026-08-05", "hour": 12, "imp": 0, "content": "[池田] 【テスト】動画編集の未経験枠、募集中です。", "likes": 0, "comments": 0, "reposts": null, "shares": null}];
+  const EMBEDDED_FOLLOWERS = [];
+
+  const STORAGE_KEY = "annken_kpi_manual_entries_v1";
+  const DATA_STORAGE_KEY = "annken_kpi_imported_data_v1";
+  const GOALS_KEY = "annken_kpi_goals_v1";
+
+  function loadEntries() {
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
+    catch(e) { return []; }
+  }
+  function saveEntries(entries) { localStorage.setItem(STORAGE_KEY, JSON.stringify(entries)); }
+  function loadGoals() {
+    try { return Object.assign({follower: 150, chat: 100, appt: 10}, JSON.parse(localStorage.getItem(GOALS_KEY)) || {}); }
+    catch(e) { return {follower: 150, chat: 100, appt: 10}; }
+  }
+  function saveGoals(g) { localStorage.setItem(GOALS_KEY, JSON.stringify(g)); }
+
+  function fmtDate(d) { const [y,m,day] = d.split("-"); return `${m}/${day}`; }
+  function fmtNum(n) { return (n === null || n === undefined) ? "—" : Number(n).toLocaleString(); }
+
+  function deltaBadge(delta, label) {
+    const labelHtml = label ? `<span class="delta-label">${label}</span>` : "";
+    if (delta === null || delta === undefined) return `${labelHtml}<span class="delta flat">—</span>`;
+    if (delta > 0) return `${labelHtml}<span class="delta up">▲${fmtNum(delta)}</span>`;
+    if (delta < 0) return `${labelHtml}<span class="delta down">▼${fmtNum(Math.abs(delta))}</span>`;
+    return `${labelHtml}<span class="delta flat">±0</span>`;
+  }
+
+  // ---- 状態 ----
+  let posts, dailyPosts, totalImp, avgImp, sortedByImp, maxPost, minPost, goalDays, goalRate, generatedAt;
+  let primaryCards, detailCards;
+  let totalLikes, avgLikes, totalComments, totalReposts, totalShares;
+  let monthAvgImp, monthPostsCount, todayCount, todayDate;
+  let followers, latestFollowers, followerDelta;
+  let deltaCount, deltaAvg, deltaLikes, deltaComments, deltaReposts, deltaShares;
+  let chartPeriod = "30";
+
+  function sumField(field) { return posts.reduce((s,p) => s + (p[field] || 0), 0); }
+  function currentMonthPrefix() {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}`;
+  }
+  function dayOverDay(field) {
+    if (dailyPosts.length < 2) return null;
+    return dailyPosts[dailyPosts.length-1][field] - dailyPosts[dailyPosts.length-2][field];
+  }
+  function dateNDaysAgo(n) {
+    const d = new Date();
+    d.setDate(d.getDate() - n);
+    return d.toISOString().slice(0,10);
+  }
+
+  function computeState(postsData, genAt, followersData) {
+    posts = (postsData || []).filter(p => p && p.date && typeof p.imp === "number");
+    generatedAt = genAt;
+    followers = (followersData || []).slice().sort((a,b) => a.date.localeCompare(b.date));
+    if (!posts.length) {
+      posts = [{date: new Date().toISOString().slice(0,10), hour: null, imp: 0, content: "（データなし）", likes: 0, comments: 0, reposts: 0, shares: 0}];
+    }
+
+    const byDay = {};
+    posts.forEach(p => {
+      if (!byDay[p.date]) byDay[p.date] = { count: 0, sum: 0, likes: 0, comments: 0, reposts: 0, shares: 0 };
+      byDay[p.date].count += 1;
+      byDay[p.date].sum += p.imp;
+      byDay[p.date].likes += (p.likes || 0);
+      byDay[p.date].comments += (p.comments || 0);
+      byDay[p.date].reposts += (p.reposts || 0);
+      byDay[p.date].shares += (p.shares || 0);
+    });
+    const days = Object.keys(byDay).sort();
+    dailyPosts = days.map(d => ({
+      date: d, count: byDay[d].count, avg: Math.round(byDay[d].sum / byDay[d].count),
+      likes: byDay[d].likes, comments: byDay[d].comments, reposts: byDay[d].reposts, shares: byDay[d].shares,
+    }));
+
+    totalImp = posts.reduce((s,p) => s + p.imp, 0);
+    avgImp = Math.round(totalImp / posts.length);
+    sortedByImp = [...posts].sort((a,b) => b.imp - a.imp);
+    maxPost = sortedByImp[0];
+    minPost = sortedByImp[sortedByImp.length - 1];
+    goalDays = dailyPosts.filter(d => d.count >= 5).length;
+    goalRate = Math.round((goalDays / dailyPosts.length) * 100);
+
+    totalLikes = sumField("likes");
+    avgLikes = Math.round((totalLikes / posts.length) * 10) / 10;
+    totalComments = sumField("comments");
+    totalReposts = sumField("reposts");
+    totalShares = sumField("shares");
+
+    const monthPrefix = currentMonthPrefix();
+    const monthPosts = posts.filter(p => p.date.startsWith(monthPrefix));
+    monthPostsCount = monthPosts.length;
+    monthAvgImp = monthPosts.length ? Math.round(monthPosts.reduce((s,p)=>s+p.imp,0)/monthPosts.length) : null;
+
+    const lastDay = dailyPosts[dailyPosts.length - 1];
+    todayCount = lastDay ? lastDay.count : 0;
+    todayDate = lastDay ? lastDay.date : null;
+
+    deltaCount = dayOverDay("count");
+    deltaAvg = dayOverDay("avg");
+    deltaLikes = dayOverDay("likes");
+    deltaComments = dayOverDay("comments");
+    deltaReposts = dayOverDay("reposts");
+    deltaShares = dayOverDay("shares");
+
+    latestFollowers = followers.length ? followers[followers.length-1].count : null;
+    followerDelta = followers.length >= 2 ? latestFollowers - followers[followers.length-2].count : null;
+
+    primaryCards = buildPrimaryCards();
+    detailCards = buildDetailCards();
+  }
+
+  function loadStoredData() {
+    try {
+      const raw = localStorage.getItem(DATA_STORAGE_KEY);
+      if (!raw) return null;
+      return JSON.parse(raw);
+    } catch(e) { return null; }
+  }
+
+  function normalizeImport(json) {
+    if (Array.isArray(json)) return { generated_at: new Date().toISOString().slice(0,10), posts: json, followers: [] };
+    if (json && Array.isArray(json.posts)) return {
+      generated_at: json.generated_at || new Date().toISOString().slice(0,10),
+      posts: json.posts, followers: json.followers || [],
+    };
+    throw new Error("認識できないJSON形式です");
+  }
+
+  // ---- SVG ----
+  function svgLine(el, points, opts) {
+    const {height=150, goalY=null, fit=false} = opts || {};
+    const pad = {top: 12, right: 10, bottom: 20, left: 4};
+    // fit=true: コンテナ幅に収める（横スクロールさせない）。falseは点数に応じて横に伸ばす
+    const w = fit ? 700 : Math.max(560, points.length * 26);
+    const h = height;
+    el.setAttribute("viewBox", `0 0 ${w} ${h}`);
+    el.setAttribute("preserveAspectRatio", "none");
+    el.style.width = fit ? "100%" : w + "px";
+    const vals = points.map(p => p.v).filter(v => v !== null && v !== undefined);
+    if (!vals.length) {
+      el.innerHTML = `<text x="${w/2}" y="${h/2}" font-size="12" fill="var(--faint)" text-anchor="middle">まだデータがありません</text>`;
+      return;
+    }
+    const maxV = Math.max(...vals, goalY || 0) * 1.15 || 1;
+    const xStep = (w - pad.left - pad.right) / Math.max(points.length - 1, 1);
+    const y = v => h - pad.bottom - (v / maxV) * (h - pad.top - pad.bottom);
+    const x = i => pad.left + i * xStep;
+    let svg = "";
+    if (goalY !== null) {
+      const gy = y(goalY);
+      svg += `<line x1="${pad.left}" y1="${gy}" x2="${w-pad.right}" y2="${gy}" stroke="var(--bad)" stroke-width="1" stroke-dasharray="4 3" opacity="0.55"/>`;
+    }
+    svg += `<line x1="${pad.left}" y1="${h-pad.bottom}" x2="${w-pad.right}" y2="${h-pad.bottom}" stroke="var(--line)" stroke-width="1"/>`;
+    let pathD = "", areaD = "", started = false;
+    points.forEach((p,i) => {
+      if (p.v === null || p.v === undefined) { started = false; return; }
+      const cx = x(i), cy = y(p.v);
+      pathD += (started ? "L" : "M") + cx + "," + cy + " ";
+      areaD += (started ? "L" : "M" + cx + "," + (h-pad.bottom) + " L") + cx + "," + cy + " ";
+      started = true;
+    });
+    if (started) areaD += `L${x(points.length-1)},${h-pad.bottom} Z`;
+    svg += `<path d="${areaD}" fill="var(--accent-soft)" stroke="none"/>`;
+    svg += `<path d="${pathD}" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`;
+    points.forEach((p,i) => {
+      if (p.v === null || p.v === undefined) return;
+      const cx = x(i), cy = y(p.v);
+      const isLast = i === points.length - 1;
+      svg += `<circle cx="${cx}" cy="${cy}" r="${isLast ? 3.5 : 2}" fill="var(--accent)"/>`;
+      if (i % Math.ceil(points.length / 10 || 1) === 0 || isLast) {
+        svg += `<text x="${cx}" y="${h-5}" font-size="9.5" fill="var(--faint)" text-anchor="middle">${fmtDate(p.date)}</text>`;
+      }
+    });
+    el.innerHTML = svg;
+  }
+
+  function sparkline(el, values, opts) {
+    const {width=140, height=34, goalY=null} = opts || {};
+    el.setAttribute("viewBox", `0 0 ${width} ${height}`);
+    el.setAttribute("preserveAspectRatio", "none");
+    const vals = values.filter(v => v !== null && v !== undefined && !isNaN(v));
+    if (!vals.length) { el.innerHTML = ""; return; }
+    const maxV = Math.max(...vals, goalY||0) * 1.1 || 1;
+    const xStep = width / Math.max(values.length - 1, 1);
+    const y = v => height - (v / maxV) * (height - 4) - 2;
+    let d = "", started = false;
+    values.forEach((v,i) => {
+      if (v === null || v === undefined || isNaN(v)) { started = false; return; }
+      const cx = i * xStep, cy = y(v);
+      d += (started ? "L" : "M") + cx + "," + cy + " ";
+      started = true;
+    });
+    let svg = "";
+    if (goalY !== null) svg += `<line x1="0" y1="${y(goalY)}" x2="${width}" y2="${y(goalY)}" stroke="var(--bad)" stroke-width="1" stroke-dasharray="3 2" opacity="0.5"/>`;
+    svg += `<path d="${d}" fill="none" stroke="var(--accent)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>`;
+    const lastIdx = values.length - 1;
+    if (values[lastIdx] !== null && values[lastIdx] !== undefined && !isNaN(values[lastIdx])) svg += `<circle cx="${lastIdx*xStep}" cy="${y(values[lastIdx])}" r="2.3" fill="var(--accent)"/>`;
+    el.innerHTML = svg;
+  }
+
+  // ---- カード定義 ----
+  function buildPrimaryCards() {
+    return [
+      {
+        id: "posts_today", label: "本日の投稿数<small>(目標5件)</small>", value: todayCount, unit: "件",
+        sub: todayDate ? `${fmtDate(todayDate)}時点` : "データなし",
+        pill: todayCount >= 5 ? {t:"good", l:"達成"} : {t:"warn", l:"未達"},
+        spark: dailyPosts.slice(-14).map(d=>d.count), goalY: 5, delta: deltaCount,
+      },
+      {
+        id: "chat", label: "オープンチャット<small>参加者数</small>", value: null, unit: "人",
+        sub: "タップして記録", pill: {t:"flat", l:"手入力"},
+        spark: [],
+      },
+      {
+        id: "appt", label: "アポ取り数<small>(直近7日合計)</small>", value: null, unit: "件",
+        sub: "タップして記録", pill: {t:"flat", l:"手入力"},
+        spark: [],
+      },
+    ];
+  }
+
+  function buildDetailCards() {
+    const days = dailyPosts.map(d => d.date);
+    return [
+      {
+        id: "total", label: "合計インプレッション<small>(全期間)</small>", value: totalImp, unit: "imp",
+        sub: `${days[0]}〜${days[days.length-1]}`, pill: null,
+        spark: (() => { let c=0; return dailyPosts.map(d => c += d.avg*d.count); })().slice(-14),
+      },
+      {
+        id: "max", label: "最高インプレッション", value: maxPost.imp, unit: "imp",
+        sub: fmtDate(maxPost.date) + " の投稿", pill: {t:"good", l:"ベスト"},
+        spark: dailyPosts.slice(-14).map(d=>d.avg),
+      },
+      {
+        id: "min", label: "最低インプレッション", value: minPost.imp, unit: "imp",
+        sub: fmtDate(minPost.date) + " の投稿", pill: {t:"warn", l:"要改善"},
+        spark: dailyPosts.slice(-14).map(d=>d.avg),
+      },
+      {
+        id: "posts", label: "1日5投稿 達成率<small>(全期間)</small>", value: goalRate, unit: "%",
+        sub: `${goalDays}/${dailyPosts.length}日で達成`, pill: goalRate >= 70 ? {t:"good", l:"良好"} : {t:"warn", l:"要注意"},
+        spark: dailyPosts.slice(-14).map(d=>d.count), goalY: 5,
+      },
+      {
+        id: "likes_total", label: "合計いいね数", value: totalLikes, unit: "いいね",
+        sub: `全${posts.length}投稿の合計`, pill: null,
+        spark: dailyPosts.slice(-14).map(d=>d.likes), delta: deltaLikes,
+      },
+      {
+        id: "likes_avg", label: "平均いいね数<small>(1投稿あたり)</small>", value: avgLikes, unit: "いいね",
+        sub: `全${posts.length}投稿の平均`, pill: null,
+        spark: dailyPosts.slice(-14).map(d=>d.likes),
+      },
+      {
+        id: "comments_total", label: "コメント数<small>(全期間)</small>", value: totalComments, unit: "件",
+        sub: `全${posts.length}投稿の合計`, pill: null,
+        spark: dailyPosts.slice(-14).map(d=>d.comments), delta: deltaComments,
+      },
+      {
+        id: "reposts_total", label: "リポスト数<small>(全期間)</small>", value: totalReposts, unit: "件",
+        sub: `全${posts.length}投稿の合計`, pill: null,
+        spark: dailyPosts.slice(-14).map(d=>d.reposts), delta: deltaReposts,
+      },
+      {
+        id: "shares_total", label: "シェア数<small>(全期間)</small>", value: totalShares, unit: "件",
+        sub: `全${posts.length}投稿の合計`, pill: null,
+        spark: dailyPosts.slice(-14).map(d=>d.shares), delta: deltaShares,
+      },
+    ];
+  }
+
+  // ---- フックの型分類 ----
+  const HOOK_PATTERNS = [
+    { name: "条件リスト型", hint: "❶❷❸で条件を並べる", test: c => /[❶❷❸①②③]/.test(c) },
+    { name: "「〇〇選」型", hint: "数字+選で列挙", test: c => /\d+選/.test(c) },
+    { name: "全部書く型", hint: "やったこと全部書く", test: c => /全部書/.test(c) },
+    { name: "相談・対話型", hint: "相談されました等", test: c => /(相談され|聞かれ|言われ|聞いた)/.test(c) },
+    { name: "権威開示型", hint: "〜だから言います", test: c => /(から言います|ので言います|していたから|していたので)/.test(c) },
+    { name: "質問投げかけ型", hint: "〜ですか？で終わる", test: c => /(ですか|ますか)？/.test(c) },
+    { name: "数字実績型", hint: "具体的な数字を提示", test: c => /\d+(万|件|%|人|円|倍|回)/.test(c) },
+    { name: "その他", hint: "上記以外", test: () => true },
+  ];
+
+  function classifyHook(content) {
+    for (const p of HOOK_PATTERNS) if (p.test(content)) return p.name;
+    return "その他";
+  }
+
+  function renderHookAnalysis() {
+    const groups = {};
+    posts.forEach(p => {
+      const type = classifyHook(p.content);
+      if (!groups[type]) groups[type] = { sum: 0, count: 0 };
+      groups[type].sum += p.imp;
+      groups[type].count += 1;
+    });
+    const rows = Object.entries(groups)
+      .map(([name, g]) => ({ name, count: g.count, avg: Math.round(g.sum / g.count) }))
+      .sort((a,b) => b.avg - a.avg);
+    const maxAvg = Math.max(...rows.map(r => r.avg), 1);
+    const hint = Object.fromEntries(HOOK_PATTERNS.map(p => [p.name, p.hint]));
+    document.getElementById("hookList").innerHTML = rows.map(r => `
+      <li class="rank-bar-item">
+        <span class="rank-bar-name">${r.name}<small>${hint[r.name] || ""} ・ ${r.count}投稿</small></span>
+        <span class="rank-bar-track"><span class="rank-bar-fill" style="width:${Math.round(r.avg/maxAvg*100)}%"></span></span>
+        <span class="rank-bar-val">${fmtNum(r.avg)}<small> imp</small></span>
+      </li>
+    `).join("");
+  }
+
+  // ---- 時間帯別分析 ----
+  const HOUR_BUCKETS = [
+    { name: "朝（5〜10時）", from: 5, to: 10 },
+    { name: "昼（11〜14時）", from: 11, to: 14 },
+    { name: "夕方（15〜18時）", from: 15, to: 18 },
+    { name: "夜（19〜22時）", from: 19, to: 22 },
+    { name: "深夜（23〜4時）", from: 23, to: 4 },
+  ];
+
+  function renderHourAnalysis() {
+    const withHour = posts.filter(p => p.hour !== null && p.hour !== undefined);
+    document.getElementById("hourNote").textContent = `時刻が記録されている${withHour.length}投稿を集計（手動即時投稿は時刻なし）`;
+    const rows = HOUR_BUCKETS.map(b => {
+      const inBucket = withHour.filter(p => b.from <= b.to ? (p.hour >= b.from && p.hour <= b.to) : (p.hour >= b.from || p.hour <= b.to));
+      return { name: b.name, count: inBucket.length, avg: inBucket.length ? Math.round(inBucket.reduce((s,p)=>s+p.imp,0)/inBucket.length) : null };
+    }).filter(r => r.count > 0).sort((a,b) => b.avg - a.avg);
+    if (!rows.length) {
+      document.getElementById("hourList").innerHTML = `<li class="rank-bar-item"><span class="rank-bar-name">データなし</span></li>`;
+      return;
+    }
+    const maxAvg = Math.max(...rows.map(r => r.avg), 1);
+    document.getElementById("hourList").innerHTML = rows.map(r => `
+      <li class="rank-bar-item">
+        <span class="rank-bar-name">${r.name}<small>${r.count}投稿</small></span>
+        <span class="rank-bar-track"><span class="rank-bar-fill" style="width:${Math.round(r.avg/maxAvg*100)}%"></span></span>
+        <span class="rank-bar-val">${fmtNum(r.avg)}<small> imp</small></span>
+      </li>
+    `).join("");
+  }
+
+  // ---- 週次サマリー ----
+  function renderWeekly() {
+    const d7 = dateNDaysAgo(7), d14 = dateNDaysAgo(14);
+    const thisWeek = posts.filter(p => p.date > d7);
+    const lastWeek = posts.filter(p => p.date > d14 && p.date <= d7);
+    const twCount = thisWeek.length, lwCount = lastWeek.length;
+    const twAvg = twCount ? Math.round(thisWeek.reduce((s,p)=>s+p.imp,0)/twCount) : null;
+    const lwAvg = lwCount ? Math.round(lastWeek.reduce((s,p)=>s+p.imp,0)/lwCount) : null;
+
+    const fThis = followers.filter(f => f.date > d7);
+    const fBefore = followers.filter(f => f.date <= d7);
+    let followerGain = null;
+    if (fThis.length && fBefore.length) followerGain = fThis[fThis.length-1].count - fBefore[fBefore.length-1].count;
+    else if (fThis.length >= 2) followerGain = fThis[fThis.length-1].count - fThis[0].count;
+
+    document.getElementById("weeklyRow").innerHTML = `
+      <div class="stat">
+        <span class="stat-label">投稿数（今週）</span>
+        <span class="stat-value">${twCount}<span class="unit">件</span></span>
+        <span class="stat-sub">先週 ${lwCount}件 ${deltaBadge(lwCount || twCount ? twCount - lwCount : null, "")}</span>
+      </div>
+      <div class="stat">
+        <span class="stat-label">平均インプレッション（今週）</span>
+        <span class="stat-value">${fmtNum(twAvg)}<span class="unit">imp</span></span>
+        <span class="stat-sub">先週 ${fmtNum(lwAvg)}imp ${deltaBadge(twAvg !== null && lwAvg !== null ? twAvg - lwAvg : null, "")}</span>
+      </div>
+      <div class="stat">
+        <span class="stat-label">フォロワー純増（今週）</span>
+        <span class="stat-value">${followerGain === null ? "—" : (followerGain >= 0 ? "+" : "") + fmtNum(followerGain)}<span class="unit">人</span></span>
+        <span class="stat-sub">${followers.length < 2 ? "データを蓄積中です" : "7日前との比較"}</span>
+      </div>
+    `;
+  }
+
+  // ---- 月間目標 ----
+  let goalEditing = false;
+
+  function renderGoals() {
+    const goals = loadGoals();
+    const entries = loadEntries().sort((a,b)=>a.date.localeCompare(b.date));
+    const chatEntries = entries.filter(e => e.chat !== undefined && e.chat !== "");
+    const latestChat = chatEntries.length ? Number(chatEntries[chatEntries.length-1].chat) : null;
+    const monthPrefix = currentMonthPrefix();
+    const apptMonth = entries.filter(e => e.date.startsWith(monthPrefix)).reduce((s,e)=>s+(Number(e.appt)||0),0);
+
+    const items = [
+      { key: "follower", name: "フォロワー数", current: latestFollowers, goal: goals.follower, unit: "人" },
+      { key: "chat", name: "オープンチャット参加者数", current: latestChat, goal: goals.chat, unit: "人" },
+      { key: "appt", name: `アポ取り数（${monthPrefix.slice(5)}月）`, current: apptMonth, goal: goals.appt, unit: "件" },
+    ];
+
+    const row = document.getElementById("goalRow");
+    if (goalEditing) {
+      row.innerHTML = items.map(it => `
+        <div class="goal-item">
+          <div class="goal-edit-row">
+            <span class="goal-name">${it.name}の目標</span>
+            <input type="number" min="0" id="goalInput_${it.key}" value="${it.goal}">
+          </div>
+        </div>
+      `).join("") + `<button type="button" class="add" id="goalSaveBtn" style="align-self:flex-start">目標を保存</button>`;
+      document.getElementById("goalSaveBtn").addEventListener("click", () => {
+        const g = {
+          follower: Number(document.getElementById("goalInput_follower").value) || goals.follower,
+          chat: Number(document.getElementById("goalInput_chat").value) || goals.chat,
+          appt: Number(document.getElementById("goalInput_appt").value) || goals.appt,
+        };
+        saveGoals(g);
+        goalEditing = false;
+        document.getElementById("goalEditBtn").textContent = "目標を編集";
+        renderGoals();
+      });
+      return;
+    }
+
+    row.innerHTML = items.map(it => {
+      const pct = (it.current !== null && it.goal > 0) ? Math.min(100, Math.round(it.current / it.goal * 100)) : 0;
+      const done = pct >= 100;
+      return `
+        <div class="goal-item">
+          <div class="goal-head">
+            <span class="goal-name">${it.name}</span>
+            <span class="goal-nums">${fmtNum(it.current)} / ${fmtNum(it.goal)}${it.unit}（${it.current === null ? "—" : pct + "%"}）</span>
+          </div>
+          <div class="goal-bar"><div class="goal-fill${done ? " done" : ""}" style="width:${pct}%"></div></div>
+        </div>
+      `;
+    }).join("");
+  }
+
+  // ---- ヒーロー ----
+  function periodSlice(arr) {
+    if (chartPeriod === "7") return arr.slice(-7);
+    if (chartPeriod === "30") return arr.slice(-30);
+    return arr;
+  }
+
+  function renderHero() {
+    const impGoalMet = monthAvgImp !== null && monthAvgImp >= 500;
+    document.getElementById("impPill").className = `pill ${impGoalMet ? "good" : "warn"}`;
+    document.getElementById("impPill").textContent = impGoalMet ? "目標達成" : "目標未達";
+    document.getElementById("impHeroValue").innerHTML = `${monthAvgImp === null ? "—" : fmtNum(monthAvgImp)}<span class="unit">imp</span>`;
+    document.getElementById("impHeroSub").innerHTML = `${currentMonthPrefix()} ・ ${monthPostsCount}投稿の平均（目標500以上） ${deltaBadge(deltaAvg, "前日比")}`;
+    svgLine(document.getElementById("heroChart"), periodSlice(dailyPosts).map(d=>({date:d.date, v:d.avg})), {goalY:500, height:140, fit:true});
+
+    const followerPill = document.getElementById("followerPill");
+    if (followerDelta === null) { followerPill.className = "pill good"; followerPill.textContent = "計測中"; }
+    else if (followerDelta >= 0) { followerPill.className = "pill good"; followerPill.textContent = "増加中"; }
+    else { followerPill.className = "pill warn"; followerPill.textContent = "減少中"; }
+    document.getElementById("followerHeroValue").innerHTML = `${latestFollowers === null ? "—" : fmtNum(latestFollowers)}<span class="unit">人</span>`;
+    document.getElementById("followerHeroSub").innerHTML = followers.length
+      ? `${fmtDate(followers[followers.length-1].date)}時点 ${deltaBadge(followerDelta, "前日比")}`
+      : "データを蓄積中です";
+    svgLine(document.getElementById("followerChart"), periodSlice(followers).map(f=>({date:f.date, v:f.count})), {height:110, fit:true});
+  }
+
+  // ---- カードグリッド ----
+  function renderCardGrid(gridId, cardList) {
+    const entries = loadEntries().sort((a,b)=>a.date.localeCompare(b.date));
+    const chatEntries = entries.filter(e => e.chat !== undefined && e.chat !== "");
+    const apptEntries = entries.filter(e => e.appt !== undefined && e.appt !== "");
+    const lastChat = chatEntries[chatEntries.length-1];
+    const prevChat = chatEntries[chatEntries.length-2];
+    const lastAppt = apptEntries[apptEntries.length-1];
+    const prevAppt = apptEntries[apptEntries.length-2];
+    const apptTotal7 = entries.filter(e => e.date > dateNDaysAgo(7)).reduce((s,e)=>s+(Number(e.appt)||0),0);
+
+    const grid = document.getElementById(gridId);
+    grid.innerHTML = cardList.map(c => {
+      let value = c.value, sub = c.sub, pill = c.pill, delta = c.delta, deltaLabel = "前日比";
+      if (c.id === "chat") {
+        value = lastChat ? Number(lastChat.chat) : null;
+        sub = lastChat ? fmtDate(lastChat.date)+" 時点" : "タップして記録";
+        delta = (lastChat && prevChat) ? Number(lastChat.chat) - Number(prevChat.chat) : null;
+        deltaLabel = "前回比";
+      }
+      if (c.id === "appt") {
+        value = apptTotal7;
+        sub = lastAppt ? `最新入力 ${fmtDate(lastAppt.date)}：${fmtNum(Number(lastAppt.appt))}件` : "タップして記録";
+        pill = lastAppt ? {t:"flat", l:fmtDate(lastAppt.date)} : {t:"warn", l:"未記録"};
+        delta = (lastAppt && prevAppt) ? Number(lastAppt.appt) - Number(prevAppt.appt) : null;
+        deltaLabel = "前回比";
+      }
+      const deltaHtml = delta !== undefined ? `<div class="card-sub">${deltaBadge(delta, deltaLabel)}</div>` : "";
+      return `
+        <button class="card" data-id="${c.id}">
+          <div class="card-head">
+            <div class="card-label">${c.label}</div>
+            ${pill ? `<span class="pill ${pill.t}">${pill.l}</span>` : ""}
+          </div>
+          <div class="card-value">${value === null ? "—" : fmtNum(value)}<span class="unit">${c.unit}</span></div>
+          <svg class="spark"></svg>
+          <div class="card-sub">${sub}</div>
+          ${deltaHtml}
+        </button>
+      `;
+    }).join("");
+
+    grid.querySelectorAll(".card").forEach((btn, i) => {
+      const c = cardList[i];
+      const svgEl = btn.querySelector("svg.spark");
+      if (c.id === "chat") sparkline(svgEl, chatEntries.map(e=>Number(e.chat)));
+      else if (c.id === "appt") sparkline(svgEl, apptEntries.map(e=>Number(e.appt)));
+      else sparkline(svgEl, c.spark, {goalY: c.goalY});
+      btn.addEventListener("click", () => openModal(c.id));
+    });
+  }
+
+  function renderCards() {
+    renderCardGrid("primaryGrid", primaryCards);
+    renderCardGrid("detailGrid", detailCards);
+  }
+
+  // ---- モーダル ----
+  function closeModal() {
+    document.getElementById("modalOverlay").classList.remove("open");
+  }
+
+  function modalShell(title, desc) {
+    return `
+      <div class="modal-head">
+        <div>
+          <div class="modal-title">${title}</div>
+          <div class="modal-desc">${desc}</div>
+        </div>
+        <button class="modal-close" id="closeBtn">✕</button>
+      </div>
+    `;
+  }
+
+  let postListSort = "date";
+
+  function renderPostListModal() {
+    const body = document.getElementById("modalBody");
+    const sorted = [...posts].sort((a,b) => postListSort === "imp" ? b.imp - a.imp : b.date.localeCompare(a.date));
+    body.innerHTML = modalShell("投稿一覧", `全${posts.length}投稿`) + `
+      <div class="sort-btns">
+        <button type="button" class="sort-btn ${postListSort === "date" ? "active" : ""}" data-sort="date">日付順</button>
+        <button type="button" class="sort-btn ${postListSort === "imp" ? "active" : ""}" data-sort="imp">インプレッション順</button>
+      </div>
+      <ul class="rank-list">
+        ${sorted.map((p,i) => `
+          <li class="rank-item">
+            <span class="rank-num">${i+1}</span>
+            <span>
+              <div class="rank-text">${p.content}</div>
+              <div class="rank-date">${p.date}${p.hour !== null && p.hour !== undefined ? " " + String(p.hour).padStart(2,"0") + "時" : ""} ・ いいね${fmtNum(p.likes)} ・ コメント${fmtNum(p.comments)}</div>
+            </span>
+            <span class="rank-imp">${fmtNum(p.imp)}<small> imp</small></span>
+          </li>
+        `).join("")}
+      </ul>
+    `;
+    document.getElementById("closeBtn").addEventListener("click", closeModal);
+    body.querySelectorAll(".sort-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        postListSort = btn.dataset.sort;
+        renderPostListModal();
+      });
+    });
+  }
+
+  function openModal(id) {
+    const overlay = document.getElementById("modalOverlay");
+    const body = document.getElementById("modalBody");
+
+    if (id === "postlist") {
+      renderPostListModal();
+      overlay.classList.add("open");
+      return;
+    }
+
+    if (id === "avg" || id === "total") {
+      body.innerHTML = modalShell(
+        id === "avg" ? "平均インプレッションの推移" : "累計インプレッションの推移",
+        id === "avg" ? "投稿があった日の1投稿あたり平均（全期間）" : "日別の投稿インプレッション合計の積み上げ"
+      ) + `<div class="modal-chart"><svg id="modalChart" style="height:180px; display:block"></svg></div>`;
+      overlay.classList.add("open");
+      document.getElementById("closeBtn").addEventListener("click", closeModal);
+      if (id === "avg") {
+        svgLine(document.getElementById("modalChart"), dailyPosts.map(d=>({date:d.date, v:d.avg})), {goalY:500, height:180});
+      } else {
+        let cum = 0;
+        svgLine(document.getElementById("modalChart"), dailyPosts.map(d => ({date:d.date, v: (cum += d.avg*d.count)})), {height:180});
+      }
+      return;
+    }
+
+    if (id === "followers") {
+      body.innerHTML = modalShell("フォロワー数の推移", "3時間おきに自動取得した記録から、日ごとの最新値を表示")
+        + `<div class="modal-chart"><svg id="modalChart" style="height:180px; display:block"></svg></div>`;
+      overlay.classList.add("open");
+      document.getElementById("closeBtn").addEventListener("click", closeModal);
+      svgLine(document.getElementById("modalChart"), followers.map(f=>({date:f.date, v:f.count})), {height:180});
+      return;
+    }
+
+    if (id === "max" || id === "min") {
+      const ranked = id === "max" ? sortedByImp.slice(0,10) : [...sortedByImp].reverse().slice(0,10);
+      body.innerHTML = modalShell(
+        id === "max" ? "インプレッションが高かった投稿 TOP10" : "インプレッションが低かった投稿 WORST10",
+        `全${posts.length}投稿から抽出`
+      ) + `
+        <ul class="rank-list">
+          ${ranked.map((p,i) => `
+            <li class="rank-item">
+              <span class="rank-num">${i+1}</span>
+              <span>
+                <div class="rank-text">${p.content}</div>
+                <div class="rank-date">${p.date}</div>
+              </span>
+              <span class="rank-imp">${fmtNum(p.imp)}</span>
+            </li>
+          `).join("")}
+        </ul>
+      `;
+      overlay.classList.add("open");
+      document.getElementById("closeBtn").addEventListener("click", closeModal);
+      return;
+    }
+
+    if (id === "posts" || id === "posts_today") {
+      body.innerHTML = modalShell("1日5投稿の達成状況", `${goalDays}/${dailyPosts.length}日で達成（${goalRate}%）`)
+        + `<div class="modal-chart"><svg id="modalChart" style="height:180px; display:block"></svg></div>`;
+      overlay.classList.add("open");
+      document.getElementById("closeBtn").addEventListener("click", closeModal);
+      svgLine(document.getElementById("modalChart"), dailyPosts.map(d=>({date:d.date, v:d.count})), {goalY:5, height:180});
+      return;
+    }
+
+    const metricModalMap = {
+      likes_total: { title: "いいね数の推移", field: "likes", desc: "日別の合計" },
+      likes_avg: { title: "いいね数の推移", field: "likes", desc: "日別の合計（カード表示は1投稿あたりの平均）" },
+      comments_total: { title: "コメント数の推移", field: "comments", desc: "日別の合計" },
+      reposts_total: { title: "リポスト数の推移", field: "reposts", desc: "日別の合計" },
+      shares_total: { title: "シェア数の推移", field: "shares", desc: "日別の合計" },
+    };
+    if (metricModalMap[id]) {
+      const m = metricModalMap[id];
+      body.innerHTML = modalShell(m.title, m.desc)
+        + `<div class="modal-chart"><svg id="modalChart" style="height:180px; display:block"></svg></div>`;
+      overlay.classList.add("open");
+      document.getElementById("closeBtn").addEventListener("click", closeModal);
+      svgLine(document.getElementById("modalChart"), dailyPosts.map(d=>({date:d.date, v:d[m.field]})), {height:180});
+      return;
+    }
+
+    if (id === "chat" || id === "appt") {
+      const label = id === "chat" ? "オープンチャット参加者数" : "アポ取り数";
+      body.innerHTML = modalShell(`${label}を記録`, "この端末のブラウザに保存されます") + `
+        <div class="modal-chart"><svg id="modalChart" style="height:130px; display:block"></svg></div>
+        <form class="entry" id="entryForm">
+          <div><label for="entryDate">日付</label><input type="date" id="entryDate" required></div>
+          <div><label for="entryVal">${label}</label><input type="number" id="entryVal" min="0" placeholder="例：${id === 'chat' ? '128' : '3'}"></div>
+          <button type="submit" class="add">保存</button>
+        </form>
+        <table>
+          <thead><tr><th>日付</th><th style="text-align:right">${label}</th><th></th></tr></thead>
+          <tbody id="entryTable"></tbody>
+        </table>
+      `;
+      overlay.classList.add("open");
+      document.getElementById("closeBtn").addEventListener("click", closeModal);
+
+      const field = id === "chat" ? "chat" : "appt";
+      function refreshEntryView() {
+        const entries = loadEntries().sort((a,b)=>a.date.localeCompare(b.date));
+        svgLine(document.getElementById("modalChart"), entries.map(e=>({date:e.date, v: e[field] !== undefined && e[field] !== "" ? Number(e[field]) : null})), {height:130});
+        const tbody = document.getElementById("entryTable");
+        const rev = [...entries].reverse();
+        if (!rev.length) {
+          tbody.innerHTML = `<tr class="empty-row"><td colspan="3">まだ記録がありません</td></tr>`;
+        } else {
+          tbody.innerHTML = rev.map(e => `
+            <tr>
+              <td>${e.date}</td>
+              <td class="num">${e[field] !== undefined && e[field] !== "" ? fmtNum(e[field]) : "—"}</td>
+              <td style="text-align:right"><button class="del-btn" data-date="${e.date}">削除</button></td>
+            </tr>
+          `).join("");
+          tbody.querySelectorAll(".del-btn").forEach(btn => {
+            btn.addEventListener("click", () => {
+              const entries2 = loadEntries();
+              const idx = entries2.findIndex(e => e.date === btn.dataset.date);
+              if (idx >= 0) { delete entries2[idx][field]; saveEntries(entries2); }
+              refreshEntryView();
+              renderCards();
+              renderGoals();
+            });
+          });
+        }
+      }
+      refreshEntryView();
+
+      document.getElementById("entryDate").valueAsDate = new Date();
+      document.getElementById("entryForm").addEventListener("submit", (e) => {
+        e.preventDefault();
+        const date = document.getElementById("entryDate").value;
+        const val = document.getElementById("entryVal").value;
+        if (!date) return;
+        const entries = loadEntries();
+        const idx = entries.findIndex(en => en.date === date);
+        if (idx >= 0) entries[idx][field] = val;
+        else entries.push({date, [field]: val});
+        saveEntries(entries);
+        document.getElementById("entryVal").value = "";
+        refreshEntryView();
+        renderCards();
+        renderGoals();
+      });
+      return;
+    }
+  }
+
+  // ---- イベント ----
+  document.getElementById("detailsToggle").addEventListener("click", () => {
+    const details = document.getElementById("detailsWrap");
+    const willShow = details.hidden;
+    details.hidden = !willShow;
+    document.getElementById("detailsToggle").textContent = willShow ? "詳細を閉じる ▴" : "詳細を見る ▾";
+  });
+
+  document.getElementById("impHero").addEventListener("click", () => openModal("avg"));
+  document.getElementById("followerHero").addEventListener("click", () => openModal("followers"));
+  document.getElementById("postListBtn").addEventListener("click", () => openModal("postlist"));
+
+  document.getElementById("periodTabs").addEventListener("click", (e) => {
+    e.stopPropagation();
+    const btn = e.target.closest(".tab");
+    if (!btn) return;
+    chartPeriod = btn.dataset.period;
+    document.querySelectorAll("#periodTabs .tab").forEach(t => t.classList.toggle("active", t === btn));
+    renderHero();
+  });
+
+  document.getElementById("goalEditBtn").addEventListener("click", () => {
+    goalEditing = !goalEditing;
+    document.getElementById("goalEditBtn").textContent = goalEditing ? "キャンセル" : "目標を編集";
+    renderGoals();
+  });
+
+  document.getElementById("modalOverlay").addEventListener("click", (e) => {
+    if (e.target.id === "modalOverlay") closeModal();
+  });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeModal(); });
+
+  function renderUpdatedNote(sourceLabel) {
+    document.getElementById("lastUpdated").textContent = `最終更新: ${generatedAt}（${sourceLabel}）`;
+  }
+
+  function renderAll() {
+    renderHero();
+    renderCards();
+    renderWeekly();
+    renderGoals();
+    renderHookAnalysis();
+    renderHourAnalysis();
+  }
+
+  // ── 全体／個別アカウントの切り替え ──
+  const ACCOUNTS = ["八千古嶋", "池田", "谷村", "河野", "濱田"];
+  let MASTER_POSTS = [], MASTER_FOLLOWERS = [], MASTER_GEN = "", currentAccount = "全体";
+  function accountsList() {
+    const inData = MASTER_POSTS.map(p => p.account).filter(Boolean);
+    return ["全体", ...ACCOUNTS.filter((a,i)=>ACCOUNTS.indexOf(a)===i), ...inData.filter(a=>!ACCOUNTS.includes(a))]
+      .filter((a,i,arr)=>arr.indexOf(a)===i);
+  }
+  function renderAccountTabs() {
+    const el = document.getElementById("accountTabs");
+    if (!el) return;
+    el.innerHTML = accountsList().map(a =>
+      `<button class="acct-tab${a===currentAccount?' active':''}" data-a="${a}">${a}</button>`).join("");
+    el.querySelectorAll("button").forEach(b => b.onclick = () => { currentAccount = b.dataset.a; applyAccountFilter(); });
+  }
+  function applyAccountFilter() {
+    const posts = currentAccount === "全体" ? MASTER_POSTS : MASTER_POSTS.filter(p => p.account === currentAccount);
+    computeState(posts, MASTER_GEN, MASTER_FOLLOWERS);
+    renderAccountTabs();
+    renderAll();
+  }
+  function setMasterData(posts, gen, followers, label) {
+    MASTER_POSTS = posts || []; MASTER_GEN = gen; MASTER_FOLLOWERS = followers || [];
+    applyAccountFilter();
+    if (label) renderUpdatedNote(label);
+  }
+
+  // ---- 初期化 ----
+  const stored = loadStoredData();
+  if (stored && Array.isArray(stored.posts) && stored.posts.length) {
+    setMasterData(stored.posts, stored.generated_at, stored.followers, "前回読み込んだデータ");
+  } else {
+    setMasterData(EMBEDDED_POSTS, EMBEDDED_GENERATED_AT, EMBEDDED_FOLLOWERS, "初期スナップショット");
+  }
+
+  // データ取得先の優先順位:
+  // 1) raw.githubusercontent（リポジトリを直接読む。GitHub Pagesのビルド詰まりの影響を受けず常に最新）
+  //    → https://raw.githubusercontent.com/kazuki0806/kpi-dashboard/main/annken/kpi_data.json を「https://raw.githubusercontent.com/<ユーザー>/<リポジトリ>/main/kpi_data.json」に置換する
+  // 2) 同フォルダの kpi_data.json（ローカルで直接開いた場合などのフォールバック）
+  const DATA_SOURCES = [
+    "https://raw.githubusercontent.com/kazuki0806/kpi-dashboard/main/annken/kpi_data.json",
+    "kpi_data.json",
+  ];
+
+  function tryFetchData(i) {
+    if (i >= DATA_SOURCES.length) return;
+    if (DATA_SOURCES[i].startsWith("__")) return tryFetchData(i + 1); // 未設定プレースホルダはスキップ
+    const url = DATA_SOURCES[i] + (DATA_SOURCES[i].includes("?") ? "&" : "?") + "t=" + Date.now();
+    fetch(url, { cache: "no-store" })
+      .then(r => r.ok ? r.json() : Promise.reject())
+      .then(json => {
+        const normalized = normalizeImport(json);
+        localStorage.setItem(DATA_STORAGE_KEY, JSON.stringify(normalized));
+        setMasterData(normalized.posts, normalized.generated_at, normalized.followers, "自動取得");
+      })
+      .catch(() => tryFetchData(i + 1));
+  }
+  tryFetchData(0);
+</script>
+
+</body>
+</html>
