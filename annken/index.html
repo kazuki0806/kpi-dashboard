@@ -135,7 +135,7 @@ body{margin:0;background:var(--bg);color:var(--ink);
     </div>
   </div>
 
-  <div class="fab"><button id="openInput">＋ 今日の数値を入力</button></div>
+  <div class="fab" style="display:none"><button id="openInput">＋ 今日の数値を入力</button></div>
 </div>
 
 <div class="modal-bg" id="detailbg"><div class="modal">
@@ -284,8 +284,8 @@ function render(){
   $("#stats").innerHTML =
     statCard("今日の投稿", todayPosts, "/ "+g.posts, {cls: todayPosts>=g.posts?"up":"flat", txt: todayPosts>=g.posts?"達成":"あと"+(g.posts-todayPosts)+"件"}, "posts") +
     statCard("平均インプレ", fmt(ps.avg), "", impBadge, "imp", ptabs) +
-    statCard("フォロワー", fmt(folNow), "人", folBadge, "follower") +
-    statCard("オプチャ参加", fmt(chatVal), "人", {cls:"flat", txt: man.some(e=>e.date===tkey&&e.chat!=null)?"今日入力済":"今日未入力"}, "chat");
+    statCard("コメント数", fmt(posts.reduce((s,p)=>s+(Number(p.comments)||0),0)), "", {cls:"flat", txt:"累計"}, "") +
+    statCard("アポ取り", fmt((d.apo!=null?d.apo:0)), "件", {cls:"flat", txt:"営業シート"}, "");
 
   // flow bars（期間連動：日=投稿ごと / 週=日別平均 / 月=週別平均）
   const bars = buildBars(posts, impPeriod);
@@ -328,9 +328,7 @@ function render(){
   // goals
   const apptMonth = man.filter(e=>e.date&&e.date.slice(0,7)===tkey.slice(0,7)).reduce((s,e)=>s+(Number(e.appt)||0),0);
   const goalRows=[
-    {n:"フォロワー",c:folNow||0,g:g.follower,u:"人"},
-    {n:"オプチャ参加",c:chatVal||0,g:g.chat,u:"人"},
-    {n:a.kpi2,c:apptMonth,g:g.appt,u:"件"},
+    {n:"アポ取り",c:(d.apo!=null?d.apo:0),g:g.appt,u:"件"},
   ];
   $("#goals").innerHTML = goalRows.map(r=>{
     const pct=Math.min(100,Math.round((r.c/r.g)*100)||0);
