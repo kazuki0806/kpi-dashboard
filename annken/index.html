@@ -347,7 +347,7 @@ async function load(){
   await Promise.all(Object.keys(ACCOUNTS).map(async k=>{
     try{
       const r=await fetch(ACCOUNTS[k].url+"?t="+Date.now(),{cache:"no-store"});
-      if(r.ok){const j=await r.json(); if((j.posts||[]).length) DATA[k]=j;}
+      if(r.ok){const j=await r.json(); if(j&&Array.isArray(j.posts)) DATA[k]=j;} // 投稿0件の人もサンプルで埋めない
     }catch(e){}
     try{
       const rm=await fetch("kpi_manual_"+k+".json?t="+Date.now(),{cache:"no-store"});
