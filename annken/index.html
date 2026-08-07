@@ -247,7 +247,8 @@ function manualEntries(acct){
   pub.forEach(e=>{byDate[e.date]=e;});
   return Object.values(byDate).sort((a,b)=>a.date<b.date?-1:1);
 }
-function goals(acct){ return Object.assign({}, GOAL_DEFAULT, lsGet("annken_kpi_"+acct+"_goals", {})); }
+const GOAL_BY_ACCOUNT = {ikeda:{posts:5}, yachi:{posts:3}, tanimura:{posts:3}, kono:{posts:3}, hamada:{posts:3}, all:{posts:15}};
+function goals(acct){ return Object.assign({}, GOAL_DEFAULT, GOAL_BY_ACCOUNT[acct]||{}, lsGet("annken_kpi_"+acct+"_goals", {})); }
 
 function statCard(lab,val,unit,badge,key,extra){
   const b = badge ? `<span class="badge ${badge.cls}">${badge.txt}</span>` : "";
