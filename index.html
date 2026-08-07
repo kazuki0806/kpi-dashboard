@@ -279,7 +279,7 @@ function render(){
   const chatVal = lastChat?lastChat.chat:null;
 
   $("#stats").innerHTML =
-    statCard("今日の投稿", todayPosts, "/ "+g.posts, {cls: todayPosts>=g.posts?"up":"flat", txt: todayPosts>=g.posts?"達成":"あと"+(g.posts-todayPosts)+"件"}, "posts") +
+    statCard("今日の投稿", todayPosts, "/ "+g.posts, {cls: todayPosts>=g.posts?"up":"flat", txt: (todayPosts>=g.posts?"達成":"あと"+(g.posts-todayPosts)+"件")+" ・ 累計"+fmt(posts.length)+"件"}, "posts") +
     statCard("平均インプレ", fmt(ps.avg), "", impBadge, "imp", ptabs) +
     statCard("フォロワー", fmt(folNow), "人", folBadge, "follower") +
     statCard("オプチャ参加", fmt(chatVal), "人", {cls:"flat", txt: man.some(e=>e.date===tkey&&e.chat!=null)?"今日入力済":"今日未入力"}, "chat");
