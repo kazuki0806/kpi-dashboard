@@ -163,6 +163,7 @@ const ACCOUNTS = {
   tanimura:{name:"谷村", handle:"", kpi2:"アポ", url:"kpi_data_tanimura.json"},
   kono:{name:"河野", handle:"", kpi2:"アポ", url:"kpi_data_kono.json"},
   hamada:{name:"濱田", handle:"", kpi2:"アポ", url:"kpi_data_hamada.json"},
+  himeji:{name:"姫路", handle:"", kpi2:"アポ", url:"kpi_data_himeji.json"},
 };
 const GOAL_DEFAULT = {follower:150, posts:5, chat:100, appt:10};
 const HOOK_TYPES = [
@@ -247,7 +248,7 @@ function manualEntries(acct){
   pub.forEach(e=>{byDate[e.date]=e;});
   return Object.values(byDate).sort((a,b)=>a.date<b.date?-1:1);
 }
-const GOAL_BY_ACCOUNT = {ikeda:{posts:3}, yachi:{posts:3}, tanimura:{posts:3}, kono:{posts:3}, hamada:{posts:3}, all:{posts:15}};
+const GOAL_BY_ACCOUNT = {ikeda:{posts:3}, yachi:{posts:3}, tanimura:{posts:3}, kono:{posts:3}, hamada:{posts:3}, himeji:{posts:3}, all:{posts:18}};
 function goals(acct){ return Object.assign({}, GOAL_DEFAULT, GOAL_BY_ACCOUNT[acct]||{}, lsGet("annken_kpi_"+acct+"_goals", {})); }
 
 function statCard(lab,val,unit,badge,key,extra){
