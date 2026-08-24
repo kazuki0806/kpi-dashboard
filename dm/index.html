@@ -79,7 +79,7 @@ body{margin:0;background:var(--bg);color:var(--ink);
   <div class="hello" id="hello">稼働量</div>
   <div class="sub" id="sub">読み込み中…</div>
 
-  <div class="grid cards4" id="stats" style="margin-bottom:14px"></div>
+  <div class="grid cards3" id="stats" style="margin-bottom:14px"></div>
 
   <div class="secLab">アポ取り → 着座 → 契約（インフルエンサーDM）</div>
   <div class="grid cards3" id="funnel" style="margin-bottom:14px"></div>
@@ -207,8 +207,7 @@ function render(){
   $("#stats").innerHTML =
     statCard("直近の日のDM数", fmt(dmToday), last ? `（${last.day}日）` : "", badge) +
     statCard("今月の累計DM数", fmt(totalDm), "件", {cls:"flat", txt:`稼働${worked.length}日 ・ 1日平均${fmt(avg)}件`}) +
-    statCard("返信数", fmt(totalReply), "件", {cls:"flat", txt:`返信率 ${rate}%`}) +
-    statCard("アポ取り", fmt(f.appt), "件", {cls:"flat", txt: totalDm ? `DMの${pct(f.appt, totalDm)}` : "営業シート"});
+    statCard("返信数", fmt(totalReply), "件", {cls:"flat", txt:`返信率 ${rate}%`});
 
   $("#funnel").innerHTML =
     statCard("アポ取り", fmt(f.appt), "件", {cls:"flat", txt:"面談が入った数"}) +
