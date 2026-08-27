@@ -148,7 +148,7 @@ body{margin:0;background:var(--bg);color:var(--ink);
   <div class="sheet">
     <h3>今日の数値を入力</h3>
     <p class="note" id="sheetacct">この端末に保存されます</p>
-    <div class="field"><label>オプチャ参加</label><input id="in_chat" inputmode="numeric" placeholder="0"><span class="prev" id="prev_chat"></span></div>
+    <div class="field"><label>公式LINE友だち</label><input id="in_chat" inputmode="numeric" placeholder="0"><span class="prev" id="prev_chat"></span></div>
     <div class="field"><label>アポ / 相談</label><input id="in_appt" inputmode="numeric" placeholder="0"><span class="prev" id="prev_appt"></span></div>
     <button class="save" id="saveInput">保存（今日の日付）</button>
     <button id="clearInput" style="width:100%;background:none;border:0;color:var(--bad);font-size:13px;margin-top:14px;cursor:pointer;font-family:inherit">この端末で入れた数値を全部消す</button>
@@ -278,14 +278,18 @@ function render(){
   const folPrev = fol.length>1?fol[fol.length-2].count:null;
   const folBadge = (folNow!=null&&folPrev!=null)? (folNow>=folPrev?{cls:"up",txt:"↑ +"+(folNow-folPrev)+" 前日"}:{cls:"down",txt:"↓ "+(folNow-folPrev)+" 前日"}):{cls:"flat",txt:"—"};
   const man = manualEntries(CUR);
+  const lineHist = (DATA[CUR]&&DATA[CUR].line)||[];
+  const lineLast = lineHist.length?lineHist[lineHist.length-1]:null;
   const lastChat = [...man].reverse().find(e=>e.chat!=null);
-  const chatVal = lastChat?lastChat.chat:null;
+  // 公式LINEを繋いでいるアカウントは自動取得を優先し、繋いでいなければ手入力を使う
+  const chatAuto = lineLast?lineLast.followers:null;
+  const chatVal = chatAuto!=null?chatAuto:(lastChat?lastChat.chat:null);
 
   $("#stats").innerHTML =
     statCard("今日の投稿", todayPosts, "/ "+g.posts, {cls: todayPosts>=g.posts?"up":"flat", txt: (todayPosts>=g.posts?"達成":"あと"+(g.posts-todayPosts)+"件")+" ・ 累計"+fmt(posts.length)+"件"}, "posts") +
     statCard("平均インプレ", fmt(ps.avg), "", impBadge, "imp", ptabs) +
     statCard("フォロワー", fmt(folNow), "人", folBadge, "follower") +
-    statCard("オプチャ参加", fmt(chatVal), "人", {cls:"flat", txt: man.some(e=>e.date===tkey&&e.chat!=null)?"今日入力済":"今日未入力"}, "chat");
+    statCard("公式LINE友だち", fmt(chatVal), "人", {cls:"flat", txt: chatAuto!=null?("自動取得 "+lineLast.date.slice(5)):(man.some(e=>e.date===tkey&&e.chat!=null)?"今日入力済":"今日未入力")}, "chat");
 
   // flow bars（期間連動：日=投稿ごと / 週=日別平均 / 月=週別平均）
   const bars = buildBars(posts, impPeriod);
@@ -328,7 +332,7 @@ function render(){
   const apptMonth = man.filter(e=>e.date&&e.date.slice(0,7)===tkey.slice(0,7)).reduce((s,e)=>s+(Number(e.appt)||0),0);
   const goalRows=[
     {n:"フォロワー",c:folNow||0,g:g.follower,u:"人"},
-    {n:"オプチャ参加",c:chatVal||0,g:g.chat,u:"人"},
+    {n:"公式LINE友だち",c:chatVal||0,g:g.chat,u:"人"},
     {n:a.kpi2,c:apptMonth,g:g.appt,u:"件"},
   ];
   $("#goals").innerHTML = goalRows.map(r=>{
@@ -408,8 +412,8 @@ function openDetail(key){
     body= fol.length? `<table class="tbl"><thead><tr><th>日付</th><th style="text-align:right">人数</th><th style="text-align:right">増減</th></tr></thead><tbody>`+
       fol.map((f,i)=>{const pv=fol[i+1];const df=pv?f.count-pv.count:null;const col=df>0?'var(--good)':df<0?'var(--bad)':'var(--ink3)';return `<tr><td>${f.date.slice(5)}</td><td style="text-align:right;font-weight:600">${fmt(f.count)}</td><td style="text-align:right;color:${col}">${df==null?"—":(df>0?"+"+df:df)}</td></tr>`;}).join("")+`</tbody></table>` : `<div class="empty">フォロワー履歴がまだありません</div>`;
   } else if(key==="chat"){
-    title="手入力KPIの履歴"; sub="オプチャ参加・"+a.kpi2+"（×で削除）";
-    body= man.length? `<table class="tbl"><thead><tr><th>日付</th><th style="text-align:right">オプチャ</th><th style="text-align:right">${a.kpi2}</th><th></th></tr></thead><tbody>`+
+    title="手入力KPIの履歴"; sub="公式LINE友だち・"+a.kpi2+"（×で削除）";
+    body= man.length? `<table class="tbl"><thead><tr><th>日付</th><th style="text-align:right">公式LINE</th><th style="text-align:right">${a.kpi2}</th><th></th></tr></thead><tbody>`+
       [...man].reverse().map(e=>`<tr><td>${e.date.slice(5)}</td><td style="text-align:right">${e.chat!=null?fmt(e.chat):"—"}</td><td style="text-align:right">${e.appt!=null?fmt(e.appt):"—"}</td><td style="text-align:right"><button data-delchat="${e.date}" title="削除" style="border:0;background:var(--bg);color:var(--bad);width:26px;height:26px;border-radius:7px;cursor:pointer;font-size:15px;font-family:inherit">×</button></td></tr>`).join("")+`</tbody></table>`
       +`<button id="clearAllChat" style="width:100%;background:none;border:0;color:var(--bad);font-size:13px;margin-top:14px;cursor:pointer;font-family:inherit">この端末の入力を全部消す</button>` : `<div class="empty">まだ入力がありません。下の「＋今日の数値を入力」から</div>`;
   }
@@ -456,7 +460,7 @@ function openGoalEdit(){
   $("#dbody").innerHTML=
     row("g_follower","フォロワー",g.follower)+
     row("g_posts","1日の投稿",g.posts)+
-    row("g_chat","オプチャ参加",g.chat)+
+    row("g_chat","公式LINE友だち",g.chat)+
     row("g_appt",a.kpi2,g.appt)+
     `<button id="g_save" style="width:100%;height:46px;border:0;background:var(--accent);color:#fff;font-weight:700;font-size:15px;border-radius:12px;cursor:pointer;margin-top:6px">保存</button>`;
   $("#detailbg").classList.add("on");
