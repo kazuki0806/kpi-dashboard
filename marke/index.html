@@ -1,0 +1,1288 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <!-- 実名が載るため、検索エンジンには載せない -->
+  <meta name="robots" content="noindex, nofollow, noarchive">
+  <meta name="referrer" content="no-referrer">
+  <title>マーケメンバー採用掲載</title>
+  <style>
+    :root {
+      --bg: #f5f7f6;
+      --surface: #ffffff;
+      --surface-muted: #f1f4f2;
+      --text: #17201b;
+      --muted: #68736c;
+      --border: #dce3de;
+      --green: #16834b;
+      --green-soft: #e5f5ec;
+      --red: #c83f3f;
+      --red-soft: #fceaea;
+      --gray: #737b76;
+      --gray-soft: #ecefed;
+      --warning: #a86600;
+      --warning-soft: #fff3d5;
+      --banned: #a34719;
+      --banned-soft: #fbe9df;
+      --shadow: 0 8px 28px rgba(21, 36, 27, 0.07);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #101512;
+        --surface: #19201c;
+        --surface-muted: #222b26;
+        --text: #edf3ef;
+        --muted: #a8b3ac;
+        --border: #344039;
+        --green: #61d494;
+        --green-soft: #183d29;
+        --red: #ff8585;
+        --red-soft: #442323;
+        --gray: #b2bbb5;
+        --gray-soft: #303733;
+        --warning: #f1bd55;
+        --warning-soft: #493716;
+        --banned: #ff9a68;
+        --banned-soft: #4b291d;
+        --shadow: 0 8px 28px rgba(0, 0, 0, 0.22);
+      }
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      min-width: 0;
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans",
+        "Hiragino Kaku Gothic ProN", "Yu Gothic", "Meiryo", sans-serif;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    button,
+    a {
+      font: inherit;
+    }
+
+    button {
+      color: inherit;
+    }
+
+    .page {
+      width: min(100% - 32px, 1080px);
+      margin-inline: auto;
+      padding: 28px 0 48px;
+    }
+
+    .eyebrow {
+      margin: 0 0 2px;
+      color: var(--muted);
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(1.45rem, 6vw, 2.1rem);
+      line-height: 1.3;
+      letter-spacing: -0.025em;
+    }
+
+    .week-controls {
+      display: grid;
+      grid-template-columns: 44px minmax(0, 1fr) 44px;
+      align-items: center;
+      gap: 8px;
+      margin-top: 24px;
+    }
+
+    .week-label {
+      min-width: 0;
+      text-align: center;
+      font-size: clamp(0.83rem, 3.7vw, 1rem);
+      font-weight: 700;
+      line-height: 1.45;
+    }
+
+    .nav-button {
+      display: grid;
+      width: 44px;
+      height: 44px;
+      padding: 0;
+      place-items: center;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface);
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(21, 36, 27, 0.04);
+    }
+
+    .nav-button:hover:not(:disabled) {
+      border-color: var(--green);
+    }
+
+    .nav-button:focus-visible,
+    .member-toggle:focus-visible,
+    .job-link:focus-visible {
+      outline: 3px solid color-mix(in srgb, var(--green) 35%, transparent);
+      outline-offset: 2px;
+    }
+
+    .nav-button:disabled {
+      cursor: not-allowed;
+      opacity: 0.32;
+    }
+
+    .updated {
+      margin: 10px 0 0;
+      color: var(--muted);
+      font-size: 0.76rem;
+      text-align: center;
+    }
+
+    .stale-warning {
+      margin-left: 0.5em;
+      color: var(--warning);
+      font-weight: 700;
+    }
+
+    .day-indicator {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      margin: 9px 0 0;
+      color: var(--muted);
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+
+    .day-indicator-current {
+      padding: 1px 6px;
+      border-radius: 7px;
+      background: var(--green);
+      color: var(--surface);
+    }
+
+    .remaining-days {
+      margin-left: 8px;
+      color: var(--text);
+      white-space: nowrap;
+    }
+
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+      margin: 24px 0;
+    }
+
+    /* 伸びていない掲載の注意。目立たせるが、赤一色にはしない。
+       毎日出るものなので、強すぎると見なくなる。 */
+    .alert {
+      margin: 0 0 24px;
+      padding: 14px 16px;
+      background: var(--warning-soft);
+      border: 1px solid var(--warning);
+      border-radius: 14px;
+    }
+
+    .alert-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .alert-title {
+      margin: 0;
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--warning);
+    }
+
+    .alert-count {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--warning);
+      white-space: nowrap;
+    }
+
+    .alert-note {
+      margin: 4px 0 10px;
+      font-size: 12px;
+      line-height: 1.6;
+      color: var(--muted);
+    }
+
+    .alert-list {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      display: grid;
+      gap: 8px;
+    }
+
+    .alert-item {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      align-items: baseline;
+      gap: 10px;
+      padding: 8px 10px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+    }
+
+    .alert-who {
+      font-size: 13px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .alert-link {
+      min-width: 0;
+      font-size: 13px;
+      line-height: 1.5;
+      color: var(--text);
+      text-decoration: none;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .alert-link:hover { text-decoration: underline; }
+
+    .alert-num {
+      font-size: 12px;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .alert-num strong { color: var(--red); }
+
+    @media (max-width: 640px) {
+      .alert-item {
+        grid-template-columns: 1fr auto;
+      }
+      .alert-link {
+        grid-column: 1 / -1;
+        white-space: normal;
+      }
+    }
+
+    .summary-card {
+      min-width: 0;
+      padding: 14px 10px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: var(--surface);
+      box-shadow: var(--shadow);
+      text-align: center;
+    }
+
+    .summary-label {
+      margin: 0;
+      color: var(--muted);
+      font-size: clamp(0.65rem, 2.9vw, 0.78rem);
+      white-space: nowrap;
+    }
+
+    .summary-value {
+      margin: 3px 0 0;
+      font-size: clamp(1.35rem, 6vw, 2.15rem);
+      font-weight: 800;
+      line-height: 1.25;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -0.04em;
+    }
+
+    .summary-unit {
+      margin-left: 2px;
+      font-size: 0.65em;
+      font-weight: 700;
+      letter-spacing: 0;
+    }
+
+    .summary-breakdown {
+      grid-column: 1 / -1;
+      margin: 3px 0 0;
+      color: var(--muted);
+      font-size: 0.82rem;
+      font-weight: 700;
+      text-align: center;
+    }
+
+    .section-heading {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      margin: 0 0 10px;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 1.05rem;
+    }
+
+    .member-count {
+      color: var(--muted);
+      font-size: 0.76rem;
+    }
+
+    .members {
+      display: grid;
+      gap: 10px;
+    }
+
+    .member {
+      min-width: 0;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--member-color);
+      border-radius: 14px;
+      background: var(--surface);
+      box-shadow: var(--shadow);
+    }
+
+    .member-toggle {
+      display: grid;
+      width: 100%;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 10px 14px;
+      padding: 16px;
+      border: 0;
+      background: transparent;
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .banned-member-toggle {
+      cursor: default;
+    }
+
+    .banned-message {
+      grid-column: 1 / -1;
+      color: var(--muted);
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+
+    .member-name-wrap {
+      display: flex;
+      min-width: 0;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .member-name {
+      min-width: 0;
+      overflow: hidden;
+      font-weight: 800;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .warning {
+      position: relative;
+      display: inline-grid;
+      flex: 0 0 24px;
+      width: 24px;
+      height: 24px;
+      place-items: center;
+      border-radius: 50%;
+      background: var(--warning-soft);
+      color: var(--warning);
+      font-size: 0.8rem;
+      font-weight: 900;
+    }
+
+    .warning-tooltip {
+      position: absolute;
+      z-index: 2;
+      top: calc(100% + 8px);
+      left: -8px;
+      width: min(270px, calc(100vw - 52px));
+      padding: 8px 10px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface);
+      color: var(--text);
+      font-size: 0.72rem;
+      font-weight: 600;
+      line-height: 1.45;
+      box-shadow: var(--shadow);
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(-3px);
+      transition: opacity 120ms ease, transform 120ms ease;
+    }
+
+    .warning:hover .warning-tooltip,
+    .warning:focus .warning-tooltip {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .status-badge {
+      align-self: start;
+      padding: 3px 9px;
+      border-radius: 999px;
+      background: var(--member-soft);
+      color: var(--member-color);
+      font-size: 0.72rem;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .progress-area {
+      grid-column: 1 / -1;
+      min-width: 0;
+    }
+
+    .pace-detail {
+      display: block;
+      margin-top: 5px;
+      color: var(--muted);
+      font-size: 0.74rem;
+      font-weight: 600;
+    }
+
+    .progress-meta {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 7px;
+    }
+
+    .progress-count {
+      font-size: 1.08rem;
+      font-weight: 800;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .applicants {
+      color: var(--muted);
+      font-size: 0.78rem;
+      white-space: nowrap;
+    }
+
+    .applicant-number {
+      color: var(--text);
+      font-weight: 800;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .progress-track {
+      display: block;
+      width: 100%;
+      height: 8px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: var(--surface-muted);
+    }
+
+    .progress-bar {
+      display: block;
+      width: var(--progress);
+      height: 100%;
+      border-radius: inherit;
+      background: var(--member-color);
+      transition: width 240ms ease-out;
+    }
+
+    .expand-hint {
+      display: flex;
+      grid-column: 1 / -1;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      margin-top: -2px;
+      color: var(--muted);
+      font-size: 0.69rem;
+    }
+
+    .chevron {
+      display: inline-block;
+      transition: transform 160ms ease;
+    }
+
+    .member-toggle[aria-expanded="true"] .chevron {
+      transform: rotate(180deg);
+    }
+
+    .details {
+      border-top: 1px solid var(--border);
+      background: var(--surface-muted);
+    }
+
+    .details[hidden] {
+      display: none;
+    }
+
+    .job-list {
+      margin: 0;
+      padding: 6px 16px;
+      list-style: none;
+    }
+
+    .job {
+      display: grid;
+      min-width: 0;
+      grid-template-columns: 1fr auto;
+      gap: 4px 12px;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .job:last-child {
+      border-bottom: 0;
+    }
+
+    .job.is-deleted {
+      opacity: 0.6;
+    }
+
+    .job-date {
+      color: var(--muted);
+      font-size: 0.72rem;
+    }
+
+    .job-link {
+      grid-column: 1 / -1;
+      min-width: 0;
+      color: var(--text);
+      font-size: 0.88rem;
+      font-weight: 700;
+      overflow-wrap: anywhere;
+      text-decoration-color: color-mix(in srgb, var(--text) 30%, transparent);
+      text-underline-offset: 3px;
+    }
+
+    .job-link:hover {
+      color: var(--green);
+    }
+
+    .deleted-badge,
+    .recruiting-ended-badge {
+      display: inline-block;
+      margin-left: 6px;
+      padding: 1px 6px;
+      border-radius: 999px;
+      background: var(--gray-soft);
+      color: var(--gray);
+      font-size: 0.65rem;
+      font-weight: 800;
+      vertical-align: 1px;
+      white-space: nowrap;
+    }
+
+    .job-applicants {
+      color: var(--muted);
+      font-size: 0.72rem;
+      white-space: nowrap;
+    }
+
+    .empty-jobs {
+      margin: 0;
+      padding: 24px 16px;
+      color: var(--muted);
+      font-size: 0.84rem;
+      text-align: center;
+    }
+
+    .continuing-label {
+      margin: 4px 0 0;
+      padding: 10px 16px 0;
+      color: var(--muted);
+      font-size: 0.76rem;
+      border-top: 1px dashed var(--border, rgba(0, 0, 0, .12));
+    }
+
+    .message {
+      margin-top: 32px;
+      padding: 34px 20px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: var(--surface);
+      box-shadow: var(--shadow);
+      text-align: center;
+    }
+
+    .message-title {
+      margin: 0;
+      font-size: 1rem;
+      font-weight: 800;
+    }
+
+    .message-detail {
+      margin: 5px 0 0;
+      color: var(--muted);
+      font-size: 0.8rem;
+    }
+
+    .loading {
+      color: var(--muted);
+    }
+
+    [hidden] {
+      display: none !important;
+    }
+
+    @media (min-width: 720px) {
+      .page {
+        padding-top: 44px;
+      }
+
+      .header-top {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 24px;
+      }
+
+      .week-block {
+        width: 410px;
+      }
+
+      .week-controls {
+        margin-top: 0;
+      }
+
+      .summary {
+        gap: 14px;
+        margin: 32px 0;
+      }
+
+      .summary-card {
+        padding: 20px;
+      }
+
+      .member-toggle {
+        grid-template-columns: minmax(150px, 1.1fr) minmax(230px, 2fr) minmax(105px, auto) 80px;
+        align-items: center;
+        gap: 18px;
+        padding: 18px 20px;
+      }
+
+      .status-badge {
+        grid-column: 4;
+        grid-row: 1;
+        justify-self: end;
+      }
+
+      .banned-member-toggle .member-name-wrap {
+        grid-column: 1;
+      }
+
+      .banned-member-toggle .banned-message {
+        grid-column: 2 / -1;
+        grid-row: 1;
+      }
+
+      .progress-area {
+        display: grid;
+        grid-column: 2;
+        grid-row: 1;
+        grid-template-columns: 76px minmax(90px, 1fr);
+        align-items: center;
+        gap: 12px;
+      }
+
+      .progress-meta {
+        margin: 0;
+      }
+
+      .applicants {
+        grid-column: 3;
+        grid-row: 1;
+        text-align: right;
+      }
+
+      .progress-track {
+        grid-column: 2;
+        grid-row: 1;
+      }
+
+      .pace-detail {
+        grid-column: 1 / -1;
+        grid-row: 2;
+        margin-top: 0;
+      }
+
+      .expand-hint {
+        display: none;
+      }
+
+      .job-list {
+        padding-inline: 20px;
+      }
+
+      .job {
+        grid-template-columns: 110px minmax(0, 1fr) 90px;
+        align-items: start;
+      }
+
+      .job-link {
+        grid-column: 2;
+        grid-row: 1;
+      }
+
+      .job-applicants {
+        grid-column: 3;
+        text-align: right;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        scroll-behavior: auto !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <div id="dashboard" hidden>
+      <header class="header-top">
+        <div>
+          <p class="eyebrow">Weekly report</p>
+          <h1>マーケメンバー採用掲載</h1>
+        </div>
+        <div class="week-block">
+          <div class="week-controls">
+            <button id="older-week" class="nav-button" type="button" aria-label="前の週を表示">←</button>
+            <div id="week-label" class="week-label"></div>
+            <button id="newer-week" class="nav-button" type="button" aria-label="次の週を表示">→</button>
+          </div>
+          <div id="day-indicator" class="day-indicator" aria-label="今週の曜日と残り日数"></div>
+          <p id="updated" class="updated"></p>
+        </div>
+      </header>
+
+      <section class="summary" aria-label="週次サマリー">
+        <div class="summary-card">
+          <p class="summary-label">達成人数 / 対象人数</p>
+          <p id="summary-achieved" class="summary-value"></p>
+        </div>
+        <div class="summary-card">
+          <p class="summary-label">掲載数の合計</p>
+          <p id="summary-posted" class="summary-value"></p>
+        </div>
+        <div class="summary-card">
+          <p class="summary-label">応募者数の合計</p>
+          <p id="summary-applicants" class="summary-value"></p>
+        </div>
+        <p id="summary-breakdown" class="summary-breakdown"></p>
+      </section>
+
+      <!-- 伸びていない掲載の注意。該当が無ければ丸ごと消える -->
+      <section id="alert" class="alert" aria-labelledby="alert-heading" hidden>
+        <div class="alert-head">
+          <h2 id="alert-heading" class="alert-title">伸びていない掲載</h2>
+          <span id="alert-count" class="alert-count"></span>
+        </div>
+        <p id="alert-note" class="alert-note"></p>
+        <ul id="alert-list" class="alert-list"></ul>
+      </section>
+
+      <section aria-labelledby="members-heading">
+        <div class="section-heading">
+          <h2 id="members-heading">メンバー一覧</h2>
+          <span id="member-count" class="member-count"></span>
+        </div>
+        <div id="members" class="members"></div>
+      </section>
+    </div>
+
+    <div id="message" class="message" role="status">
+      <p id="message-title" class="message-title loading">データを読み込んでいます</p>
+      <p id="message-detail" class="message-detail">少々お待ちください</p>
+    </div>
+  </main>
+
+  <script>
+    (() => {
+      "use strict";
+
+      const elements = {
+        dashboard: document.querySelector("#dashboard"),
+        message: document.querySelector("#message"),
+        messageTitle: document.querySelector("#message-title"),
+        messageDetail: document.querySelector("#message-detail"),
+        weekLabel: document.querySelector("#week-label"),
+        dayIndicator: document.querySelector("#day-indicator"),
+        updated: document.querySelector("#updated"),
+        olderWeek: document.querySelector("#older-week"),
+        newerWeek: document.querySelector("#newer-week"),
+        achieved: document.querySelector("#summary-achieved"),
+        posted: document.querySelector("#summary-posted"),
+        applicants: document.querySelector("#summary-applicants"),
+        breakdown: document.querySelector("#summary-breakdown"),
+        memberCount: document.querySelector("#member-count"),
+        members: document.querySelector("#members"),
+        alert: document.querySelector("#alert"),
+        alertCount: document.querySelector("#alert-count"),
+        alertNote: document.querySelector("#alert-note"),
+        alertList: document.querySelector("#alert-list")
+      };
+
+      // 伸びていない掲載の判定。
+      // 出した直後は応募が少なくて当たり前なので、2日たってから見る。
+      // 古いものまで並べると毎日同じ顔ぶれになって見なくなるので、直近だけ。
+      const ALERT_AFTER_DAYS = 2;      // 投稿からこの日数がたったら対象
+      const ALERT_MAX_APPLICANTS = 10; // 応募がこの人数以下なら注意
+      const ALERT_WITHIN_DAYS = 14;    // これより古い掲載は並べない
+      const ALERT_SHOW = 10;           // 一度に並べる数。全部出すと見なくなる
+
+      let data;
+      let weekIndex = 0;
+      let currentWeekIndex = 0;
+
+      const numberFormatter = new Intl.NumberFormat("ja-JP");
+      const dateFormatter = new Intl.DateTimeFormat("ja-JP", {
+        timeZone: "Asia/Tokyo",
+        month: "numeric",
+        day: "numeric",
+        weekday: "short"
+      });
+      const weekdayFormatter = new Intl.DateTimeFormat("ja-JP", {
+        timeZone: "Asia/Tokyo",
+        weekday: "short"
+      });
+      const updatedFormatter = new Intl.DateTimeFormat("ja-JP", {
+        timeZone: "Asia/Tokyo",
+        year: "numeric",
+        month: "numeric",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false
+      });
+
+      // YYYY-MM-DDを環境のタイムゾーンに依存せず扱う。
+      function dateFromKey(dateKey) {
+        const [year, month, day] = dateKey.split("-").map(Number);
+        return new Date(Date.UTC(year, month - 1, day, 12));
+      }
+
+      function addDays(date, days) {
+        const next = new Date(date);
+        next.setUTCDate(next.getUTCDate() + days);
+        return next;
+      }
+
+      function formatWeek(weekKey) {
+        const start = dateFromKey(weekKey);
+        const end = addDays(start, 6);
+        const normalizedStart = `${start.getUTCFullYear()}年${start.getUTCMonth() + 1}月${start.getUTCDate()}日(${weekdayFormatter.format(start)})`;
+        const normalizedEnd = `${end.getUTCMonth() + 1}月${end.getUTCDate()}日(${weekdayFormatter.format(end)})`;
+        return `${normalizedStart} 〜 ${normalizedEnd}`;
+      }
+
+      function formatJobDate(dateKey) {
+        if (!dateKey) return "掲載日不明";
+        return dateFormatter.format(dateFromKey(dateKey));
+      }
+
+      function statusFor(member, week) {
+        if (member.banned === true || member.status === "banned") {
+          return { label: "垢BAN", rank: 5, color: "var(--banned)", soft: "var(--banned-soft)" };
+        }
+        if (member.employerIdMissing === true) {
+          return { label: "ID未設定", rank: 4, color: "var(--gray)", soft: "var(--gray-soft)" };
+        }
+        if (member.status === "paused") {
+          return { label: "休止中", rank: 4, color: "var(--gray)", soft: "var(--gray-soft)" };
+        }
+        if (member.status === "left") {
+          return { label: "離脱", rank: 4, color: "var(--gray)", soft: "var(--gray-soft)" };
+        }
+        const statuses = {
+          behind: { label: "要注意", rank: 0, color: "var(--warning)", soft: "var(--warning-soft)" },
+          missed: { label: "未達", rank: 1, color: "var(--red)", soft: "var(--red-soft)" },
+          onTrack: { label: "順調", rank: 2, color: "var(--green)", soft: "var(--green-soft)" },
+          achieved: { label: "達成", rank: 3, color: "var(--green)", soft: "var(--green-soft)" },
+          untracked: { label: "追跡不可", rank: 4, color: "var(--gray)", soft: "var(--gray-soft)" }
+        };
+        return statuses[week.pace?.status] || (week.achieved ? statuses.achieved : statuses.missed);
+      }
+
+      function paceDetail(member, week) {
+        const pace = week.pace || {};
+        if (member.banned === true || member.status === "banned") return "追跡不可（垢BAN）";
+        if (member.employerIdMissing === true) return "追跡不可（発注者ID未設定）";
+        if (member.status === "paused") return "追跡対象外（休止中）";
+        if (member.status === "left") return "追跡対象外（離脱）";
+        if (pace.status === "achieved") return "週間目標を達成";
+        if (pace.status === "missed") {
+          return `週終了・あと${numberFormatter.format(pace.remainingRequired ?? 0)}件不足`;
+        }
+        if (pace.status === "onTrack") {
+          return `今日の目安 ${numberFormatter.format(pace.expectedByToday ?? 0)}件を達成 ・ あと${numberFormatter.format(pace.remainingRequired ?? 0)}件`;
+        }
+        if (pace.status === "behind") {
+          return `今日の目安 ${numberFormatter.format(pace.expectedByToday ?? 0)}件 ・ あと${numberFormatter.format(pace.remainingRequired ?? 0)}件`;
+        }
+        return "";
+      }
+
+      function escapeHtml(value) {
+        return String(value)
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#039;");
+      }
+
+      function safeJobUrl(value) {
+        try {
+          const url = new URL(value);
+          return url.protocol === "https:" || url.protocol === "http:" ? url.href : "#";
+        } catch {
+          return "#";
+        }
+      }
+
+      // 「出したのに伸びていない掲載」を集める。
+      // 週の切り替えに関係なく、いま気にすべきものを出したいので全週から拾う。
+      // 削除済み・募集終了済みの掲載は直しようがないので外す。
+      function collectStaleJobs() {
+        const base = data.today && data.today.date ? data.today.date : null;
+        if (!base) return [];
+        const todayMs = Date.parse(base + "T00:00:00+09:00");
+        if (isNaN(todayMs)) return [];
+
+        const seen = new Set();
+        const out = [];
+        data.members.forEach((member) => {
+          if (member.status === "banned" || member.employerIdMissing === true) return;
+          Object.keys(member.weeks || {}).forEach((weekKey) => {
+            const jobs = (member.weeks[weekKey] || {}).jobs || [];
+            jobs.forEach((job) => {
+              if (job.visible === false) return;
+              if (job.recruiting === false) return;
+              if (!job.postedDate) return;
+              if (seen.has(job.jobId)) return;      // 週をまたいで二重に出さない
+              const postedMs = Date.parse(job.postedDate + "T00:00:00+09:00");
+              if (isNaN(postedMs)) return;
+              const days = Math.floor((todayMs - postedMs) / 86400000);
+              if (days < ALERT_AFTER_DAYS || days > ALERT_WITHIN_DAYS) return;
+              if (job.applyDeadline) {
+                const deadlineMs = Date.parse(job.applyDeadline + "T00:00:00+09:00");
+                if (!isNaN(deadlineMs) && deadlineMs < todayMs) return;
+              }
+              // 応募数が取れていない掲載は判断できない。黙って混ぜず、対象外にする。
+              if (typeof job.applicantCount !== "number") return;
+              if (job.applicantCount > ALERT_MAX_APPLICANTS) return;
+              seen.add(job.jobId);
+              out.push({ name: member.name, days, job });
+            });
+          });
+        });
+        // 応募が少ない順、同じなら古い順。手を打つ優先度そのまま。
+        out.sort((a, b) =>
+          a.job.applicantCount - b.job.applicantCount ||
+          b.days - a.days ||
+          String(a.name).localeCompare(String(b.name), "ja")
+        );
+        return out;
+      }
+
+      function renderAlert() {
+        const list = collectStaleJobs();
+        if (!list.length) {
+          elements.alert.hidden = true;
+          elements.alertList.replaceChildren();
+          return;
+        }
+        const show = list.slice(0, ALERT_SHOW);
+        elements.alert.hidden = false;
+        elements.alertCount.textContent = `${numberFormatter.format(list.length)}件`;
+        elements.alertNote.textContent =
+          `投稿から${ALERT_AFTER_DAYS}日以上たって、応募が${ALERT_MAX_APPLICANTS}人以下のものです。`
+          + `文面か条件の見直しをおすすめします。（直近${ALERT_WITHIN_DAYS}日ぶん`
+          + (list.length > show.length
+              ? `／応募が少ない順に${ALERT_SHOW}件だけ表示、ほか${numberFormatter.format(list.length - show.length)}件`
+              : "")
+          + "）募集終了したものは除きます。";
+        elements.alertList.innerHTML = show.map((row) => `
+          <li class="alert-item">
+            <span class="alert-who">${escapeHtml(row.name)}</span>
+            <a class="alert-link" href="${escapeHtml(safeJobUrl(row.job.url))}" target="_blank" rel="noopener">${escapeHtml(row.job.title || "タイトルなし")}</a>
+            <span class="alert-num">${escapeHtml(formatJobDate(row.job.postedDate))}・${numberFormatter.format(row.days)}日経過 ・ 応募 <strong>${numberFormatter.format(row.job.applicantCount)}人</strong></span>
+          </li>
+        `).join("");
+      }
+
+      function renderJobs(jobs) {
+        if (!jobs.length) {
+          return '<p class="empty-jobs">掲載なし</p>';
+        }
+
+        return `<ul class="job-list">${jobs.map((job) => {
+          const deletedBadge = job.visible === false
+            ? '<span class="deleted-badge">削除済み</span>'
+            : "";
+          const recruitingEndedBadge = job.recruiting === false
+            ? '<span class="recruiting-ended-badge">募集終了</span>'
+            : "";
+          return `
+            <li class="job${job.visible === false ? " is-deleted" : ""}">
+              <time class="job-date" datetime="${escapeHtml(job.postedDate || "")}">${escapeHtml(formatJobDate(job.postedDate))}</time>
+              <a class="job-link" href="${escapeHtml(safeJobUrl(job.url))}" target="_blank" rel="noopener">${escapeHtml(job.title || "タイトルなし")}${deletedBadge}${recruitingEndedBadge}</a>
+              <span class="job-applicants">応募者 <strong>${numberFormatter.format(job.applicantCount ?? 0)}人</strong></span>
+            </li>
+          `;
+        }).join("")}</ul>`;
+      }
+
+      // 今週の枠に出ない（＝過去の週に掲載した）案件でも、CW上でまだ公開中なら
+      // カードの明細に出す。「登録したのに掲載なしと出る」という混乱を防ぐため。
+      function renderContinuing(member, weekKey) {
+        if (weekKey !== data.currentWeek) return "";
+        const currentIds = new Set(
+          ((member.weeks[weekKey] || {}).jobs || []).map((job) => job.jobId)
+        );
+        const older = [];
+        Object.keys(member.weeks).forEach((wk) => {
+          if (wk === weekKey) return;
+          ((member.weeks[wk] || {}).jobs || []).forEach((job) => {
+            if (job.visible !== false && !currentIds.has(job.jobId)) older.push(job);
+          });
+        });
+        if (!older.length) return "";
+        older.sort((a, b) => String(b.postedDate || "").localeCompare(String(a.postedDate || "")));
+        return '<p class="continuing-label">過去の週に掲載して、いまも公開中の案件（今週のノルマには数えません）</p>'
+          + renderJobs(older);
+      }
+
+      function renderMember(member, weekKey, index) {
+        const week = member.weeks[weekKey] || {
+          postedCount: 0,
+          achieved: false,
+          applicantTotal: 0,
+          jobs: []
+        };
+        const status = statusFor(member, week);
+        const banned = member.banned === true || member.status === "banned";
+        if (banned) {
+          return `
+            <article class="member" style="--member-color:${status.color};--member-soft:${status.soft}">
+              <div class="member-toggle banned-member-toggle">
+                <span class="member-name-wrap">
+                  <span class="status-badge">${status.label}</span>
+                  <span class="member-name">${escapeHtml(member.name)}</span>
+                </span>
+                <span class="banned-message">アカウント停止のため掲載を追跡できません</span>
+              </div>
+            </article>
+          `;
+        }
+        const quota = Number(member.weeklyQuota) || 0;
+        const percent = quota > 0 ? Math.min(100, (week.postedCount / quota) * 100) : 0;
+        const detailsId = `details-${index}`;
+        const mismatched = Number(member.excludedMismatched) || 0;
+        const warning = mismatched > 0 ? `
+          <span class="warning" title="発注者IDが一致しない案件が ${mismatched} 件あります">
+            !
+            <span class="warning-tooltip" role="tooltip">発注者IDが一致しない案件が ${numberFormatter.format(mismatched)} 件あります</span>
+          </span>
+        ` : "";
+        const detail = paceDetail(member, week);
+        const schedule = Array.isArray(week.pace?.postingDays) && week.pace.postingDays.length
+          ? `予定: ${week.pace.postingDays.map(escapeHtml).join("・")}`
+          : "";
+        const detailText = [detail, schedule].filter(Boolean).join("　 ");
+
+        return `
+          <article class="member" style="--member-color:${status.color};--member-soft:${status.soft};--progress:${percent}%">
+            <button class="member-toggle" type="button" aria-expanded="false" aria-controls="${detailsId}">
+              <span class="member-name-wrap">
+                <span class="member-name">${escapeHtml(member.name)}</span>
+                ${warning}
+              </span>
+              <span class="status-badge">${status.label}</span>
+              <span class="progress-area">
+                <span class="progress-meta">
+                  <span class="progress-count">${numberFormatter.format(week.postedCount)} / ${numberFormatter.format(quota)}件</span>
+                </span>
+                <span class="progress-track" aria-label="ノルマ達成率 ${Math.round(percent)}%">
+                  <span class="progress-bar"></span>
+                </span>
+                ${detailText ? `<span class="pace-detail">${detailText}</span>` : ""}
+              </span>
+              <span class="applicants">応募者 <span class="applicant-number">${numberFormatter.format(week.applicantTotal ?? 0)}人</span></span>
+              <span class="expand-hint"><span>明細を見る</span><span class="chevron" aria-hidden="true">⌄</span></span>
+            </button>
+            <div id="${detailsId}" class="details" hidden>
+              ${(() => {
+                if (member.employerIdMissing === true) {
+                  return '<p class="empty-jobs">発注者IDが未設定です</p>';
+                }
+                const weekJobs = Array.isArray(week.jobs) ? week.jobs : [];
+                const continuing = renderContinuing(member, weekKey);
+                const jobsHtml = weekJobs.length
+                  ? renderJobs(weekJobs)
+                  : `<p class="empty-jobs">${continuing ? "今週の掲載はまだありません" : "掲載なし"}</p>`;
+                return jobsHtml + continuing;
+              })()}
+            </div>
+          </article>
+        `;
+      }
+
+      function render() {
+        const weekKey = data.weeks[weekIndex];
+        const totals = data.totals[weekKey] || {
+          membersActive: 0,
+          membersAchieved: 0,
+          postedCount: 0,
+          applicantTotal: 0
+        };
+        const members = data.members.map((member) => {
+          const week = member.weeks[weekKey] || { postedCount: 0, achieved: false };
+          return { member, week, status: statusFor(member, week) };
+        }).sort((a, b) =>
+          a.status.rank - b.status.rank ||
+          (Number(b.week.pace?.remainingRequired) || 0)
+            - (Number(a.week.pace?.remainingRequired) || 0) ||
+          String(a.member.name).localeCompare(String(b.member.name), "ja")
+        );
+
+        elements.weekLabel.textContent = formatWeek(weekKey);
+        if (weekKey === data.currentWeek && data.today) {
+          const days = ["日", "月", "火", "水", "木", "金", "土"];
+          elements.dayIndicator.innerHTML = days.map((day) =>
+            day === data.today.dayOfWeek
+              ? `<span class="day-indicator-current">[${day}]</span>`
+              : `<span>${day}</span>`
+          ).join('<span aria-hidden="true">─</span>')
+            + `<span class="remaining-days">残り${numberFormatter.format(data.today.remainingDays)}日</span>`;
+          elements.dayIndicator.hidden = false;
+        } else {
+          elements.dayIndicator.hidden = true;
+          elements.dayIndicator.replaceChildren();
+        }
+        const generatedAt = new Date(data.generatedAt);
+        elements.updated.textContent = `最終更新 ${updatedFormatter.format(generatedAt)} JST`;
+        // 36時間以上更新されていない場合は、最終更新時刻の隣で知らせる
+        if (Date.now() - generatedAt.getTime() >= 36 * 60 * 60 * 1000) {
+          const staleWarning = document.createElement("span");
+          staleWarning.className = "stale-warning";
+          staleWarning.textContent = "⚠ データが更新されていません";
+          elements.updated.append(staleWarning);
+        }
+        elements.achieved.innerHTML = `${numberFormatter.format(totals.membersAchieved)} / ${numberFormatter.format(totals.membersActive)}<span class="summary-unit">人</span>`;
+        elements.posted.innerHTML = `${numberFormatter.format(totals.postedCount)}<span class="summary-unit">件</span>`;
+        elements.applicants.innerHTML = `${numberFormatter.format(totals.applicantTotal)}<span class="summary-unit">人</span>`;
+        const breakdownOrder = ["要注意", "未達", "順調", "達成", "ID未設定", "垢BAN"];
+        const statusCounts = members.reduce((counts, item) => {
+          counts[item.status.label] = (counts[item.status.label] || 0) + 1;
+          return counts;
+        }, {});
+        elements.breakdown.textContent = breakdownOrder
+          .filter((label) => statusCounts[label] > 0)
+          .map((label) => `${label} ${numberFormatter.format(statusCounts[label])}名`)
+          .join(" ・ ");
+        elements.breakdown.hidden = !elements.breakdown.textContent;
+        // 注意は週の切り替えに関係なく「いまの状況」を出す
+        renderAlert();
+        elements.memberCount.textContent = `${numberFormatter.format(members.length)}人`;
+        elements.members.innerHTML = members.map(({ member }, index) =>
+          renderMember(member, weekKey, index)
+        ).join("");
+
+        // weeksは新しい順。currentWeekより先の週へは進ませない。
+        elements.newerWeek.disabled = weekIndex <= currentWeekIndex;
+        elements.olderWeek.disabled = weekIndex >= data.weeks.length - 1;
+
+        elements.members.querySelectorAll(".member-toggle").forEach((button) => {
+          button.addEventListener("click", () => {
+            const details = document.getElementById(button.getAttribute("aria-controls"));
+            const expanded = button.getAttribute("aria-expanded") === "true";
+            button.setAttribute("aria-expanded", String(!expanded));
+            details.hidden = expanded;
+            const hint = button.querySelector(".expand-hint span:first-child");
+            if (hint) hint.textContent = expanded ? "明細を見る" : "明細を閉じる";
+          });
+        });
+      }
+
+      function showNoData(detail) {
+        elements.dashboard.hidden = true;
+        elements.message.hidden = false;
+        elements.messageTitle.classList.remove("loading");
+        elements.messageTitle.textContent = "データがまだありません";
+        elements.messageDetail.textContent = detail;
+      }
+
+      function showLoadError() {
+        elements.dashboard.hidden = true;
+        elements.message.hidden = false;
+        elements.messageTitle.classList.remove("loading");
+        elements.messageTitle.textContent = "データを読み込めませんでした。ページを再読み込みしてください。";
+        elements.messageDetail.textContent = "";
+      }
+
+      elements.olderWeek.addEventListener("click", () => {
+        if (weekIndex < data.weeks.length - 1) {
+          weekIndex += 1;
+          render();
+        }
+      });
+
+      elements.newerWeek.addEventListener("click", () => {
+        if (weekIndex > currentWeekIndex) {
+          weekIndex -= 1;
+          render();
+        }
+      });
+
+      // ブラウザとCDNのキャッシュを避け、常に最新の集計を取得する
+      fetch(`./data/weekly.json?t=${Date.now()}`, { cache: "no-store" })
+        .then((response) => {
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          return response.json();
+        })
+        .then((json) => {
+          if (
+            !json ||
+            !Array.isArray(json.weeks) ||
+            !json.weeks.length ||
+            !Array.isArray(json.members) ||
+            !json.totals ||
+            !json.generatedAt ||
+            Number.isNaN(new Date(json.generatedAt).getTime())
+          ) {
+            throw new Error("invalid data");
+          }
+          data = json;
+          const currentIndex = data.weeks.indexOf(data.currentWeek);
+          currentWeekIndex = currentIndex >= 0 ? currentIndex : 0;
+          weekIndex = currentWeekIndex;
+          elements.message.hidden = true;
+          elements.dashboard.hidden = false;
+          render();
+        })
+        .catch(() => {
+          showLoadError();
+        });
+    })();
+  </script>
+</body>
+</html>
