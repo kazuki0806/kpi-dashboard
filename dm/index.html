@@ -81,6 +81,9 @@ body{margin:0;background:var(--bg);color:var(--ink);
 
   <div class="grid cards3" id="stats" style="margin-bottom:14px"></div>
 
+  <div class="secLab" id="goalLab">9月の目標（インフルエンサー3人採用）</div>
+  <div class="grid cards4" id="goal" style="margin-bottom:14px"></div>
+
   <div class="secLab">アポ取り → 着座 → 契約（インフルエンサーDM）</div>
   <div class="grid cards3" id="funnel" style="margin-bottom:14px"></div>
 
@@ -108,6 +111,22 @@ const PEOPLE = {
   tanimura:  {name:"谷村"},
   matsumoto: {name:"松本"},
 };
+// ── 9月の目標（2026-09-02 設計）──────────────────
+// 10月に5契約／300万円を作るには、9月中にインフルエンサーを3人採る必要がある。
+//   1採用 = 4アポ / 3採用 = 12アポ
+//   12アポ × 830DM = 9,960DM ÷ 30日 = 332DM/日
+// 830DMは想定値。8月の実測は 4,620DM ÷ 4アポ = 1,155DM なので、
+// このままだと 9,960DM では 8.6アポ にしかならない。
+// どちらに寄っているかを毎日見えるようにするため、CV（DM/アポ）も出す。
+const GOAL = {
+  dmPerDay: 332,        // 1日のDM目標
+  apptPerMonth: 12,     // 月のアポ目標（週3本ペース）
+  hirePerMonth: 3,      // 月の採用目標
+  cvAssumed: 830,       // 想定CV（DM/アポ）
+  cvActual: 1155,       // 8月の実測CV
+  capacityPerDay: 600,  // 20端末 × 3アカウント × 10DM の上限
+};
+
 let CUR = "all";
 let DATA = null;
 let sortKey = "dm", sortDesc = true;
@@ -159,10 +178,10 @@ function buildTabs(){
   });
 }
 
-function statCard(lab, val, unit, badge){
+function statCard(lab, val, unit, badge, extra){
   const b = badge ? `<span class="badge ${badge.cls}">${badge.txt}</span>` : "";
   return `<div class="card stat"><div class="lab">${lab}</div>
-    <div class="val">${val}${unit ? `<small> ${unit}</small>` : ""}</div>${b}</div>`;
+    <div class="val">${val}${unit ? `<small> ${unit}</small>` : ""}</div>${b}${extra || ""}</div>`;
 }
 
 function render(){
@@ -209,6 +228,39 @@ function render(){
     statCard("直近の日のDM数", fmt(dmToday), last ? `（${last.day}日）` : "", badge) +
     statCard("今月の累計DM数", fmt(totalDm), "件", {cls:"flat", txt:`稼働${worked.length}日 ・ 1日平均${fmt(avg)}件`}) +
     statCard("返信数", fmt(totalReply), "件", {cls:"flat", txt:`返信率 ${rate}%`});
+
+  // ── 目標（全体タブのときだけ出す。人ごとに割ると意味が変わるため）──
+  const goalOn = CUR === "all";
+  $("#goalLab").style.display = goalOn ? "" : "none";
+  $("#goal").style.display = goalOn ? "" : "none";
+  if (goalOn) {
+    const days = new Date(DATA.month ? DATA.month + "-01" : Date.now());
+    const daysInMonth = new Date(days.getFullYear(), days.getMonth() + 1, 0).getDate();
+    const goalDm = GOAL.dmPerDay * daysInMonth;
+    const paceDm = worked.length ? Math.round(totalDm / worked.length) : 0;
+    const dmPct = Math.round(totalDm / goalDm * 100);
+    const apptPct = Math.round(f.appt / GOAL.apptPerMonth * 100);
+    const cv = f.appt ? Math.round(totalDm / f.appt) : null;
+    const hire = Math.floor(f.appt / 4);
+
+    const bar = (pct, warn) =>
+      `<div style="height:6px;border-radius:4px;background:var(--line);margin-top:8px;overflow:hidden">
+         <div style="height:100%;width:${Math.min(100, Math.max(0, pct))}%;background:${warn ? "var(--down,#e5484d)" : "linear-gradient(90deg,var(--accent),var(--accent-2))"}"></div>
+       </div>`;
+
+    $("#goal").innerHTML =
+      statCard("DM（今月）", fmt(totalDm), `/ ${fmt(goalDm)}`,
+               {cls: dmPct >= 100 ? "up" : "flat", txt: `${dmPct}% ・ 1日${fmt(paceDm)}件（目標${GOAL.dmPerDay}）`},
+               bar(dmPct)) +
+      statCard("アポ（今月）", fmt(f.appt), `/ ${GOAL.apptPerMonth}件`,
+               {cls: apptPct >= 100 ? "up" : "flat", txt: `${apptPct}% ・ 週3本ペース`},
+               bar(apptPct)) +
+      statCard("CV（DM÷アポ）", cv == null ? "—" : fmt(cv), "DM/アポ",
+               {cls: cv == null ? "flat" : (cv <= GOAL.cvAssumed ? "up" : "down"),
+                txt: `想定${GOAL.cvAssumed} ・ 8月実測${GOAL.cvActual}`}) +
+      statCard("採用（見込み）", fmt(hire), `/ ${GOAL.hirePerMonth}人`,
+               {cls: hire >= GOAL.hirePerMonth ? "up" : "flat", txt: "アポ4件で1人の想定"});
+  }
 
   $("#funnel").innerHTML =
     statCard("アポ取り", fmt(f.appt), "件", {cls:"flat", txt:"面談が入った数"}) +
