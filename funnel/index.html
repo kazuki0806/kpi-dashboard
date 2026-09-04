@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Threads導線ダッシュボード</title>
+<style>
+:root{
+  --accent:#7b61ff; --accent-soft:#efeaff; --accent-2:#b8abff;
+  --bg:#f4f3fa; --card:#ffffff; --ink:#1c1b29; --ink2:#6b6980; --ink3:#9d9bb0;
+  --line:#eceaf4; --good:#16a06a; --good-bg:#e6f6ef; --bad:#e2544f; --bad-bg:#fdecec;
+  --radius:16px; --shadow:0 1px 3px rgba(30,25,60,.05);
+}
+:root[data-theme=dark]{
+  --accent:#8f7bff; --accent-soft:#2a2547; --accent-2:#5b4fa8;
+  --bg:#141320; --card:#1e1c2e; --ink:#f0eefb; --ink2:#a6a3c0; --ink3:#75729a;
+  --line:#2b2940; --good:#4cd196; --good-bg:#173a2c; --bad:#f0817d; --bad-bg:#3a1f1f;
+  --shadow:0 1px 3px rgba(0,0,0,.3);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP",sans-serif;
+  -webkit-font-smoothing:antialiased;padding:18px}
+.wrap{max-width:1120px;margin:0 auto}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:18px}
+.logo{width:34px;height:34px;border-radius:10px;background:var(--accent);color:#fff;display:grid;place-items:center;font-weight:800}
+.iconbtn{width:38px;height:38px;border-radius:10px;border:0;background:var(--card);color:var(--ink2);cursor:pointer;font-size:16px;box-shadow:var(--shadow)}
+.hello{font-size:22px;font-weight:700;margin:2px 0 2px}
+.sub{color:var(--ink2);font-size:13px;margin-bottom:16px}
+.grid{display:grid;gap:14px}
+.cards5{grid-template-columns:repeat(5,1fr)}
+.cards4{grid-template-columns:repeat(4,1fr)}
+.secLab{font-size:13px;font-weight:700;color:var(--ink2);margin:0 0 8px 2px}
+.card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px 20px}
+.stat .lab{color:var(--ink2);font-size:13px;font-weight:600}
+.stat .val{font-size:26px;font-weight:800;margin:8px 0 8px;letter-spacing:-.5px}
+.stat .val small{font-size:14px;color:var(--ink3);font-weight:600}
+.badge{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:700;padding:3px 8px;border-radius:20px}
+.badge.up{color:var(--good);background:var(--good-bg)}
+.badge.down{color:var(--bad);background:var(--bad-bg)}
+.badge.flat{color:var(--ink2);background:var(--line)}
+.badge.wait{color:var(--ink3);background:var(--line)}
+.src{margin-top:10px;font-size:11px;color:var(--ink3);line-height:1.6}
+.arrow{display:grid;place-items:center;color:var(--ink3);font-size:13px;font-weight:700;padding:6px 0}
+.rateRow{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.rate{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:14px 18px}
+.rate .lab{color:var(--ink2);font-size:12px;font-weight:600}
+.rate .val{font-size:20px;font-weight:800;margin-top:6px}
+.tbl{width:100%;border-collapse:collapse;font-size:13px}
+.tbl th{text-align:left;color:var(--ink2);font-weight:600;padding:9px 10px;border-bottom:1px solid var(--line)}
+.tbl td{padding:9px 10px;border-bottom:1px solid var(--line)}
+.tbl td.num{text-align:right;font-variant-numeric:tabular-nums}
+.empty{color:var(--ink3);font-size:13px;text-align:center;padding:26px 0}
+.note{background:var(--accent-soft);color:var(--ink2);border-radius:12px;padding:12px 16px;font-size:12.5px;line-height:1.8;margin-bottom:16px}
+@media(max-width:900px){.cards5,.cards4,.rateRow{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <div class="brand"><div class="logo">導</div>Threads導線</div>
+    <button class="iconbtn" id="theme" title="テーマ">☾</button>
+  </div>
+
+  <div class="hello">投稿 → プロフィール → note → 公式LINE → アポ</div>
+  <div class="sub" id="sub">項目だけ用意した状態です</div>
+
+  <div class="note" id="notice"></div>
+
+  <div class="secLab">導線（今月）</div>
+  <div class="grid cards5" id="funnel" style="margin-bottom:6px"></div>
+  <div class="arrow">▼ 次の段への転換率 ▼</div>
+  <div class="rateRow" id="rates" style="margin-bottom:16px"></div>
+
+  <div class="card">
+    <div class="secLab" style="margin-bottom:10px">各項目の取得元と状態</div>
+    <div id="srcTable"></div>
+  </div>
+</div>
+
+<script>
+// ── 導線の段。数値はまだ繋いでいない（2026-09-04 本人指示で項目だけ先に用意）──
+//
+// value に入れる名前は、あとで funnel_<アカウント>.json の項目名と合わせること。
+// funnel_export.py が history に {views, note_clicks, note_pv, line_followers,
+// profile_views} を1日1行で貯める作りになっているので、そこから拾えばよい。
+const STAGES = [
+  { key: "views",          name: "投稿インプレッション", unit: "imp",
+    src: "Threads API（自動）", ready: true,
+    memo: "投稿が何回見られたか。量が出ているかを見る" },
+  { key: "profile_views",  name: "プロフィール到達",   unit: "回",
+    src: "Threads API のアカウント単位 views", ready: true,
+    memo: "厳密なプロフィール閲覧はAPIに無い。プロフ＋投稿の総ビューを代理で使う" },
+  { key: "note_pv",        name: "note閲覧数",        unit: "PV",
+    src: "note（要 ~/.note_token）", ready: false,
+    memo: "公式APIは無く、ダッシュボードのJSONを使う。トークンは失効したら入れ直し" },
+  { key: "line_followers", name: "公式LINE追加",      unit: "人",
+    src: "LINE Messaging API（★トークン未登録）", ready: false,
+    memo: "いま鍵があるのは社内ボットと後藤さんのみ。導線用アカウントの鍵が要る" },
+  { key: "appt",           name: "アポ取得",          unit: "件",
+    src: "営業シート（自動）", ready: true,
+    memo: "営業(threads)タブ。誰の行を数えるかは要決定" },
+];
+
+// 段と段のあいだの転換率
+const RATES = [
+  { from: "views",         to: "profile_views",  name: "投稿 → プロフィール" },
+  { from: "profile_views", to: "note_pv",        name: "プロフィール → note" },
+  { from: "note_pv",       to: "line_followers", name: "note → 公式LINE" },
+  { from: "line_followers", to: "appt",          name: "公式LINE → アポ" },
+];
+
+// 目標値。決まったらここに入れる（2026-09-04 時点は想定値のみ）
+const GOAL = { note_pv: 600, line_followers: 30, appt: 15 };
+
+const $ = s => document.querySelector(s);
+const fmt = n => (n == null ? "—" : Number(n).toLocaleString());
+let DATA = null;
+
+function statCard(st){
+  const v = DATA && DATA.totals ? DATA.totals[st.key] : null;
+  const goal = GOAL[st.key];
+  const badge = v == null
+    ? `<span class="badge wait">未接続</span>`
+    : (goal ? `<span class="badge ${v >= goal ? "up" : "flat"}">目標 ${fmt(goal)}${st.unit}</span>`
+            : `<span class="badge flat">今月</span>`);
+  return `<div class="card stat">
+    <div class="lab">${st.name}</div>
+    <div class="val">${fmt(v)}<small> ${st.unit}</small></div>
+    ${badge}
+    <div class="src">${st.memo}</div>
+  </div>`;
+}
+
+function rateCard(r){
+  const t = DATA && DATA.totals ? DATA.totals : {};
+  const a = t[r.from], b = t[r.to];
+  const val = (a && b) ? (b / a * 100).toFixed(1) + "%" : "—";
+  return `<div class="rate"><div class="lab">${r.name}</div><div class="val">${val}</div></div>`;
+}
+
+function render(){
+  $("#funnel").innerHTML = STAGES.map(statCard).join("");
+  $("#rates").innerHTML = RATES.map(rateCard).join("");
+
+  const wait = STAGES.filter(s => !s.ready).map(s => s.name);
+  $("#notice").innerHTML = DATA
+    ? `更新 ${DATA.generated_at || "—"}`
+    : "数値はまだ繋いでいません。項目と取得元だけ先に置いてあります。"
+      + (wait.length ? `<br>繋ぐのに手当てが要るもの: <b>${wait.join(" / ")}</b>` : "");
+
+  $("#srcTable").innerHTML = `<table class="tbl"><thead><tr>
+      <th>項目</th><th>取得元</th><th>状態</th><th>補足</th></tr></thead><tbody>` +
+    STAGES.map(s => `<tr>
+      <td>${s.name}</td><td>${s.src}</td>
+      <td>${s.ready ? "自動で取れる" : "<b>手当てが要る</b>"}</td>
+      <td style="color:var(--ink3)">${s.memo}</td></tr>`).join("") +
+    `</tbody></table>`;
+}
+
+// あとで funnel_A.json などを置けば、そのまま数字が入る
+async function load(){
+  try {
+    const r = await fetch("funnel_data.json?t=" + Date.now(), {cache:"no-store"});
+    if (r.ok) DATA = await r.json();
+  } catch(e) {}
+  render();
+}
+
+$("#theme").onclick = () => {
+  const dark = document.documentElement.getAttribute("data-theme") === "dark";
+  document.documentElement.setAttribute("data-theme", dark ? "light" : "dark");
+};
+load();
+</script>
+</body>
+</html>
