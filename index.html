@@ -150,6 +150,7 @@ body{margin:0;background:var(--bg);color:var(--ink);
     <p class="note" id="sheetacct">この端末に保存されます</p>
     <div class="field"><label>オプチャ参加</label><input id="in_chat" inputmode="numeric" placeholder="0"><span class="prev" id="prev_chat"></span></div>
     <div class="field"><label>アポ / 相談</label><input id="in_appt" inputmode="numeric" placeholder="0"><span class="prev" id="prev_appt"></span></div>
+    <div class="field"><label>プロフィール閲覧（合計）</label><input id="in_profile" inputmode="numeric" placeholder="0"><span class="prev" id="prev_profile"></span></div>
     <div class="field"><label>公式LINE追加</label><input id="in_line" inputmode="numeric" placeholder="0"><span class="prev" id="prev_line"></span></div>
     <button class="save" id="saveInput">保存（今日の日付）</button>
     <button id="clearInput" style="width:100%;background:none;border:0;color:var(--bad);font-size:13px;margin-top:14px;cursor:pointer;font-family:inherit">この端末で入れた数値を全部消す</button>
@@ -167,6 +168,7 @@ const GOAL_DEFAULT = {follower:150, posts:5, chat:100, appt:10, impMonth:0, impA
 const GOAL_BY_ACCT = {
   A: {follower:150, posts:5, chat:600, appt:15, impMonth:300000, impAvg:2000, line:30},
 };
+const FUNNEL = {};   // funnel_<acct>.json（noteクリック等の自動取得分）
 const HOOK_TYPES = [
   {key:"権威開示", re:/(していたから|見てきた|担当をして|やってわかった|年やって|件見て)/},
   {key:"数字対比", re:/(\d+件|\d+\s*人|\d+%|\d+件中|100件|300件)/},
@@ -282,12 +284,40 @@ function render(){
   const man = manualEntries(CUR);
   const lastChat = [...man].reverse().find(e=>e.chat!=null);
   const chatVal = lastChat?lastChat.chat:null;
+  const lastProf = [...man].reverse().find(e=>e.profile!=null);
+  const manProf = lastProf?lastProf.profile:null;
+  const fn = FUNNEL[CUR]||[];
+  const fnNow = fn.length?fn[fn.length-1]:null;
+  const fnPrev = fn.length>1?fn[fn.length-2]:null;
+  const noteClicks = fnNow&&fnNow.note_clicks!=null?fnNow.note_clicks:null;
+  const noteBadge = (fnNow&&fnPrev&&fnPrev.note_clicks!=null&&noteClicks!=null)
+    ? (noteClicks>=fnPrev.note_clicks
+        ? {cls:"up",  txt:"↑ +"+(noteClicks-fnPrev.note_clicks)+" 前日"}
+        : {cls:"down",txt:"↓ "+(noteClicks-fnPrev.note_clicks)+" 前日"})
+    : {cls:"flat", txt: fn.length?"自動取得":"funnel_export.py 未実行"};
+
+  // プロフィールへのアクセス：funnel（Threads Web版インサイトの実測）を優先し、
+  // 無ければ手入力値にさがる。APIには profile_views が無いのでこの2段構えにしている。
+  const fnProf = fn.filter(r=>r.profile_views!=null);
+  const pNow = fnProf.length?fnProf[fnProf.length-1]:null;
+  const pPrev = fnProf.length>1?fnProf[fnProf.length-2]:null;
+  const profVal = pNow? pNow.profile_views : manProf;
+  const profRate = (pNow&&pNow.views)? (pNow.profile_views/pNow.views*100) : null;
+  const profBadge = pNow
+    ? (pPrev
+        ? {cls: pNow.profile_views>=pPrev.profile_views?"up":"down",
+           txt: (pNow.profile_views>=pPrev.profile_views?"↑ +":"↓ ")+(pNow.profile_views-pPrev.profile_views)
+                +" 前回 ・ 閲覧の"+profRate.toFixed(1)+"%"}
+        : {cls:"flat", txt: pNow.date+" の投稿"})
+    : {cls:"flat", txt:"未取得"};
 
   $("#stats").innerHTML =
     statCard("今日の投稿", todayPosts, "/ "+g.posts, {cls: todayPosts>=g.posts?"up":"flat", txt: (todayPosts>=g.posts?"達成":"あと"+(g.posts-todayPosts)+"件")+" ・ 累計"+fmt(posts.length)+"件"}, "posts") +
     statCard("平均インプレ", fmt(ps.avg), "", impBadge, "imp", ptabs) +
     statCard("フォロワー", fmt(folNow), "人", folBadge, "follower") +
-    statCard("オプチャ参加", fmt(chatVal), "人", {cls:"flat", txt: man.some(e=>e.date===tkey&&e.chat!=null)?"今日入力済":"今日未入力"}, "chat");
+    statCard("オプチャ参加", fmt(chatVal), "人", {cls:"flat", txt: man.some(e=>e.date===tkey&&e.chat!=null)?"今日入力済":"今日未入力"}, "chat") +
+    statCard("プロフィール閲覧", fmt(profVal), "人", profBadge, "profile") +
+    statCard("noteクリック", fmt(noteClicks), "件", noteBadge, "note");
 
   // flow bars（期間連動：日=投稿ごと / 週=日別平均 / 月=週別平均）
   const bars = buildBars(posts, impPeriod);
@@ -350,10 +380,12 @@ function render(){
 
   // sheet prev values
   const lastAppt=[...man].reverse().find(e=>e.appt!=null);
+  const lastProf2 = [...man].reverse().find(e=>e.profile!=null);
+  $("#prev_profile").textContent = lastProf2?("前回 "+lastProf2.profile):"";
   $("#prev_chat").textContent = lastChat?("前回 "+lastChat.chat):"";
   $("#prev_appt").textContent = lastAppt?("前回 "+lastAppt.appt):"";
   $("#prev_line").textContent = lastLine?("前回 "+lastLine.line):"";
-  $("#in_chat").value=""; $("#in_appt").value=""; $("#in_line").value="";
+  $("#in_chat").value=""; $("#in_appt").value=""; $("#in_line").value=""; $("#in_profile").value="";
 }
 
 async function load(){
@@ -365,6 +397,10 @@ async function load(){
     try{
       const rm=await fetch("kpi_manual_"+k+".json?t="+Date.now(),{cache:"no-store"});
       if(rm.ok){const jm=await rm.json(); if(Array.isArray(jm)) MANUAL[k]=jm;}
+    }catch(e){}
+    try{
+      const rf=await fetch("funnel_"+k+".json?t="+Date.now(),{cache:"no-store"});
+      if(rf.ok){const jf=await rf.json(); if(jf&&Array.isArray(jf.history)) FUNNEL[k]=jf.history;}
     }catch(e){}
   }));
   render();
@@ -384,16 +420,18 @@ $("#refresh").onclick=async ()=>{
 $("#openInput").onclick=()=>$("#sheetbg").classList.add("on");
 $("#sheetbg").onclick=e=>{if(e.target===$("#sheetbg"))$("#sheetbg").classList.remove("on");};
 $("#in_chat").addEventListener("keydown",e=>{if(e.key==="Enter")$("#in_appt").focus();});
-$("#in_appt").addEventListener("keydown",e=>{if(e.key==="Enter")$("#in_line").focus();});
+$("#in_appt").addEventListener("keydown",e=>{if(e.key==="Enter")$("#in_profile").focus();});
+$("#in_profile").addEventListener("keydown",e=>{if(e.key==="Enter")$("#in_line").focus();});
 $("#in_line").addEventListener("keydown",e=>{if(e.key==="Enter")$("#saveInput").click();});
 $("#saveInput").onclick=()=>{
-  const chat=$("#in_chat").value.trim(), appt=$("#in_appt").value.trim(), line=$("#in_line").value.trim();
-  if(chat===""&&appt===""&&line==="")return $("#sheetbg").classList.remove("on");
+  const chat=$("#in_chat").value.trim(), appt=$("#in_appt").value.trim(), line=$("#in_line").value.trim(), prof=$("#in_profile").value.trim();
+  if(chat===""&&appt===""&&line===""&&prof==="")return $("#sheetbg").classList.remove("on");
   const man=manualEntries(CUR); const t=today();
   let row=man.find(e=>e.date===t); if(!row){row={date:t};man.push(row);}
   if(chat!=="")row.chat=chat.startsWith("+")?(Number(row.chat||0)+Number(chat.slice(1))):Number(chat);
   if(appt!=="")row.appt=Number(appt);
   if(line!=="")row.line=line.startsWith("+")?(Number(row.line||0)+Number(line.slice(1))):Number(line);
+  if(prof!=="")row.profile=prof.startsWith("+")?(Number(row.profile||0)+Number(prof.slice(1))):Number(prof);
   lsSet("uni_kpi_"+CUR+"_manual",man);
   $("#sheetbg").classList.remove("on"); render();
 };

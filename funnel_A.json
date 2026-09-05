@@ -1,0 +1,34 @@
+{
+  "history": [
+    {
+      "date": "2026-08-31",
+      "profile_views": 487,
+      "views": 5092,
+      "note_clicks": null,
+      "line_clicks": null,
+      "note_pv": null,
+      "line_followers": null,
+      "profile_views_note": "8/31投稿5本の合計（Threads Web版インサイト）"
+    },
+    {
+      "date": "2026-09-02",
+      "profile_views": 270,
+      "views": 4186,
+      "note_clicks": null,
+      "line_clicks": null,
+      "note_pv": null,
+      "line_followers": null,
+      "profile_views_note": "9/2投稿5本の合計（Threads Web版インサイト）"
+    },
+    {
+      "date": "2026-09-04",
+      "profile_views": 444,
+      "views": 12010,
+      "note_clicks": 2,
+      "line_clicks": 0,
+      "note_pv": 96,
+      "line_followers": 2,
+      "profile_views_note": "9/4投稿5本の合計（Threads Web版インサイト）"
+    }
+  ]
+}
