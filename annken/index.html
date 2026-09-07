@@ -150,6 +150,8 @@ body{margin:0;background:var(--bg);color:var(--ink);
     <p class="note" id="sheetacct">この端末に保存されます</p>
     <div class="field"><label>オプチャ参加</label><input id="in_chat" inputmode="numeric" placeholder="0"><span class="prev" id="prev_chat"></span></div>
     <div class="field"><label>アポ / 相談</label><input id="in_appt" inputmode="numeric" placeholder="0"><span class="prev" id="prev_appt"></span></div>
+    <div class="field"><label>プロフィール閲覧（合計）</label><input id="in_profile" inputmode="numeric" placeholder="0"><span class="prev" id="prev_profile"></span></div>
+    <div class="field"><label>公式LINE追加</label><input id="in_line" inputmode="numeric" placeholder="0"><span class="prev" id="prev_line"></span></div>
     <button class="save" id="saveInput">保存（今日の日付）</button>
     <button id="clearInput" style="width:100%;background:none;border:0;color:var(--bad);font-size:13px;margin-top:14px;cursor:pointer;font-family:inherit">この端末で入れた数値を全部消す</button>
   </div>
@@ -165,7 +167,12 @@ const ACCOUNTS = {
   hamada:{name:"濱田", handle:"", kpi2:"アポ", url:"kpi_data_hamada.json"},
   himeji:{name:"姫路", handle:"", kpi2:"アポ", url:"kpi_data_himeji.json"},
 };
-const GOAL_DEFAULT = {follower:150, posts:5, chat:100, appt:10};
+const GOAL_DEFAULT = {follower:150, posts:5, chat:100, appt:10, impMonth:0, impAvg:0, line:0};
+// 月次コミット（アカウントごとの目標。端末で編集すると上書きされる）
+const GOAL_BY_ACCT = {
+  A: {follower:150, posts:5, chat:600, appt:15, impMonth:300000, impAvg:2000, line:30},
+};
+const FUNNEL = {};   // funnel_<acct>.json（noteクリック等の自動取得分）
 const HOOK_TYPES = [
   {key:"権威開示", re:/(していたから|見てきた|担当をして|やってわかった|年やって|件見て)/},
   {key:"数字対比", re:/(\d+件|\d+\s*人|\d+%|\d+件中|100件|300件)/},
@@ -248,8 +255,7 @@ function manualEntries(acct){
   pub.forEach(e=>{byDate[e.date]=e;});
   return Object.values(byDate).sort((a,b)=>a.date<b.date?-1:1);
 }
-const GOAL_BY_ACCOUNT = {ikeda:{posts:3}, yachi:{posts:3}, tanimura:{posts:3}, kono:{posts:3}, hamada:{posts:3}, himeji:{posts:3}, all:{posts:18}};
-function goals(acct){ return Object.assign({}, GOAL_DEFAULT, GOAL_BY_ACCOUNT[acct]||{}, lsGet("annken_kpi_"+acct+"_goals", {})); }
+function goals(acct){ return Object.assign({}, GOAL_DEFAULT, GOAL_BY_ACCT[acct]||{}, lsGet("annken_kpi_"+acct+"_goals_v2", {})); }
 
 function statCard(lab,val,unit,badge,key,extra){
   const b = badge ? `<span class="badge ${badge.cls}">${badge.txt}</span>` : "";
@@ -282,6 +288,32 @@ function render(){
   const man = manualEntries(CUR);
   const lastChat = [...man].reverse().find(e=>e.chat!=null);
   const chatVal = lastChat?lastChat.chat:null;
+  const lastProf = [...man].reverse().find(e=>e.profile!=null);
+  const manProf = lastProf?lastProf.profile:null;
+  const fn = FUNNEL[CUR]||[];
+  const fnNow = fn.length?fn[fn.length-1]:null;
+  const fnPrev = fn.length>1?fn[fn.length-2]:null;
+  const noteClicks = fnNow&&fnNow.note_clicks!=null?fnNow.note_clicks:null;
+  const noteBadge = (fnNow&&fnPrev&&fnPrev.note_clicks!=null&&noteClicks!=null)
+    ? (noteClicks>=fnPrev.note_clicks
+        ? {cls:"up",  txt:"↑ +"+(noteClicks-fnPrev.note_clicks)+" 前日"}
+        : {cls:"down",txt:"↓ "+(noteClicks-fnPrev.note_clicks)+" 前日"})
+    : {cls:"flat", txt: fn.length?"自動取得":"funnel_export.py 未実行"};
+
+  // プロフィールへのアクセス：funnel（Threads Web版インサイトの実測）を優先し、
+  // 無ければ手入力値にさがる。APIには profile_views が無いのでこの2段構えにしている。
+  const fnProf = fn.filter(r=>r.profile_views!=null);
+  const pNow = fnProf.length?fnProf[fnProf.length-1]:null;
+  const pPrev = fnProf.length>1?fnProf[fnProf.length-2]:null;
+  const profVal = pNow? pNow.profile_views : manProf;
+  const profRate = (pNow&&pNow.views)? (pNow.profile_views/pNow.views*100) : null;
+  const profBadge = pNow
+    ? (pPrev
+        ? {cls: pNow.profile_views>=pPrev.profile_views?"up":"down",
+           txt: (pNow.profile_views>=pPrev.profile_views?"↑ +":"↓ ")+(pNow.profile_views-pPrev.profile_views)
+                +" 前回 ・ 閲覧の"+profRate.toFixed(1)+"%"}
+        : {cls:"flat", txt: pNow.date+" の投稿"})
+    : {cls:"flat", txt:"未取得"};
 
   $("#stats").innerHTML =
     statCard("今日の投稿", todayPosts, "/ "+g.posts, {cls: todayPosts>=g.posts?"up":"flat", txt: (todayPosts>=g.posts?"達成":"あと"+(g.posts-todayPosts)+"件")+" ・ 累計"+fmt(posts.length)+"件"}, "posts") +
@@ -328,10 +360,16 @@ function render(){
     `</tbody></table><div style="font-size:11px;color:var(--ink3);margin-top:8px">行をタップで全文表示</div>` : `<div class="empty">投稿がまだありません</div>`;
 
   // goals
-  const apptMonth = man.filter(e=>e.date&&e.date.slice(0,7)===tkey.slice(0,7)).reduce((s,e)=>s+(Number(e.appt)||0),0);
+  const mkey = tkey.slice(0,7);
+  const apptMonth = man.filter(e=>e.date&&e.date.slice(0,7)===mkey).reduce((s,e)=>s+(Number(e.appt)||0),0);
+  const mposts = posts.filter(p=>(p.date||"").slice(0,7)===mkey);
+  const impMonthNow = mposts.reduce((s,p)=>s+(Number(p.imp)||0),0);
+  const impAvgNow = mposts.length?Math.round(impMonthNow/mposts.length):0;
+  const lastLine = [...man].reverse().find(e=>e.line!=null);
+  const lineVal = lastLine?Number(lastLine.line):0;
   const goalRows=[
     {n:"アポ取り",c:(d.apo!=null?d.apo:0),g:g.appt,u:"件"},
-  ];
+  ].filter(r=>r.g>0);
   $("#goals").innerHTML = goalRows.map(r=>{
     const pct=Math.min(100,Math.round((r.c/r.g)*100)||0);
     return `<div class="goal"><div class="gt"><span>${r.n}</span><b>${fmt(r.c)} / ${fmt(r.g)}${r.u}</b></div>
@@ -340,9 +378,12 @@ function render(){
 
   // sheet prev values
   const lastAppt=[...man].reverse().find(e=>e.appt!=null);
+  const lastProf2 = [...man].reverse().find(e=>e.profile!=null);
+  $("#prev_profile").textContent = lastProf2?("前回 "+lastProf2.profile):"";
   $("#prev_chat").textContent = lastChat?("前回 "+lastChat.chat):"";
   $("#prev_appt").textContent = lastAppt?("前回 "+lastAppt.appt):"";
-  $("#in_chat").value=""; $("#in_appt").value="";
+  $("#prev_line").textContent = lastLine?("前回 "+lastLine.line):"";
+  $("#in_chat").value=""; $("#in_appt").value=""; $("#in_line").value=""; $("#in_profile").value="";
 }
 
 async function load(){
@@ -354,6 +395,10 @@ async function load(){
     try{
       const rm=await fetch("kpi_manual_"+k+".json?t="+Date.now(),{cache:"no-store"});
       if(rm.ok){const jm=await rm.json(); if(Array.isArray(jm)) MANUAL[k]=jm;}
+    }catch(e){}
+    try{
+      const rf=await fetch("funnel_"+k+".json?t="+Date.now(),{cache:"no-store"});
+      if(rf.ok){const jf=await rf.json(); if(jf&&Array.isArray(jf.history)) FUNNEL[k]=jf.history;}
     }catch(e){}
   }));
   render();
@@ -373,14 +418,18 @@ $("#refresh").onclick=async ()=>{
 $("#openInput").onclick=()=>$("#sheetbg").classList.add("on");
 $("#sheetbg").onclick=e=>{if(e.target===$("#sheetbg"))$("#sheetbg").classList.remove("on");};
 $("#in_chat").addEventListener("keydown",e=>{if(e.key==="Enter")$("#in_appt").focus();});
-$("#in_appt").addEventListener("keydown",e=>{if(e.key==="Enter")$("#saveInput").click();});
+$("#in_appt").addEventListener("keydown",e=>{if(e.key==="Enter")$("#in_profile").focus();});
+$("#in_profile").addEventListener("keydown",e=>{if(e.key==="Enter")$("#in_line").focus();});
+$("#in_line").addEventListener("keydown",e=>{if(e.key==="Enter")$("#saveInput").click();});
 $("#saveInput").onclick=()=>{
-  const chat=$("#in_chat").value.trim(), appt=$("#in_appt").value.trim();
-  if(chat===""&&appt==="")return $("#sheetbg").classList.remove("on");
+  const chat=$("#in_chat").value.trim(), appt=$("#in_appt").value.trim(), line=$("#in_line").value.trim(), prof=$("#in_profile").value.trim();
+  if(chat===""&&appt===""&&line===""&&prof==="")return $("#sheetbg").classList.remove("on");
   const man=manualEntries(CUR); const t=today();
   let row=man.find(e=>e.date===t); if(!row){row={date:t};man.push(row);}
   if(chat!=="")row.chat=chat.startsWith("+")?(Number(row.chat||0)+Number(chat.slice(1))):Number(chat);
   if(appt!=="")row.appt=Number(appt);
+  if(line!=="")row.line=line.startsWith("+")?(Number(row.line||0)+Number(line.slice(1))):Number(line);
+  if(prof!=="")row.profile=prof.startsWith("+")?(Number(row.profile||0)+Number(prof.slice(1))):Number(prof);
   lsSet("annken_kpi_"+CUR+"_manual",man);
   $("#sheetbg").classList.remove("on"); render();
 };
@@ -453,29 +502,35 @@ function openGoalEdit(){
   const g=goals(CUR); const a=ACCOUNTS[CUR];
   $("#dtitle").textContent="今月の目標を編集";
   $("#dsub").textContent=a.name+"｜数値を変えて保存（このアカウントに保存）";
-  const row=(id,lab,val)=>`<div class="field" style="margin-bottom:12px"><label style="width:130px">${lab}</label><input id="${id}" inputmode="numeric" value="${val}"></div>`;
+  const row=(id,lab,val)=>`<div class="field" style="margin-bottom:12px"><label style="width:150px">${lab}</label><input id="${id}" inputmode="numeric" value="${val}"></div>`;
   $("#dbody").innerHTML=
+    row("g_impMonth","月間インプレ",g.impMonth)+
+    row("g_impAvg","1投稿の平均",g.impAvg)+
     row("g_follower","フォロワー",g.follower)+
     row("g_posts","1日の投稿",g.posts)+
     row("g_chat","オプチャ参加",g.chat)+
+    row("g_line","公式LINE追加",g.line)+
     row("g_appt",a.kpi2,g.appt)+
     `<button id="g_save" style="width:100%;height:46px;border:0;background:var(--accent);color:#fff;font-weight:700;font-size:15px;border-radius:12px;cursor:pointer;margin-top:6px">保存</button>`;
   $("#detailbg").classList.add("on");
   $("#g_save").onclick=()=>{
     const ng=Object.assign(goals(CUR),{
+      impMonth:Number($("#g_impMonth").value)||g.impMonth,
+      impAvg:Number($("#g_impAvg").value)||g.impAvg,
       follower:Number($("#g_follower").value)||g.follower,
       posts:Number($("#g_posts").value)||g.posts,
       chat:Number($("#g_chat").value)||g.chat,
+      line:Number($("#g_line").value)||g.line,
       appt:Number($("#g_appt").value)||g.appt,
     });
-    lsSet("annken_kpi_"+CUR+"_goals",ng);
+    lsSet("annken_kpi_"+CUR+"_goals_v2",ng);
     $("#detailbg").classList.remove("on"); render();
   };
 }
 $("#editGoals").onclick=openGoalEdit;
 $("#clearInput").onclick=()=>{
   localStorage.removeItem("annken_kpi_"+CUR+"_manual");
-  $("#in_chat").value=""; $("#in_appt").value="";
+  $("#in_chat").value=""; $("#in_appt").value=""; $("#in_line").value="";
   $("#sheetbg").classList.remove("on"); render();
 };
 $("#dbody").addEventListener("click",e=>{
