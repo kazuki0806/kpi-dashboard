@@ -1,0 +1,75 @@
+name: ダッシュボード更新
+
+# 5分おきに、シートとNotionから数値を取り直して公開する。
+# 公開リポジトリなので Actions の実行時間は無料・無制限。
+#
+# GitHubのcronは混雑時に遅れることがある。5分と書いても10〜20分空くことがあるが、
+# ダッシュボードの数値は多少ずれても実害がないのでこれで足りる。
+# 投稿の予約実行など時刻の正確さが要るものは、ここに入れないこと。
+#
+# 必要な Secrets（リポジトリの Settings → Secrets and variables → Actions）
+#   SHEETS_JSON   … スプレッドシートIDの一覧（scripts/sheets.json の中身をそのまま）
+#   ANNKEN_ENV    … 案件掲載用の設定（annken-dashboard/.env の中身をそのまま）
+#
+# どちらも中身に個人情報へのアクセス手段が含まれる。リポジトリに直接置かないこと。
+
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+  workflow_dispatch:          # 手動実行用
+
+# 同じリポジトリへ書き込むので、前の実行が終わるまで次を待たせる
+concurrency:
+  group: dashboards
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 設定ファイルを Secrets から書き出す
+        run: |
+          printf '%s' "$SHEETS_JSON" > scripts/sheets.json
+          printf '%s' "$ANNKEN_ENV"  > scripts/.env
+          python3 -c "import json;json.load(open('scripts/sheets.json'));print('sheets.json 読み込みOK')"
+        env:
+          SHEETS_JSON: ${{ secrets.SHEETS_JSON }}
+          ANNKEN_ENV: ${{ secrets.ANNKEN_ENV }}
+
+      - name: DM稼働量を集計
+        run: python3 scripts/dm_export.py
+        env:
+          SITE_DIR: ${{ github.workspace }}
+
+      - name: 案件掲載の数値を集計
+        run: |
+          python3 scripts/annken_export.py
+          python3 scripts/annken_build.py
+        env:
+          SITE_DIR: ${{ github.workspace }}
+
+      - name: 生成物を公開
+        run: |
+          rm -f scripts/sheets.json scripts/.env
+          git config user.name  "dashboard-bot"
+          git config user.email "dashboard-bot@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "前回から変化なし"
+          else
+            git commit -m "ダッシュボード更新 $(TZ=Asia/Tokyo date '+%Y-%m-%d %H:%M')"
+            git pull --rebase origin main
+            git push origin main
+            echo "公開しました"
+          fi

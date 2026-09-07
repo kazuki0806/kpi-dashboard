@@ -1,3 +1,5 @@
 .deploy.lock
 *.bak_*
 *.bak.*
+scripts/sheets.json
+*.bak
