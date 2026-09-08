@@ -29,6 +29,21 @@
       "note_pv": 96,
       "line_followers": 2,
       "profile_views_note": "9/4投稿5本の合計（Threads Web版インサイト）"
+    },
+    {
+      "date": "2026-09-06",
+      "profile_views": 516,
+      "views": 15992,
+      "profile_views_note": "9/6投稿5本のうち4本の合計（B4はThreads側がエラーで未取得）。全5本を23:55〜23:59に固めて投稿した回"
+    },
+    {
+      "date": "2026-09-08",
+      "profile_views": null,
+      "note_clicks": 5,
+      "line_clicks": 0,
+      "line_followers": 2,
+      "views": 6424,
+      "note_pv": 123
     }
   ]
 }
