@@ -169,6 +169,7 @@ const GOAL_BY_ACCT = {
   A: {follower:150, posts:5, chat:600, appt:15, impMonth:300000, impAvg:2000, line:30},
 };
 const FUNNEL = {};   // funnel_<acct>.json（noteクリック等の自動取得分）
+const DEMO = {};     // 同ファイルの demographics（フォロワーの年齢・性別・国）
 const HOOK_TYPES = [
   {key:"権威開示", re:/(していたから|見てきた|担当をして|やってわかった|年やって|件見て)/},
   {key:"数字対比", re:/(\d+件|\d+\s*人|\d+%|\d+件中|100件|300件)/},
@@ -413,7 +414,9 @@ async function load(){
     }catch(e){}
     try{
       const rf=await fetch("funnel_"+k+".json?t="+Date.now(),{cache:"no-store"});
-      if(rf.ok){const jf=await rf.json(); if(jf&&Array.isArray(jf.history)) FUNNEL[k]=jf.history;}
+      if(rf.ok){const jf=await rf.json();
+        if(jf&&Array.isArray(jf.history)) FUNNEL[k]=jf.history;
+        if(jf&&jf.demographics) DEMO[k]=jf.demographics;}
     }catch(e){}
   }));
   render();
@@ -472,6 +475,27 @@ function openDetail(key){
     title="フォロワー推移"; sub="日別の人数と増減";
     body= fol.length? `<table class="tbl"><thead><tr><th>日付</th><th style="text-align:right">人数</th><th style="text-align:right">増減</th></tr></thead><tbody>`+
       fol.map((f,i)=>{const pv=fol[i+1];const df=pv?f.count-pv.count:null;const col=df>0?'var(--good)':df<0?'var(--bad)':'var(--ink3)';return `<tr><td>${f.date.slice(5)}</td><td style="text-align:right;font-weight:600">${fmt(f.count)}</td><td style="text-align:right;color:${col}">${df==null?"—":(df>0?"+"+df:df)}</td></tr>`;}).join("")+`</tbody></table>` : `<div class="empty">フォロワー履歴がまだありません</div>`;
+    const dm = DEMO[CUR];
+    if(dm && dm.age && Object.keys(dm.age).length){
+      // フォロワーの年齢層。誰に向けて書くかの前提になるので、推移より上に置く。
+      const age = dm.age, at = Object.values(age).reduce((x,y)=>x+y,0)||1;
+      const keys = ["18-24","25-34","35-44","45-54","55-64","65+"].filter(k=>age[k]!=null);
+      const top = keys.slice().sort((x,y)=>age[y]-age[x])[0];
+      const g = dm.gender||{}, gt=(g.F||0)+(g.M||0);
+      let gtxt = gt? `判明分では女性 ${g.F||0}人・男性 ${g.M||0}人`+(g.U?`（判定不能 ${g.U}人）`:"") : "";
+      body = `<div style="background:var(--bg);border-radius:12px;padding:14px;margin-bottom:16px">
+        <div style="font-size:12px;color:var(--ink2);margin-bottom:10px">フォロワーの年齢層　合計 ${fmt(at)}人　${dm.updated?`（${dm.updated} 時点）`:""}</div>`+
+        keys.map(k=>{
+          const v=age[k], pc=v/at*100;
+          return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:7px">
+            <div style="width:52px;font-size:12px;color:var(--ink2)">${k}</div>
+            <div style="flex:1;background:var(--card);border-radius:6px;height:16px;overflow:hidden"><div style="width:${pc.toFixed(1)}%;height:100%;background:${k===top?"var(--brand,#7c5cff)":"var(--ink3)"};border-radius:6px"></div></div>
+            <div style="width:78px;text-align:right;font-size:12px;font-weight:${k===top?"800":"500"}">${v}人 ${pc.toFixed(1)}%</div>
+          </div>`;
+        }).join("")+
+        (gtxt?`<div style="font-size:12px;color:var(--ink2);margin-top:10px">${gtxt}</div>`:"")+
+      `</div>` + body;
+    }
   } else if(key==="chat"){
     title="手入力KPIの履歴"; sub="オプチャ参加・"+a.kpi2+"（×で削除）";
     body= man.length? `<table class="tbl"><thead><tr><th>日付</th><th style="text-align:right">オプチャ</th><th style="text-align:right">${a.kpi2}</th><th></th></tr></thead><tbody>`+
