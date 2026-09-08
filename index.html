@@ -328,14 +328,21 @@ function render(){
   const sumVal   = (rows,k)=>{const v=rowsWith(rows,k); return v.length? v.reduce((a,r)=>a+r[k],0) : null;};
   const growVal  = (rows,k)=>{const v=rowsWith(rows,k); return v.length>1? v[v.length-1][k]-v[0][k] : null;};
   const isMon = fnPeriod==="month";
+  const isAll = fnPeriod==="all";
   const monLabel = fnYM.slice(5)+"月";
+  // 集計の対象。日と月は最新／今月、全体は記録が残っている全期間。
+  const fnScope = isMon ? fnMon : fn;
+  const scopeLabel = isAll ? "全期間" : monLabel;
 
-  const ftabs = `<div class="ptabs">`+[["day","日"],["month","月"]]
+  const ftabs = `<div class="ptabs">`+[["day","日"],["month","月"],["all","全体"]]
     .map(([k,l])=>`<button class="ptab ${k===fnPeriod?'on':''}" data-fper="${k}">${l}</button>`).join("")+`</div>`;
 
   // 日ごとに起きた数（合計してよいもの）
   function flowCard(k){
-    if(isMon) return {val:sumVal(fnMon,k), badge:{cls:"flat", txt:monLabel+"の合計 ・ "+rowsWith(fnMon,k).length+"日分"}};
+    if(isMon||isAll){
+      const rows = isMon?fnMon:fn;
+      return {val:sumVal(rows,k), badge:{cls:"flat", txt:scopeLabel+"の合計 ・ "+rowsWith(rows,k).length+"日分"}};
+    }
     const now=lastVal(fn,k), pv=prevVal(fn,k), dt=lastDate(fn,k);
     if(now==null) return {val:null, badge:{cls:"flat", txt:"未取得"}};
     if(pv==null)  return {val:now,  badge:{cls:"flat", txt:(dt||"")+" の分"}};
@@ -348,6 +355,11 @@ function render(){
     if(isMon){
       const g=growVal(fnMon,k);
       return {val:g, badge:{cls: g>0?"up":"flat", txt:monLabel+"で増えた分"}};
+    }
+    // 全体は積み上がった総数そのもの。増えた分ではなく、いまの合計を見せる。
+    if(isAll){
+      const v=lastVal(fn,k);
+      return {val:v, badge:{cls:"flat", txt:"これまでの合計"}};
     }
     const now=lastVal(fn,k), pv=prevVal(fn,k), dt=lastDate(fn,k);
     if(now==null) return {val:null, badge:{cls:"flat", txt:"未取得"}};
@@ -367,14 +379,14 @@ function render(){
   // プロフィール → note は同じ行どうしで数える。プロフィールは投稿日にしか
   // 記録が無いので、noteクリックもその日の値を使わないと率がずれる。
   const profRows = rowsWith(isMon?fnMon:fn, "profile_views");
-  const profSrc  = isMon ? profRows : profRows.slice(-1);
+  const profSrc  = (isMon||isAll) ? profRows : profRows.slice(-1);
   const pfProf   = profSrc.length? profSrc.reduce((a,r)=>a+r.profile_views,0) : null;
   const pfClicks = profSrc.length? profSrc.reduce((a,r)=>a+(r.note_clicks||0),0) : null;
   const pfViews  = profSrc.length? profSrc.reduce((a,r)=>a+(r.views||0),0) : null;
-  const pfPrev   = (!isMon && profRows.length>1)? profRows[profRows.length-2].profile_views : null;
+  const pfPrev   = (!isMon && !isAll && profRows.length>1)? profRows[profRows.length-2].profile_views : null;
   const pfDate   = profSrc.length? profSrc[profSrc.length-1].date : null;
   const pfBadge  = pfProf==null ? {cls:"flat", txt:"未取得"}
-    : isMon ? {cls:"flat", txt:monLabel+"の合計 ・ 閲覧の"+(pfViews?(pfProf/pfViews*100).toFixed(1)+"%":"—")}
+    : (isMon||isAll) ? {cls:"flat", txt:scopeLabel+"の合計 ・ "+profSrc.length+"日分 ・ 閲覧の"+(pfViews?(pfProf/pfViews*100).toFixed(1)+"%":"—")}
     : pfPrev==null ? {cls:"flat", txt:(pfDate||"")+" の投稿"}
     : {cls: pfProf>=pfPrev?"up":"down",
        txt:(pfProf>=pfPrev?"↑ +":"↓ ")+(pfProf-pfPrev)+" 前回 ・ 閲覧の"+(pfViews?(pfProf/pfViews*100).toFixed(1)+"%":"—")};
