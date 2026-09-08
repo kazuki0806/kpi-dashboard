@@ -34,6 +34,7 @@ body{margin:0;background:var(--bg);color:var(--ink);
 .sub{color:var(--ink2);font-size:13px;margin-bottom:16px}
 .grid{display:grid;gap:14px}
 .cards4{grid-template-columns:repeat(4,1fr)}
+.cards3{grid-template-columns:repeat(3,1fr)}
 .two{grid-template-columns:1.6fr 1fr}
 .two2{grid-template-columns:1.6fr 1fr}
 .card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px 20px}
@@ -98,8 +99,8 @@ body{margin:0;background:var(--bg);color:var(--ink);
 .gedit{border:0;background:var(--accent-soft);color:var(--accent);font-size:12px;font-weight:700;padding:5px 12px;border-radius:8px;cursor:pointer;font-family:inherit}
 @keyframes spin{to{transform:rotate(360deg)}}
 .spinning{animation:spin .7s linear infinite}
-@media(max-width:820px){.cards4{grid-template-columns:1fr 1fr}.two,.two2{grid-template-columns:1fr}}
-@media(max-width:480px){.cards4{grid-template-columns:1fr 1fr}.hello{font-size:19px}}
+@media(max-width:820px){.cards4,.cards3{grid-template-columns:1fr 1fr}.two,.two2{grid-template-columns:1fr}}
+@media(max-width:480px){.cards4,.cards3{grid-template-columns:1fr 1fr}.hello{font-size:19px}}
 </style>
 </head>
 <body>
@@ -116,7 +117,7 @@ body{margin:0;background:var(--bg);color:var(--ink);
   <div class="hello" id="hello">おかえりなさい</div>
   <div class="sub" id="sub">読み込み中…</div>
 
-  <div class="grid cards4" id="stats" style="margin-bottom:14px"></div>
+  <div class="grid cards3" id="stats" style="margin-bottom:14px"></div>
 
   <div class="grid two" style="margin-bottom:14px">
     <div class="card">
@@ -153,7 +154,6 @@ body{margin:0;background:var(--bg);color:var(--ink);
   <div class="sheet">
     <h3>今日の数値を入力</h3>
     <p class="note" id="sheetacct">この端末に保存されます</p>
-    <div class="field"><label>オプチャ参加</label><input id="in_chat" inputmode="numeric" placeholder="0"><span class="prev" id="prev_chat"></span></div>
     <div class="field"><label>アポ / 相談</label><input id="in_appt" inputmode="numeric" placeholder="0"><span class="prev" id="prev_appt"></span></div>
     <div class="field"><label>プロフィール閲覧（合計）</label><input id="in_profile" inputmode="numeric" placeholder="0"><span class="prev" id="prev_profile"></span></div>
     <div class="field"><label>公式LINE追加</label><input id="in_line" inputmode="numeric" placeholder="0"><span class="prev" id="prev_line"></span></div>
@@ -434,10 +434,9 @@ function render(){
   const lastAppt=[...man].reverse().find(e=>e.appt!=null);
   const lastProf2 = [...man].reverse().find(e=>e.profile!=null);
   $("#prev_profile").textContent = lastProf2?("前回 "+lastProf2.profile):"";
-  $("#prev_chat").textContent = lastChat?("前回 "+lastChat.chat):"";
   $("#prev_appt").textContent = lastAppt?("前回 "+lastAppt.appt):"";
   $("#prev_line").textContent = lastLine?("前回 "+lastLine.line):"";
-  $("#in_chat").value=""; $("#in_appt").value=""; $("#in_line").value=""; $("#in_profile").value="";
+  $("#in_appt").value=""; $("#in_line").value=""; $("#in_profile").value="";
 }
 
 async function load(){
@@ -473,16 +472,14 @@ $("#refresh").onclick=async ()=>{
 // input sheet
 $("#openInput").onclick=()=>$("#sheetbg").classList.add("on");
 $("#sheetbg").onclick=e=>{if(e.target===$("#sheetbg"))$("#sheetbg").classList.remove("on");};
-$("#in_chat").addEventListener("keydown",e=>{if(e.key==="Enter")$("#in_appt").focus();});
 $("#in_appt").addEventListener("keydown",e=>{if(e.key==="Enter")$("#in_profile").focus();});
 $("#in_profile").addEventListener("keydown",e=>{if(e.key==="Enter")$("#in_line").focus();});
 $("#in_line").addEventListener("keydown",e=>{if(e.key==="Enter")$("#saveInput").click();});
 $("#saveInput").onclick=()=>{
-  const chat=$("#in_chat").value.trim(), appt=$("#in_appt").value.trim(), line=$("#in_line").value.trim(), prof=$("#in_profile").value.trim();
-  if(chat===""&&appt===""&&line===""&&prof==="")return $("#sheetbg").classList.remove("on");
+  const appt=$("#in_appt").value.trim(), line=$("#in_line").value.trim(), prof=$("#in_profile").value.trim();
+  if(appt===""&&line===""&&prof==="")return $("#sheetbg").classList.remove("on");
   const man=manualEntries(CUR); const t=today();
   let row=man.find(e=>e.date===t); if(!row){row={date:t};man.push(row);}
-  if(chat!=="")row.chat=chat.startsWith("+")?(Number(row.chat||0)+Number(chat.slice(1))):Number(chat);
   if(appt!=="")row.appt=Number(appt);
   if(line!=="")row.line=line.startsWith("+")?(Number(row.line||0)+Number(line.slice(1))):Number(line);
   if(prof!=="")row.profile=prof.startsWith("+")?(Number(row.profile||0)+Number(prof.slice(1))):Number(prof);
@@ -535,9 +532,9 @@ function openDetail(key){
       `</div>` + body;
     }
   } else if(key==="chat"){
-    title="手入力KPIの履歴"; sub="オプチャ参加・"+a.kpi2+"（×で削除）";
-    body= man.length? `<table class="tbl"><thead><tr><th>日付</th><th style="text-align:right">オプチャ</th><th style="text-align:right">${a.kpi2}</th><th></th></tr></thead><tbody>`+
-      [...man].reverse().map(e=>`<tr><td>${e.date.slice(5)}</td><td style="text-align:right">${e.chat!=null?fmt(e.chat):"—"}</td><td style="text-align:right">${e.appt!=null?fmt(e.appt):"—"}</td><td style="text-align:right"><button data-delchat="${e.date}" title="削除" style="border:0;background:var(--bg);color:var(--bad);width:26px;height:26px;border-radius:7px;cursor:pointer;font-size:15px;font-family:inherit">×</button></td></tr>`).join("")+`</tbody></table>`
+    title="手入力KPIの履歴"; sub=a.kpi2+"（×で削除）";
+    body= man.length? `<table class="tbl"><thead><tr><th>日付</th><th style="text-align:right">${a.kpi2}</th><th></th></tr></thead><tbody>`+
+      [...man].reverse().map(e=>`<tr><td>${e.date.slice(5)}</td><td style="text-align:right">${e.appt!=null?fmt(e.appt):"—"}</td><td style="text-align:right"><button data-delchat="${e.date}" title="削除" style="border:0;background:var(--bg);color:var(--bad);width:26px;height:26px;border-radius:7px;cursor:pointer;font-size:15px;font-family:inherit">×</button></td></tr>`).join("")+`</tbody></table>`
       +`<button id="clearAllChat" style="width:100%;background:none;border:0;color:var(--bad);font-size:13px;margin-top:14px;cursor:pointer;font-family:inherit">この端末の入力を全部消す</button>` : `<div class="empty">まだ入力がありません。下の「＋今日の数値を入力」から</div>`;
   } else if(key==="profile"||key==="note"||key==="notepv"||key==="line"){
     // ファネル3枚（プロフィール閲覧／noteクリック／note閲覧）は同じ履歴表を出す。
@@ -598,7 +595,6 @@ function openGoalEdit(){
     row("g_impAvg","1投稿の平均",g.impAvg)+
     row("g_follower","フォロワー",g.follower)+
     row("g_posts","1日の投稿",g.posts)+
-    row("g_chat","オプチャ参加",g.chat)+
     row("g_line","公式LINE追加",g.line)+
     row("g_appt",a.kpi2,g.appt)+
     `<button id="g_save" style="width:100%;height:46px;border:0;background:var(--accent);color:#fff;font-weight:700;font-size:15px;border-radius:12px;cursor:pointer;margin-top:6px">保存</button>`;
@@ -609,7 +605,6 @@ function openGoalEdit(){
       impAvg:Number($("#g_impAvg").value)||g.impAvg,
       follower:Number($("#g_follower").value)||g.follower,
       posts:Number($("#g_posts").value)||g.posts,
-      chat:Number($("#g_chat").value)||g.chat,
       line:Number($("#g_line").value)||g.line,
       appt:Number($("#g_appt").value)||g.appt,
     });
@@ -620,7 +615,7 @@ function openGoalEdit(){
 $("#editGoals").onclick=openGoalEdit;
 $("#clearInput").onclick=()=>{
   localStorage.removeItem("annken_kpi_"+CUR+"_manual");
-  $("#in_chat").value=""; $("#in_appt").value=""; $("#in_line").value="";
+  $("#in_appt").value=""; $("#in_line").value="";
   $("#sheetbg").classList.remove("on"); render();
 };
 $("#dbody").addEventListener("click",e=>{
