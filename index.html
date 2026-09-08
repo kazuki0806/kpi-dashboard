@@ -296,6 +296,18 @@ function render(){
         : {cls:"down",txt:"↓ "+(noteClicks-fnPrev.note_clicks)+" 前日"})
     : {cls:"flat", txt: fn.length?"自動取得":"funnel_export.py 未実行"};
 
+  // note の閲覧数（PV）。取れなかった日は null が入るので、値のある行だけで前回比を出す。
+  const fnPv = fn.filter(r=>r.note_pv!=null);
+  const pvNow  = fnPv.length?fnPv[fnPv.length-1]:null;
+  const pvPrev = fnPv.length>1?fnPv[fnPv.length-2]:null;
+  const pvVal = pvNow?pvNow.note_pv:null;
+  const pvBadge = pvNow
+    ? (pvPrev
+        ? {cls: pvNow.note_pv>=pvPrev.note_pv?"up":"down",
+           txt: (pvNow.note_pv>=pvPrev.note_pv?"↑ +":"↓ ")+(pvNow.note_pv-pvPrev.note_pv)+" 前回"}
+        : {cls:"flat", txt: pvNow.date+" 時点"})
+    : {cls:"flat", txt:"未取得"};
+
   // プロフィールへのアクセス：funnel（Threads Web版インサイトの実測）を優先し、
   // 無ければ手入力値にさがる。APIには profile_views が無いのでこの2段構えにしている。
   const fnProf = fn.filter(r=>r.profile_views!=null);
@@ -317,7 +329,8 @@ function render(){
     statCard("フォロワー", fmt(folNow), "人", folBadge, "follower") +
     statCard("オプチャ参加", fmt(chatVal), "人", {cls:"flat", txt: man.some(e=>e.date===tkey&&e.chat!=null)?"今日入力済":"今日未入力"}, "chat") +
     statCard("プロフィール閲覧", fmt(profVal), "人", profBadge, "profile") +
-    statCard("noteクリック", fmt(noteClicks), "件", noteBadge, "note");
+    statCard("noteクリック", fmt(noteClicks), "件", noteBadge, "note") +
+    statCard("note閲覧", fmt(pvVal), "回", pvBadge, "notepv");
 
   // flow bars（期間連動：日=投稿ごと / 週=日別平均 / 月=週別平均）
   const bars = buildBars(posts, impPeriod);
@@ -464,6 +477,19 @@ function openDetail(key){
     body= man.length? `<table class="tbl"><thead><tr><th>日付</th><th style="text-align:right">オプチャ</th><th style="text-align:right">${a.kpi2}</th><th></th></tr></thead><tbody>`+
       [...man].reverse().map(e=>`<tr><td>${e.date.slice(5)}</td><td style="text-align:right">${e.chat!=null?fmt(e.chat):"—"}</td><td style="text-align:right">${e.appt!=null?fmt(e.appt):"—"}</td><td style="text-align:right"><button data-delchat="${e.date}" title="削除" style="border:0;background:var(--bg);color:var(--bad);width:26px;height:26px;border-radius:7px;cursor:pointer;font-size:15px;font-family:inherit">×</button></td></tr>`).join("")+`</tbody></table>`
       +`<button id="clearAllChat" style="width:100%;background:none;border:0;color:var(--bad);font-size:13px;margin-top:14px;cursor:pointer;font-family:inherit">この端末の入力を全部消す</button>` : `<div class="empty">まだ入力がありません。下の「＋今日の数値を入力」から</div>`;
+  } else if(key==="profile"||key==="note"||key==="notepv"){
+    // ファネル3枚（プロフィール閲覧／noteクリック／note閲覧）は同じ履歴表を出す。
+    const fh=(FUNNEL[CUR]||[]).slice().reverse();
+    title=({profile:"プロフィールへのアクセス",note:"noteリンクのクリック",notepv:"noteの閲覧数"})[key];
+    sub="Threads → note → 公式LINE の推移";
+    body= fh.length? `<table class="tbl"><thead><tr><th>日付</th><th style="text-align:right">閲覧</th><th style="text-align:right">プロフ</th><th style="text-align:right">率</th><th style="text-align:right">noteクリック</th><th style="text-align:right">note閲覧</th><th style="text-align:right">LINE</th></tr></thead><tbody>`+
+      fh.map(r=>{
+        const rate=(r.profile_views!=null&&r.views)?(r.profile_views/r.views*100).toFixed(1)+"%":"—";
+        const c=v=>v==null?"—":fmt(v);
+        return `<tr><td style="white-space:nowrap">${r.date.slice(5)}</td><td style="text-align:right">${c(r.views)}</td><td style="text-align:right;font-weight:600">${c(r.profile_views)}</td><td style="text-align:right;color:var(--ink2)">${rate}</td><td style="text-align:right">${c(r.note_clicks)}</td><td style="text-align:right">${c(r.note_pv)}</td><td style="text-align:right">${c(r.line_followers)}</td></tr>`;
+      }).join("")+`</tbody></table>`
+      +`<p class="note" style="margin-top:12px">プロフィールへのアクセスはThreads APIに無いため、Web版の投稿インサイトから取った実測です。「—」はその日に取得していない項目です。</p>`
+      : `<div class="empty">funnel_export.py がまだ動いていません</div>`;
   }
   $("#dtitle").textContent=title; $("#dsub").textContent=sub; $("#dbody").innerHTML=body;
   $("#detailbg").classList.add("on");
