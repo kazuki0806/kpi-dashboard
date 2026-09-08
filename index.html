@@ -372,8 +372,9 @@ function render(){
 
   const cPv   = stockCard("note_pv");
   const cLine = stockCard("line_followers");
-  const cNfol = stockCard("note_followers");
-  const cNlk  = stockCard("note_likes");
+  // いいねとフォロワーは積み上がった総数。期間で切らずに、いまの合計をそのまま出す。
+  const nFolNow = lastVal(fn,"note_followers");
+  const nLikeNow = lastVal(fn,"note_likes");
   const cLnk  = flowCard("line_clicks");
 
   // プロフィール → note は同じ行どうしで数える。プロフィールは投稿日にしか
@@ -402,11 +403,11 @@ function render(){
     statCard("平均インプレ", fmt(ps.avg), "", impBadge, "imp", ptabs, null,
              {cur:ps.avg, target:g.impAvg, note:"1投稿あたりの目標"}) +
     statCard("フォロワー", fmt(folNow), "人", folBadge, "follower", null, null,
-             {cur:folNow, target:g.follower, unit:"人", note:"今月の目標"}) +
+) +
     statCard("プロフィール → note", fmt(pfProf), "人 プロフィール", pfBadge, "profile", ftabs,
              [[fmt(pfClicks),"noteクリック"],[pfRate,"プロフィールから"]]) +
     statCard("note", fmt(cPv.val), "回 閲覧", cPv.badge, "notepv", ftabs,
-             [[fmt(cNlk.val),"いいね"],[fmt(cNfol.val),"フォロワー"]]) +
+             [[fmt(nLikeNow),"いいね"],[fmt(nFolNow),"フォロワー"]]) +
     statCard("公式LINE", fmt(cLine.val), "人", cLine.badge, "line", ftabs,
              [[fmt(cLnk.val),"LINEクリック"],[lnRate,"note閲覧から"]],
              {cur:lineGrow, target:g.line, unit:"人", note:"今月の追加"});
@@ -459,7 +460,6 @@ function render(){
   const goalRows=[
     {n:"月間インプレッション",c:impMonthNow,g:g.impMonth,u:""},
     {n:"1投稿あたり平均",c:impAvgNow,g:g.impAvg,u:""},
-    {n:"フォロワー",c:folNow||0,g:g.follower,u:"人"},
     {n:"公式LINE追加",c:lineVal,g:g.line,u:"人"},
     {n:a.kpi2,c:apptMonth,g:g.appt,u:"件"},
   ].filter(r=>r.g>0);
@@ -632,7 +632,6 @@ function openGoalEdit(){
   $("#dbody").innerHTML=
     row("g_impMonth","月間インプレ",g.impMonth)+
     row("g_impAvg","1投稿の平均",g.impAvg)+
-    row("g_follower","フォロワー",g.follower)+
     row("g_posts","1日の投稿",g.posts)+
     row("g_line","公式LINE追加",g.line)+
     row("g_appt",a.kpi2,g.appt)+
@@ -642,7 +641,6 @@ function openGoalEdit(){
     const ng=Object.assign(goals(CUR),{
       impMonth:Number($("#g_impMonth").value)||g.impMonth,
       impAvg:Number($("#g_impAvg").value)||g.impAvg,
-      follower:Number($("#g_follower").value)||g.follower,
       posts:Number($("#g_posts").value)||g.posts,
       line:Number($("#g_line").value)||g.line,
       appt:Number($("#g_appt").value)||g.appt,
