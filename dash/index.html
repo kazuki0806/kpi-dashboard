@@ -6,123 +6,180 @@
 <meta name="robots" content="noindex, nofollow">
 <title>ダッシュボード</title>
 <style>
+/* 見た目はCW業務アプリに合わせている。色や角の丸みはあちらの値をそのまま使う。
+   あちらを作り替えたときは、ここも同じ値に直すと揃ったままになる。 */
+:root{
+  color-scheme: light;
+  --bg:#E9EFF8; --bg-deep:#DCE7F5;
+  --surface-strong:rgba(255,255,255,.84);
+  --surface-soft:rgba(239,246,255,.72);
+  --border:rgba(30,64,110,.18);
+  --highlight:rgba(255,255,255,.88);
+  --text:#101B2D; --muted:#506078; --subtle:#68768B;
+  --accent-bright:#3B82F6; --accent-cyan:#22D3EE;
+  --glow:0 0 24px rgba(59,130,246,.4);
+  --ease:200ms cubic-bezier(.4,0,.2,1);
+}
+@media (prefers-color-scheme: dark){
   :root{
-    --bg:#f4f3fa; --card:#fff; --ink:#1c1b29; --ink2:#6b6980;
-    --line:#e6e4f0; --accent:#4f46e5;
-    --shadow:0 1px 3px rgba(20,18,40,.08);
+    color-scheme: dark;
+    --bg:#05070D; --bg-deep:#0B1220;
+    --surface-strong:rgba(13,22,38,.86);
+    --surface-soft:rgba(255,255,255,.035);
+    --border:rgba(255,255,255,.08);
+    --highlight:rgba(255,255,255,.09);
+    --text:#EDF5FF; --muted:#A7B6CB; --subtle:#8B9BB1;
+    --accent-bright:#60A5FA;
   }
-  @media (prefers-color-scheme: dark){
-    :root{ --bg:#141320; --card:#1e1c2e; --ink:#f0eefb; --ink2:#a6a3c0;
-           --line:#2c2a40; --accent:#8b85f5; --shadow:0 1px 3px rgba(0,0,0,.4); }
+}
+*{box-sizing:border-box}
+html,body{height:100%; margin:0}
+body{
+  background:linear-gradient(160deg,var(--bg),var(--bg-deep));
+  color:var(--text);
+  font:14px/1.6 -apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP",sans-serif;
+  display:flex; overflow:hidden;
+}
+
+#side{
+  width:240px; flex-shrink:0; display:flex; flex-direction:column; overflow-y:auto;
+  background:var(--surface-strong); border-right:1px solid var(--border);
+  box-shadow:18px 0 50px rgba(0,0,0,.12);
+  backdrop-filter:blur(20px) saturate(130%);
+  -webkit-backdrop-filter:blur(20px) saturate(130%);
+}
+.brand{
+  height:68px; flex-shrink:0; display:flex; align-items:center; gap:11px;
+  padding:0 17px; font-size:16px; font-weight:700; letter-spacing:-.015em;
+}
+.brandMark{
+  width:24px; height:24px; flex-shrink:0;
+  border:1px solid rgba(255,255,255,.34); border-radius:8px;
+  background:linear-gradient(135deg,var(--accent-bright),var(--accent-cyan));
+  box-shadow:var(--glow); transform:rotate(45deg);
+}
+nav{padding:0 10px 18px}
+.navSec{
+  margin:18px 0 6px 10px; font-size:11px; font-weight:700;
+  letter-spacing:.04em; color:var(--subtle);
+}
+.nav{
+  position:relative; display:block; width:100%; min-height:54px;
+  padding:9px 12px 9px 15px; margin-bottom:2px;
+  color:var(--muted); background:transparent;
+  border:1px solid transparent; border-radius:14px;
+  text-align:left; cursor:pointer; font:inherit;
+  transition:color var(--ease),background-color var(--ease),
+             border-color var(--ease),box-shadow var(--ease),transform var(--ease);
+}
+.nav:hover{
+  color:var(--text); background:var(--surface-soft);
+  border-color:var(--border); transform:translateX(2px);
+}
+.nav[aria-current="page"]{
+  color:var(--text);
+  background:linear-gradient(90deg,rgba(59,130,246,.17),rgba(34,211,238,.06));
+  border-color:rgba(59,130,246,.24);
+  box-shadow:inset 0 1px 0 var(--highlight),0 0 20px rgba(59,130,246,.12);
+}
+.nav .k{display:block; font-size:14px; font-weight:700; letter-spacing:-.01em}
+.nav .d{display:block; margin-top:2px; font-size:11.5px; color:var(--subtle)}
+
+.sideFoot{margin-top:auto; padding:14px 17px; font-size:11px; color:var(--subtle)}
+.sideFoot a{color:inherit}
+
+main{flex:1 1 auto; position:relative; min-width:0}
+iframe{
+  position:absolute; inset:0; width:100%; height:100%;
+  border:0; background:transparent; visibility:hidden;
+}
+iframe.on{visibility:visible}
+.load{
+  position:absolute; left:50%; top:44%; transform:translateX(-50%);
+  color:var(--subtle); font-size:13px;
+}
+
+/* スマホでは横に並べず、上に横スクロールのタブを出す */
+@media(max-width:760px){
+  body{flex-direction:column}
+  #side{
+    width:100%; flex-direction:row; align-items:center; gap:8px;
+    overflow-x:auto; overflow-y:hidden; padding:8px 10px;
+    border-right:0; border-bottom:1px solid var(--border); box-shadow:none;
   }
-  *{box-sizing:border-box}
-  html,body{height:100%}
-  body{
-    margin:0; background:var(--bg); color:var(--ink);
-    font:14px/1.6 -apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP",sans-serif;
-    display:flex; flex-direction:column;
-  }
-  header{
-    flex:0 0 auto; background:var(--card); border-bottom:1px solid var(--line);
-    box-shadow:var(--shadow); padding:10px 14px;
-    display:flex; align-items:center; gap:14px; flex-wrap:wrap;
-  }
-  .brand{font-weight:800; letter-spacing:-.2px; white-space:nowrap}
-  .tabs{display:flex; gap:6px; flex-wrap:wrap}
-  .tab{
-    appearance:none; border:1px solid var(--line); background:transparent;
-    color:var(--ink2); font:inherit; font-weight:700;
-    padding:7px 14px; border-radius:999px; cursor:pointer; white-space:nowrap;
-  }
-  .tab:hover{border-color:var(--accent); color:var(--ink)}
-  .tab[aria-selected="true"]{background:var(--accent); border-color:var(--accent); color:#fff}
-  .open{
-    margin-left:auto; font-size:12px; font-weight:700; color:var(--ink2);
-    text-decoration:none; border:1px solid var(--line); border-radius:999px;
-    padding:7px 12px; white-space:nowrap;
-  }
-  .open:hover{color:var(--ink); border-color:var(--accent)}
-  main{flex:1 1 auto; position:relative; min-height:0}
-  iframe{
-    position:absolute; inset:0; width:100%; height:100%;
-    border:0; background:var(--bg); visibility:hidden;
-  }
-  iframe.on{visibility:visible}
-  .note{
-    position:absolute; left:50%; top:40%; transform:translateX(-50%);
-    color:var(--ink2); font-size:13px; text-align:center; line-height:2;
-  }
-  @media(max-width:640px){
-    header{gap:8px; padding:8px 10px}
-    .tab{padding:6px 11px; font-size:13px}
-    .open{display:none}
-  }
+  .brand{height:auto; padding:0 6px 0 4px; font-size:14px; white-space:nowrap}
+  .brand .brandMark{width:18px; height:18px}
+  nav{display:flex; gap:6px; padding:0}
+  .navSec, .sideFoot, .nav .d{display:none}
+  .nav{min-height:0; width:auto; padding:8px 14px; margin:0; white-space:nowrap; border-radius:999px}
+  .nav:hover{transform:none}
+}
 </style>
 </head>
 <body>
 
-<header>
-  <div class="brand">ダッシュボード</div>
-  <div class="tabs" id="tabs" role="tablist"></div>
-  <a class="open" id="open" href="#" target="_blank" rel="noopener">別タブで開く ↗</a>
-</header>
+<aside id="side">
+  <div class="brand"><span class="brandMark" aria-hidden="true"></span>ダッシュボード</div>
+  <nav id="nav"></nav>
+  <div class="sideFoot">
+    <a id="open" href="#" target="_blank" rel="noopener">いま見ている画面を別タブで開く</a>
+  </div>
+</aside>
 
 <main id="stage">
-  <div class="note" id="note">読み込んでいます</div>
+  <div class="load" id="load">読み込んでいます</div>
 </main>
 
 <script>
-/* 3つのダッシュボードを1つの画面でまとめて見る。
-   それぞれは別々に公開されているページなので、ここでは枠に読み込むだけ。
-   中身の更新はもとのページ側で行われる。ここを直す必要はない。
+/* 3つのダッシュボードを1画面でまとめて見る。
+   中身はそれぞれ別に公開されているページで、ここは枠に読み込むだけ。
+   数字が変わってもここを直す必要はない。
 
    ★幹部threadsはここに入れない。見せる相手が違う。 */
 var VIEWS = [
-  { id: "dm",     name: "DM管理",       url: "../dm/" },
-  { id: "kojin",  name: "属人threads",  url: "../" },
-  { id: "annken", name: "案件掲載",     url: "../annken/" },
+  { id: "annken", name: "案件掲載ダッシュボード", note: "Threads案件の掲載状況", url: "../annken/" },
+  { id: "dm",     name: "DM管理ダッシュボード",   note: "ThreadsのDMの状況",   url: "../dm/" },
+  { id: "marke",  name: "CW採用掲載",             note: "6人のCW掲載状況",     url: "../marke/" },
 ];
 
-var tabs = document.getElementById("tabs");
+var nav = document.getElementById("nav");
 var stage = document.getElementById("stage");
-var note = document.getElementById("note");
+var load = document.getElementById("load");
 var open = document.getElementById("open");
 var frames = {};
 
-/* 最初に開いたタブは覚えておく。毎回同じところから見たい人が多いため。 */
-function saved() {
-  try { return localStorage.getItem("dashTab"); } catch (e) { return null; }
-}
-function remember(id) {
-  try { localStorage.setItem("dashTab", id); } catch (e) {}
-}
+/* 前回どれを見ていたかを覚える。毎回同じ画面から始めたい人が多い。
+   プライベートモードなどで使えないことがあるので、失敗しても無視する。 */
+function saved() { try { return localStorage.getItem("dashTab"); } catch (e) { return null; } }
+function remember(id) { try { localStorage.setItem("dashTab", id); } catch (e) {} }
 
 function show(id) {
   VIEWS.forEach(function (v) {
     var on = v.id === id;
     frames[v.id].classList.toggle("on", on);
-    document.getElementById("tab-" + v.id).setAttribute("aria-selected", on ? "true" : "false");
-    if (on) open.href = v.url;
+    var b = document.getElementById("nav-" + v.id);
+    if (on) { b.setAttribute("aria-current", "page"); open.href = v.url; }
+    else { b.removeAttribute("aria-current"); }
   });
   remember(id);
-  note.style.display = "none";
+  load.style.display = "none";
 }
 
-VIEWS.forEach(function (v, i) {
+VIEWS.forEach(function (v) {
   var b = document.createElement("button");
-  b.className = "tab";
-  b.id = "tab-" + v.id;
+  b.className = "nav";
+  b.id = "nav-" + v.id;
   b.type = "button";
-  b.setAttribute("role", "tab");
-  b.textContent = v.name;
+  b.innerHTML = '<span class="k"></span><span class="d"></span>';
+  b.querySelector(".k").textContent = v.name;
+  b.querySelector(".d").textContent = v.note;
   b.addEventListener("click", function () { show(v.id); });
-  tabs.appendChild(b);
+  nav.appendChild(b);
 
-  /* 3つとも最初に読み込んでおく。切り替えたときに待たされないようにする。 */
+  /* 3つとも最初に読み込む。切り替えたときに待たされないようにする。 */
   var f = document.createElement("iframe");
   f.title = v.name;
   f.src = v.url;
-  f.setAttribute("loading", i === 0 ? "eager" : "lazy");
   stage.appendChild(f);
   frames[v.id] = f;
 });
