@@ -382,8 +382,9 @@ function render(){
 
   const cPv   = stockCard("note_pv");
   const cLine = stockCard("line_followers");
-  const cNfol = stockCard("note_followers");
-  const cNlk  = stockCard("note_likes");
+  // いいねとフォロワーは積み上がった総数。期間で切らずに、いまの合計をそのまま出す。
+  const nFolNow = lastVal(fn,"note_followers");
+  const nLikeNow = lastVal(fn,"note_likes");
   const cLnk  = flowCard("line_clicks");
 
   // プロフィール → note は同じ行どうしで数える。プロフィールは投稿日にしか
@@ -635,7 +636,6 @@ function openGoalEdit(){
   $("#dbody").innerHTML=
     row("g_impMonth","月間インプレ",g.impMonth)+
     row("g_impAvg","1投稿の平均",g.impAvg)+
-    row("g_follower","フォロワー",g.follower)+
     row("g_posts","1日の投稿",g.posts)+
     row("g_line","公式LINE追加",g.line)+
     row("g_appt",a.kpi2,g.appt)+
@@ -645,7 +645,6 @@ function openGoalEdit(){
     const ng=Object.assign(goals(CUR),{
       impMonth:Number($("#g_impMonth").value)||g.impMonth,
       impAvg:Number($("#g_impAvg").value)||g.impAvg,
-      follower:Number($("#g_follower").value)||g.follower,
       posts:Number($("#g_posts").value)||g.posts,
       line:Number($("#g_line").value)||g.line,
       appt:Number($("#g_appt").value)||g.appt,
