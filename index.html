@@ -208,6 +208,7 @@ const lsGet = (k,d) => {try{return JSON.parse(localStorage.getItem(k))??d}catch(
 const lsSet = (k,v) => localStorage.setItem(k,JSON.stringify(v));
 
 let impPeriod = "week";
+let fnPeriod  = "day";   // ファネル4枚の期間（日／月）
 const avg = a => a.length? Math.round(a.reduce((s,v)=>s+v,0)/a.length):0;
 function daysAgo(n){const d=new Date();d.setHours(0,0,0,0);d.setDate(d.getDate()-n);return d.toISOString().slice(0,10);}
 function between(p,fromAgo,toAgo){const dt=(p.date||"");return dt>=daysAgo(fromAgo)&&dt<=daysAgo(toAgo);}
@@ -288,66 +289,70 @@ function render(){
   const lastProf = [...man].reverse().find(e=>e.profile!=null);
   const manProf = lastProf?lastProf.profile:null;
   const fn = FUNNEL[CUR]||[];
-  const fnNow = fn.length?fn[fn.length-1]:null;
-  const fnPrev = fn.length>1?fn[fn.length-2]:null;
-  const noteClicks = fnNow&&fnNow.note_clicks!=null?fnNow.note_clicks:null;
-  const noteBadge = (fnNow&&fnPrev&&fnPrev.note_clicks!=null&&noteClicks!=null)
-    ? (noteClicks>=fnPrev.note_clicks
-        ? {cls:"up",  txt:"↑ +"+(noteClicks-fnPrev.note_clicks)+" 前日"}
-        : {cls:"down",txt:"↓ "+(noteClicks-fnPrev.note_clicks)+" 前日"})
-    : {cls:"flat", txt: fn.length?"自動取得":"funnel_export.py 未実行"};
 
-  // note の閲覧数（PV）。取れなかった日は null が入るので、値のある行だけで前回比を出す。
-  const fnPv = fn.filter(r=>r.note_pv!=null);
-  const pvNow  = fnPv.length?fnPv[fnPv.length-1]:null;
-  const pvPrev = fnPv.length>1?fnPv[fnPv.length-2]:null;
-  const pvVal = pvNow?pvNow.note_pv:null;
-  const pvBadge = pvNow
-    ? (pvPrev
-        ? {cls: pvNow.note_pv>=pvPrev.note_pv?"up":"down",
-           txt: (pvNow.note_pv>=pvPrev.note_pv?"↑ +":"↓ ")+(pvNow.note_pv-pvPrev.note_pv)+" 前回"}
-        : {cls:"flat", txt: pvNow.date+" 時点"})
-    : {cls:"flat", txt:"未取得"};
+  // ファネル4枚（プロフィール／noteクリック／note閲覧／公式LINE）の日・月切り替え。
+  // 数え方が2種類ある。プロフィールとクリックはその日に起きた数なので月は合計。
+  // noteの閲覧数と公式LINEの友だち数は積み上がった総数なので、月は増えた分を出す。
+  const fnYM = (fn.length? fn[fn.length-1].date : today()).slice(0,7);
+  const fnMon = fn.filter(r=>(r.date||"").slice(0,7)===fnYM);
+  const rowsWith = (rows,k)=>rows.filter(r=>r[k]!=null);
+  const lastVal  = (rows,k)=>{const v=rowsWith(rows,k); return v.length? v[v.length-1][k] : null;};
+  const prevVal  = (rows,k)=>{const v=rowsWith(rows,k); return v.length>1? v[v.length-2][k] : null;};
+  const lastDate = (rows,k)=>{const v=rowsWith(rows,k); return v.length? v[v.length-1].date : null;};
+  const sumVal   = (rows,k)=>{const v=rowsWith(rows,k); return v.length? v.reduce((a,r)=>a+r[k],0) : null;};
+  const growVal  = (rows,k)=>{const v=rowsWith(rows,k); return v.length>1? v[v.length-1][k]-v[0][k] : null;};
+  const isMon = fnPeriod==="month";
+  const monLabel = fnYM.slice(5)+"月";
 
-  // プロフィールへのアクセス：funnel（Threads Web版インサイトの実測）を優先し、
-  // 無ければ手入力値にさがる。APIには profile_views が無いのでこの2段構えにしている。
-  const fnProf = fn.filter(r=>r.profile_views!=null);
-  const pNow = fnProf.length?fnProf[fnProf.length-1]:null;
-  const pPrev = fnProf.length>1?fnProf[fnProf.length-2]:null;
-  const profVal = pNow? pNow.profile_views : manProf;
-  const profRate = (pNow&&pNow.views)? (pNow.profile_views/pNow.views*100) : null;
-  const profBadge = pNow
-    ? (pPrev
-        ? {cls: pNow.profile_views>=pPrev.profile_views?"up":"down",
-           txt: (pNow.profile_views>=pPrev.profile_views?"↑ +":"↓ ")+(pNow.profile_views-pPrev.profile_views)
-                +" 前回 ・ 閲覧の"+profRate.toFixed(1)+"%"}
-        : {cls:"flat", txt: pNow.date+" の投稿"})
-    : {cls:"flat", txt:"未取得"};
+  const ftabs = `<div class="ptabs">`+[["day","日"],["month","月"]]
+    .map(([k,l])=>`<button class="ptab ${k===fnPeriod?'on':''}" data-fper="${k}">${l}</button>`).join("")+`</div>`;
 
-  // 公式LINEの友だち数。増えた分がそのまま流入数になるので、バッジに前回比を出す。
-  const fnLine = fn.filter(r=>r.line_followers!=null);
-  const lnNow  = fnLine.length?fnLine[fnLine.length-1]:null;
-  const lnPrev = fnLine.length>1?fnLine[fnLine.length-2]:null;
-  const lnVal = lnNow?lnNow.line_followers:null;
-  const lnBadge = lnNow
-    ? (lnPrev
-        ? (lnNow.line_followers>lnPrev.line_followers
-            ? {cls:"up",   txt:"↑ +"+(lnNow.line_followers-lnPrev.line_followers)+" 前回"}
-            : lnNow.line_followers<lnPrev.line_followers
-              ? {cls:"down",txt:"↓ "+(lnNow.line_followers-lnPrev.line_followers)+" 前回"}
-              : {cls:"flat",txt:"前回から動きなし"})
-        : {cls:"flat", txt: lnNow.date+" 時点"})
-    : {cls:"flat", txt:"未取得"};
+  // 日ごとに起きた数（合計してよいもの）
+  function flowCard(k){
+    if(isMon) return {val:sumVal(fnMon,k), badge:{cls:"flat", txt:monLabel+"の合計 ・ "+rowsWith(fnMon,k).length+"日分"}};
+    const now=lastVal(fn,k), pv=prevVal(fn,k), dt=lastDate(fn,k);
+    if(now==null) return {val:null, badge:{cls:"flat", txt:"未取得"}};
+    if(pv==null)  return {val:now,  badge:{cls:"flat", txt:(dt||"")+" の分"}};
+    return {val:now, badge: now>=pv
+      ? {cls:"up",  txt:"↑ +"+(now-pv)+" 前回 ・ "+(dt||"").slice(5)}
+      : {cls:"down",txt:"↓ "+(now-pv)+" 前回 ・ "+(dt||"").slice(5)}};
+  }
+  // 積み上がった総数（月は増えた分）
+  function stockCard(k){
+    if(isMon){
+      const g=growVal(fnMon,k);
+      return {val:g, badge:{cls: g>0?"up":"flat", txt:monLabel+"で増えた分"}};
+    }
+    const now=lastVal(fn,k), pv=prevVal(fn,k), dt=lastDate(fn,k);
+    if(now==null) return {val:null, badge:{cls:"flat", txt:"未取得"}};
+    if(pv==null)  return {val:now,  badge:{cls:"flat", txt:(dt||"")+" 時点"}};
+    return {val:now, badge: now>pv
+      ? {cls:"up",  txt:"↑ +"+(now-pv)+" 前回"}
+      : now<pv ? {cls:"down",txt:"↓ "+(now-pv)+" 前回"}
+               : {cls:"flat",txt:"前回から動きなし"}};
+  }
+
+  const cProf = flowCard("profile_views");
+  const cNote = flowCard("note_clicks");
+  const cPv   = stockCard("note_pv");
+  const cLine = stockCard("line_followers");
+
+  // プロフィールは閲覧に対する率も出す（動線の詰まりがここに出る）
+  const profRow = rowsWith(isMon?fnMon:fn,"profile_views");
+  const profViews = isMon ? sumVal(fnMon,"views") : (profRow.length?profRow[profRow.length-1].views:null);
+  if(cProf.val!=null && profViews){
+    cProf.badge = {cls:cProf.badge.cls, txt:cProf.badge.txt+" ・ 閲覧の"+(cProf.val/profViews*100).toFixed(1)+"%"};
+  }
 
   $("#stats").innerHTML =
     statCard("今日の投稿", todayPosts, "/ "+g.posts, {cls: todayPosts>=g.posts?"up":"flat", txt: (todayPosts>=g.posts?"達成":"あと"+(g.posts-todayPosts)+"件")+" ・ 累計"+fmt(posts.length)+"件"}, "posts") +
     statCard("平均インプレ", fmt(ps.avg), "", impBadge, "imp", ptabs) +
     statCard("フォロワー", fmt(folNow), "人", folBadge, "follower") +
     statCard("オプチャ参加", fmt(chatVal), "人", {cls:"flat", txt: man.some(e=>e.date===tkey&&e.chat!=null)?"今日入力済":"今日未入力"}, "chat") +
-    statCard("プロフィール閲覧", fmt(profVal), "人", profBadge, "profile") +
-    statCard("noteクリック", fmt(noteClicks), "件", noteBadge, "note") +
-    statCard("note閲覧", fmt(pvVal), "回", pvBadge, "notepv") +
-    statCard("公式LINE", fmt(lnVal), "人", lnBadge, "line");
+    statCard("プロフィール閲覧", fmt(cProf.val), "人", cProf.badge, "profile", ftabs) +
+    statCard("noteクリック", fmt(cNote.val), "件", cNote.badge, "note", ftabs) +
+    statCard("note閲覧", fmt(cPv.val), "回", cPv.badge, "notepv", ftabs) +
+    statCard("公式LINE", fmt(cLine.val), "人", cLine.badge, "line", ftabs);
 
   // flow bars（期間連動：日=投稿ごと / 週=日別平均 / 月=週別平均）
   const bars = buildBars(posts, impPeriod);
@@ -536,7 +541,7 @@ function openDetail(key){
 }
 $("#stats").addEventListener("click",e=>{
   const arw=e.target.closest(".arrow"); if(arw){openDetail(arw.dataset.detail);return;}
-  const pt=e.target.closest(".ptab"); if(pt){impPeriod=pt.dataset.per;render();}
+  const pt=e.target.closest(".ptab"); if(pt){ if(pt.dataset.fper){fnPeriod=pt.dataset.fper;}else{impPeriod=pt.dataset.per;} render(); }
 });
 // 最近の投稿 → 全文
 function openPost(i){
