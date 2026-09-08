@@ -393,8 +393,9 @@ function render(){
     statCard("今日の投稿", todayPosts, "/ "+g.posts, {cls: todayPosts>=g.posts?"up":"flat", txt: (todayPosts>=g.posts?"達成":"あと"+(g.posts-todayPosts)+"件")+" ・ 累計"+fmt(posts.length)+"件"}, "posts") +
     statCard("平均インプレ", fmt(ps.avg), "", impBadge, "imp", ptabs, null,
              {cur:ps.avg, target:g.impAvg, note:"1投稿あたりの目標"}) +
-    statCard("コメント数", fmt(posts.reduce((s,p)=>s+(Number(p.comments)||0),0)), "", {cls:"flat", txt:"累計"}, "") +
-    statCard("アポ取り", fmt((d.apo!=null?d.apo:0)), "件", {cls:"flat", txt:"営業シート"}, "");
+    statCard("アポ取り", fmt((d.apo!=null?d.apo:0)), "件", {cls:"flat", txt:"営業シート"}, "") +
+    statCard("着座", fmt((d.sat!=null?d.sat:0)), "件", {cls:"flat", txt:(d.apo?Math.round((d.sat||0)/d.apo*100)+"% がアポから着座":"アポ待ち")}, "") +
+    statCard("契約", fmt((d.contract!=null?d.contract:0)), "件", {cls:"flat", txt:(d.sat?Math.round((d.contract||0)/d.sat*100)+"% が着座から契約":"着座待ち")}, "");
 
   // flow bars（期間連動：日=投稿ごと / 週=日別平均 / 月=週別平均）
   const bars = buildBars(posts, impPeriod);
@@ -444,6 +445,8 @@ function render(){
   const lineVal = lastLine?Number(lastLine.line):0;
   const goalRows=[
     {n:"アポ取り",c:(d.apo!=null?d.apo:0),g:g.appt,u:"件"},
+    {n:"着座",c:(d.sat!=null?d.sat:0),g:g.appt,u:"件"},
+    {n:"契約",c:(d.contract!=null?d.contract:0),g:1,u:"件"},
   ].filter(r=>r.g>0);
   $("#goals").innerHTML = goalRows.map(r=>{
     const pct=Math.min(100,Math.round((r.c/r.g)*100)||0);
