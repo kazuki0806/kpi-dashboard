@@ -33,7 +33,7 @@ body{margin:0;background:var(--bg);color:var(--ink);
 .hello{font-size:22px;font-weight:700;margin:2px 0 2px}
 .sub{color:var(--ink2);font-size:13px;margin-bottom:16px}
 .grid{display:grid;gap:14px}
-.cards4{grid-template-columns:repeat(4,1fr)}
+.cards4{grid-template-columns:repeat(5,1fr)}
 .two{grid-template-columns:1.6fr 1fr}
 .two2{grid-template-columns:1.6fr 1fr}
 .card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px 20px}
@@ -285,9 +285,13 @@ function render(){
   const chatAuto = lineLast?lineLast.followers:null;
   const chatVal = chatAuto!=null?chatAuto:(lastChat?lastChat.chat:null);
 
+  const cmtTotal = posts.reduce((s,p)=>s+(p.comments||0),0);
+  const cmtToday = posts.filter(p=>(p.date||"").slice(0,10)===tkey).reduce((s,p)=>s+(p.comments||0),0);
+
   $("#stats").innerHTML =
     statCard("今日の投稿", todayPosts, "/ "+g.posts, {cls: todayPosts>=g.posts?"up":"flat", txt: (todayPosts>=g.posts?"達成":"あと"+(g.posts-todayPosts)+"件")+" ・ 累計"+fmt(posts.length)+"件"}, "posts") +
     statCard("平均インプレ", fmt(ps.avg), "", impBadge, "imp", ptabs) +
+    statCard("コメント数", fmt(cmtTotal), "件", {cls: cmtToday>0?"up":"flat", txt: cmtToday>0?("今日 +"+cmtToday):"今日 0"}, "comments") +
     statCard("フォロワー", fmt(folNow), "人", folBadge, "follower") +
     statCard("公式LINE友だち", fmt(chatVal), "人", {cls:"flat", txt: chatAuto!=null?("自動取得 "+lineLast.date.slice(5)):(man.some(e=>e.date===tkey&&e.chat!=null)?"今日入力済":"今日未入力")}, "chat");
 
@@ -411,6 +415,12 @@ function openDetail(key){
     title="フォロワー推移"; sub="日別の人数と増減";
     body= fol.length? `<table class="tbl"><thead><tr><th>日付</th><th style="text-align:right">人数</th><th style="text-align:right">増減</th></tr></thead><tbody>`+
       fol.map((f,i)=>{const pv=fol[i+1];const df=pv?f.count-pv.count:null;const col=df>0?'var(--good)':df<0?'var(--bad)':'var(--ink3)';return `<tr><td>${f.date.slice(5)}</td><td style="text-align:right;font-weight:600">${fmt(f.count)}</td><td style="text-align:right;color:${col}">${df==null?"—":(df>0?"+"+df:df)}</td></tr>`;}).join("")+`</tbody></table>` : `<div class="empty">フォロワー履歴がまだありません</div>`;
+  } else if(key==="comments"){
+    const withC = posts.filter(p=>p.comments!=null&&p.comments>0).sort((x,y)=>y.comments-x.comments);
+    const total = posts.reduce((s,p)=>s+(p.comments||0),0);
+    title="コメント数"; sub="累計"+fmt(total)+"件 ・ コメントが多い投稿順";
+    body= withC.length? `<table class="tbl"><thead><tr><th>日時</th><th>内容</th><th style="text-align:right">コメント</th><th style="text-align:right">インプレ</th></tr></thead><tbody>`+
+      withC.slice(0,20).map(p=>`<tr><td style="white-space:nowrap;color:var(--ink2)">${hhmm(p)}</td><td><div style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.content||""}</div></td><td style="text-align:right;font-weight:600">${fmt(p.comments)}</td><td style="text-align:right;color:var(--ink2)">${fmt(p.imp)}</td></tr>`).join("")+`</tbody></table>` : `<div class="empty">コメントのついた投稿がまだありません</div>`;
   } else if(key==="chat"){
     title="手入力KPIの履歴"; sub="公式LINE友だち・"+a.kpi2+"（×で削除）";
     body= man.length? `<table class="tbl"><thead><tr><th>日付</th><th style="text-align:right">公式LINE</th><th style="text-align:right">${a.kpi2}</th><th></th></tr></thead><tbody>`+
