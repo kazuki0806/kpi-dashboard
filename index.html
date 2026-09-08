@@ -40,6 +40,11 @@ body{margin:0;background:var(--bg);color:var(--ink);
 .stat .lab{color:var(--ink2);font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:space-between}
 .stat .val{font-size:26px;font-weight:800;margin:8px 0 8px;letter-spacing:-.5px}
 .stat .val small{font-size:14px;color:var(--ink3);font-weight:600}
+.substat{display:flex;margin-top:12px;border-top:1px solid var(--line);padding-top:11px}
+.substat>div{flex:1;text-align:center;border-right:1px solid var(--line)}
+.substat>div:last-child{border-right:0}
+.substat .sn{font-size:17px;font-weight:800;line-height:1.3}
+.substat .st{font-size:10px;color:var(--ink3);font-weight:600}
 .badge{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:700;padding:3px 8px;border-radius:20px}
 .badge.up{color:var(--good);background:var(--good-bg)}
 .badge.down{color:var(--bad);background:var(--bad-bg)}
@@ -255,10 +260,13 @@ function manualEntries(acct){
 }
 function goals(acct){ return Object.assign({}, GOAL_DEFAULT, GOAL_BY_ACCT[acct]||{}, lsGet("uni_kpi_"+acct+"_goals_v2", {})); }
 
-function statCard(lab,val,unit,badge,key,extra){
+function statCard(lab,val,unit,badge,key,extra,sub){
   const b = badge ? `<span class="badge ${badge.cls}">${badge.txt}</span>` : "";
+  // sub は [[数値,見出し],…]。ファネルの内訳をカード下段に小さく並べるのに使う。
+  const sb = (sub&&sub.length) ? `<div class="substat">`+
+    sub.map(([n,t])=>`<div><div class="sn">${n}</div><div class="st">${t}</div></div>`).join("")+`</div>` : "";
   return `<div class="card stat"><div class="lab">${lab}<button class="arrow" data-detail="${key||''}" title="詳細を見る">↗</button></div>
-    ${extra||""}<div class="val">${val}${unit?`<small> ${unit}</small>`:""}</div>${b}</div>`;
+    ${extra||""}<div class="val">${val}${unit?`<small> ${unit}</small>`:""}</div>${b}${sb}</div>`;
 }
 
 function render(){
@@ -332,31 +340,41 @@ function render(){
                : {cls:"flat",txt:"前回から動きなし"}};
   }
 
-  const cProf = flowCard("profile_views");
-  const cNote = flowCard("note_clicks");
   const cPv   = stockCard("note_pv");
   const cLine = stockCard("line_followers");
   const cNfol = stockCard("note_followers");
   const cNlk  = stockCard("note_likes");
+  const cLnk  = flowCard("line_clicks");
 
-  // プロフィールは閲覧に対する率も出す（動線の詰まりがここに出る）
-  const profRow = rowsWith(isMon?fnMon:fn,"profile_views");
-  const profViews = isMon ? sumVal(fnMon,"views") : (profRow.length?profRow[profRow.length-1].views:null);
-  if(cProf.val!=null && profViews){
-    cProf.badge = {cls:cProf.badge.cls, txt:cProf.badge.txt+" ・ 閲覧の"+(cProf.val/profViews*100).toFixed(1)+"%"};
-  }
+  // プロフィール → note は同じ行どうしで数える。プロフィールは投稿日にしか
+  // 記録が無いので、noteクリックもその日の値を使わないと率がずれる。
+  const profRows = rowsWith(isMon?fnMon:fn, "profile_views");
+  const profSrc  = isMon ? profRows : profRows.slice(-1);
+  const pfProf   = profSrc.length? profSrc.reduce((a,r)=>a+r.profile_views,0) : null;
+  const pfClicks = profSrc.length? profSrc.reduce((a,r)=>a+(r.note_clicks||0),0) : null;
+  const pfViews  = profSrc.length? profSrc.reduce((a,r)=>a+(r.views||0),0) : null;
+  const pfPrev   = (!isMon && profRows.length>1)? profRows[profRows.length-2].profile_views : null;
+  const pfDate   = profSrc.length? profSrc[profSrc.length-1].date : null;
+  const pfBadge  = pfProf==null ? {cls:"flat", txt:"未取得"}
+    : isMon ? {cls:"flat", txt:monLabel+"の合計 ・ 閲覧の"+(pfViews?(pfProf/pfViews*100).toFixed(1)+"%":"—")}
+    : pfPrev==null ? {cls:"flat", txt:(pfDate||"")+" の投稿"}
+    : {cls: pfProf>=pfPrev?"up":"down",
+       txt:(pfProf>=pfPrev?"↑ +":"↓ ")+(pfProf-pfPrev)+" 前回 ・ 閲覧の"+(pfViews?(pfProf/pfViews*100).toFixed(1)+"%":"—")};
+  const pfRate = (pfProf&&pfClicks!=null)? (pfClicks/pfProf*100).toFixed(1)+"%" : "—";
+
+  // 公式LINEは note を読んだ人がどれだけ踏んだかで見る。
+  const lnRate = (cPv.val&&cLnk.val!=null)? (cLnk.val/cPv.val*100).toFixed(1)+"%" : "—";
 
   $("#stats").innerHTML =
     statCard("今日の投稿", todayPosts, "/ "+g.posts, {cls: todayPosts>=g.posts?"up":"flat", txt: (todayPosts>=g.posts?"達成":"あと"+(g.posts-todayPosts)+"件")+" ・ 累計"+fmt(posts.length)+"件"}, "posts") +
     statCard("平均インプレ", fmt(ps.avg), "", impBadge, "imp", ptabs) +
     statCard("フォロワー", fmt(folNow), "人", folBadge, "follower") +
-    statCard("オプチャ参加", fmt(chatVal), "人", {cls:"flat", txt: man.some(e=>e.date===tkey&&e.chat!=null)?"今日入力済":"今日未入力"}, "chat") +
-    statCard("プロフィール閲覧", fmt(cProf.val), "人", cProf.badge, "profile", ftabs) +
-    statCard("noteクリック", fmt(cNote.val), "件", cNote.badge, "note", ftabs) +
-    statCard("note閲覧", fmt(cPv.val), "回", cPv.badge, "notepv", ftabs) +
-    statCard("noteフォロワー", fmt(cNfol.val), "人", cNfol.badge, "notepv", ftabs) +
-    statCard("noteいいね", fmt(cNlk.val), "件", cNlk.badge, "notepv", ftabs) +
-    statCard("公式LINE", fmt(cLine.val), "人", cLine.badge, "line", ftabs);
+    statCard("プロフィール → note", fmt(pfProf), "人 プロフィール", pfBadge, "profile", ftabs,
+             [[fmt(pfClicks),"noteクリック"],[pfRate,"プロフィールから"]]) +
+    statCard("note", fmt(cPv.val), "回 閲覧", cPv.badge, "notepv", ftabs,
+             [[fmt(cNlk.val),"いいね"],[fmt(cNfol.val),"フォロワー"]]) +
+    statCard("公式LINE", fmt(cLine.val), "人", cLine.badge, "line", ftabs,
+             [[fmt(cLnk.val),"LINEクリック"],[lnRate,"note閲覧から"]]);
 
   // flow bars（期間連動：日=投稿ごと / 週=日別平均 / 月=週別平均）
   const bars = buildBars(posts, impPeriod);
