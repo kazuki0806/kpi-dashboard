@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>ダッシュボード</title>
+<style>
+  :root{
+    --bg:#f4f3fa; --card:#fff; --ink:#1c1b29; --ink2:#6b6980;
+    --line:#e6e4f0; --accent:#4f46e5;
+    --shadow:0 1px 3px rgba(20,18,40,.08);
+  }
+  @media (prefers-color-scheme: dark){
+    :root{ --bg:#141320; --card:#1e1c2e; --ink:#f0eefb; --ink2:#a6a3c0;
+           --line:#2c2a40; --accent:#8b85f5; --shadow:0 1px 3px rgba(0,0,0,.4); }
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font:14px/1.6 -apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP",sans-serif;
+    display:flex; flex-direction:column;
+  }
+  header{
+    flex:0 0 auto; background:var(--card); border-bottom:1px solid var(--line);
+    box-shadow:var(--shadow); padding:10px 14px;
+    display:flex; align-items:center; gap:14px; flex-wrap:wrap;
+  }
+  .brand{font-weight:800; letter-spacing:-.2px; white-space:nowrap}
+  .tabs{display:flex; gap:6px; flex-wrap:wrap}
+  .tab{
+    appearance:none; border:1px solid var(--line); background:transparent;
+    color:var(--ink2); font:inherit; font-weight:700;
+    padding:7px 14px; border-radius:999px; cursor:pointer; white-space:nowrap;
+  }
+  .tab:hover{border-color:var(--accent); color:var(--ink)}
+  .tab[aria-selected="true"]{background:var(--accent); border-color:var(--accent); color:#fff}
+  .open{
+    margin-left:auto; font-size:12px; font-weight:700; color:var(--ink2);
+    text-decoration:none; border:1px solid var(--line); border-radius:999px;
+    padding:7px 12px; white-space:nowrap;
+  }
+  .open:hover{color:var(--ink); border-color:var(--accent)}
+  main{flex:1 1 auto; position:relative; min-height:0}
+  iframe{
+    position:absolute; inset:0; width:100%; height:100%;
+    border:0; background:var(--bg); visibility:hidden;
+  }
+  iframe.on{visibility:visible}
+  .note{
+    position:absolute; left:50%; top:40%; transform:translateX(-50%);
+    color:var(--ink2); font-size:13px; text-align:center; line-height:2;
+  }
+  @media(max-width:640px){
+    header{gap:8px; padding:8px 10px}
+    .tab{padding:6px 11px; font-size:13px}
+    .open{display:none}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">ダッシュボード</div>
+  <div class="tabs" id="tabs" role="tablist"></div>
+  <a class="open" id="open" href="#" target="_blank" rel="noopener">別タブで開く ↗</a>
+</header>
+
+<main id="stage">
+  <div class="note" id="note">読み込んでいます</div>
+</main>
+
+<script>
+/* 3つのダッシュボードを1つの画面でまとめて見る。
+   それぞれは別々に公開されているページなので、ここでは枠に読み込むだけ。
+   中身の更新はもとのページ側で行われる。ここを直す必要はない。
+
+   ★幹部threadsはここに入れない。見せる相手が違う。 */
+var VIEWS = [
+  { id: "dm",     name: "DM管理",       url: "../dm/" },
+  { id: "kojin",  name: "属人threads",  url: "../" },
+  { id: "annken", name: "案件掲載",     url: "../annken/" },
+];
+
+var tabs = document.getElementById("tabs");
+var stage = document.getElementById("stage");
+var note = document.getElementById("note");
+var open = document.getElementById("open");
+var frames = {};
+
+/* 最初に開いたタブは覚えておく。毎回同じところから見たい人が多いため。 */
+function saved() {
+  try { return localStorage.getItem("dashTab"); } catch (e) { return null; }
+}
+function remember(id) {
+  try { localStorage.setItem("dashTab", id); } catch (e) {}
+}
+
+function show(id) {
+  VIEWS.forEach(function (v) {
+    var on = v.id === id;
+    frames[v.id].classList.toggle("on", on);
+    document.getElementById("tab-" + v.id).setAttribute("aria-selected", on ? "true" : "false");
+    if (on) open.href = v.url;
+  });
+  remember(id);
+  note.style.display = "none";
+}
+
+VIEWS.forEach(function (v, i) {
+  var b = document.createElement("button");
+  b.className = "tab";
+  b.id = "tab-" + v.id;
+  b.type = "button";
+  b.setAttribute("role", "tab");
+  b.textContent = v.name;
+  b.addEventListener("click", function () { show(v.id); });
+  tabs.appendChild(b);
+
+  /* 3つとも最初に読み込んでおく。切り替えたときに待たされないようにする。 */
+  var f = document.createElement("iframe");
+  f.title = v.name;
+  f.src = v.url;
+  f.setAttribute("loading", i === 0 ? "eager" : "lazy");
+  stage.appendChild(f);
+  frames[v.id] = f;
+});
+
+var first = saved();
+if (!frames[first]) first = VIEWS[0].id;
+show(first);
+</script>
+
+</body>
+</html>
