@@ -73,6 +73,10 @@ body{margin:0;background:var(--bg);color:var(--ink);
 .goal .gt b{font-weight:700}
 .bar{height:9px;border-radius:20px;background:var(--line);overflow:hidden}
 .bar > i{display:block;height:100%;border-radius:20px;background:var(--accent)}
+.bar > i.ok{background:var(--good)}
+.goalmini{margin-top:10px;display:flex;gap:7px;align-items:baseline;font-size:11px;color:var(--ink3);font-weight:600}
+.goalmini b{font-size:13px;font-weight:800;color:var(--ink2)}
+.goalmini b.ok{color:var(--good)}
 .win{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--line)}
 .win:last-child{border-bottom:0}
 .rank{width:22px;height:22px;border-radius:7px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-size:12px;font-weight:800}
@@ -267,13 +271,20 @@ function manualEntries(acct){
 }
 function goals(acct){ return Object.assign({}, GOAL_DEFAULT, GOAL_BY_ACCT[acct]||{}, lsGet("uni_kpi_"+acct+"_goals_v2", {})); }
 
-function statCard(lab,val,unit,badge,key,extra,sub){
+function statCard(lab,val,unit,badge,key,extra,sub,goal){
   const b = badge ? `<span class="badge ${badge.cls}">${badge.txt}</span>` : "";
   // sub は [[数値,見出し],…]。ファネルの内訳をカード下段に小さく並べるのに使う。
   const sb = (sub&&sub.length) ? `<div class="substat">`+
     sub.map(([n,t])=>`<div><div class="sn">${n}</div><div class="st">${t}</div></div>`).join("")+`</div>` : "";
+  // goal は {cur,target,unit,note}。目標に対する位置を「◯ / ◯」で1行だけ出す。
+  let gb = "";
+  if(goal && goal.target>0){
+    const done = goal.cur>=goal.target;
+    gb = `<div class="goalmini"><span>${goal.note||"目標"}</span>
+      <b class="${done?'ok':''}">${fmt(goal.cur)} / ${fmt(goal.target)}${goal.unit||""}</b></div>`;
+  }
   return `<div class="card stat"><div class="lab">${lab}<button class="arrow" data-detail="${key||''}" title="詳細を見る">↗</button></div>
-    ${extra||""}<div class="val">${val}${unit?`<small> ${unit}</small>`:""}</div>${b}${sb}</div>`;
+    ${extra||""}<div class="val">${val}${unit?`<small> ${unit}</small>`:""}</div>${b}${gb}${sb}</div>`;
 }
 
 function render(){
@@ -371,17 +382,22 @@ function render(){
 
   // 公式LINEは note を読んだ人がどれだけ踏んだかで見る。
   const lnRate = (cPv.val&&cLnk.val!=null)? (cLnk.val/cPv.val*100).toFixed(1)+"%" : "—";
+  // 公式LINEの目標は「今月に何人増やすか」なので、日表示でも今月の増加分と比べる。
+  const lineGrow = growVal(fnMon,"line_followers") || 0;
 
   $("#stats").innerHTML =
     statCard("今日の投稿", todayPosts, "/ "+g.posts, {cls: todayPosts>=g.posts?"up":"flat", txt: (todayPosts>=g.posts?"達成":"あと"+(g.posts-todayPosts)+"件")+" ・ 累計"+fmt(posts.length)+"件"}, "posts") +
-    statCard("平均インプレ", fmt(ps.avg), "", impBadge, "imp", ptabs) +
-    statCard("フォロワー", fmt(folNow), "人", folBadge, "follower") +
+    statCard("平均インプレ", fmt(ps.avg), "", impBadge, "imp", ptabs, null,
+             {cur:ps.avg, target:g.impAvg, note:"1投稿あたりの目標"}) +
+    statCard("フォロワー", fmt(folNow), "人", folBadge, "follower", null, null,
+             {cur:folNow, target:g.follower, unit:"人", note:"今月の目標"}) +
     statCard("プロフィール → note", fmt(pfProf), "人 プロフィール", pfBadge, "profile", ftabs,
              [[fmt(pfClicks),"noteクリック"],[pfRate,"プロフィールから"]]) +
     statCard("note", fmt(cPv.val), "回 閲覧", cPv.badge, "notepv", ftabs,
              [[fmt(cNlk.val),"いいね"],[fmt(cNfol.val),"フォロワー"]]) +
     statCard("公式LINE", fmt(cLine.val), "人", cLine.badge, "line", ftabs,
-             [[fmt(cLnk.val),"LINEクリック"],[lnRate,"note閲覧から"]]);
+             [[fmt(cLnk.val),"LINEクリック"],[lnRate,"note閲覧から"]],
+             {cur:lineGrow, target:g.line, unit:"人", note:"今月の追加"});
 
   // flow bars（期間連動：日=投稿ごと / 週=日別平均 / 月=週別平均）
   const bars = buildBars(posts, impPeriod);
