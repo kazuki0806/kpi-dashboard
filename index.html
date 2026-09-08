@@ -350,28 +350,30 @@ function render(){
       ? {cls:"up",  txt:"↑ +"+(now-pv)+" 前回 ・ "+(dt||"").slice(5)}
       : {cls:"down",txt:"↓ "+(now-pv)+" 前回 ・ "+(dt||"").slice(5)}};
   }
-  // 積み上がった総数（月は増えた分）
-  function stockCard(k){
-    if(isMon){
-      const g=growVal(fnMon,k);
-      return {val:g, badge:{cls: g>0?"up":"flat", txt:monLabel+"で増えた分"}};
+  // 積み上がった総数の出し方は指標で分ける。
+  //   grow  … noteの閲覧数。「どれだけ読まれたか」なので増えた分を主役にし、累計はバッジへ。
+  //   total … 公式LINEの友だち数。「いま何人か」が主なので総数を出し、増減はバッジへ。
+  function stockCard(k, mode){
+    const tot = lastVal(fn,k), dt = lastDate(fn,k);
+    if(tot==null) return {val:null, badge:{cls:"flat", txt:"未取得"}};
+    const grow = isMon ? growVal(fnMon,k)
+               : isAll ? null
+               : (prevVal(fn,k)==null ? null : tot-prevVal(fn,k));
+    const when = isMon ? monLabel+"で" : "前回から";
+    if(mode==="total"){
+      const t = isAll ? "これまでの合計"
+              : grow==null ? (dt||"")+" 時点"
+              : grow>0 ? when+"+"+grow : grow<0 ? when+grow : when+"動きなし";
+      return {val:tot, badge:{cls: grow>0?"up":grow<0?"down":"flat", txt:t}};
     }
-    // 全体は積み上がった総数そのもの。増えた分ではなく、いまの合計を見せる。
-    if(isAll){
-      const v=lastVal(fn,k);
-      return {val:v, badge:{cls:"flat", txt:"これまでの合計"}};
-    }
-    const now=lastVal(fn,k), pv=prevVal(fn,k), dt=lastDate(fn,k);
-    if(now==null) return {val:null, badge:{cls:"flat", txt:"未取得"}};
-    if(pv==null)  return {val:now,  badge:{cls:"flat", txt:(dt||"")+" 時点"}};
-    return {val:now, badge: now>pv
-      ? {cls:"up",  txt:"↑ +"+(now-pv)+" 前回"}
-      : now<pv ? {cls:"down",txt:"↓ "+(now-pv)+" 前回"}
-               : {cls:"flat",txt:"前回から動きなし"}};
+    if(isAll) return {val:tot, badge:{cls:"flat", txt:"これまでの合計"}};
+    if(grow==null) return {val:tot, badge:{cls:"flat", txt:(dt||"")+" 時点"}};
+    return {val:grow, badge:{cls: grow>0?"up":"flat",
+            txt: when+"増えた分 ・ 累計"+fmt(tot)+"回"}};
   }
 
-  const cPv   = stockCard("note_pv");
-  const cLine = stockCard("line_followers");
+  const cPv   = stockCard("note_pv","grow");
+  const cLine = stockCard("line_followers","total");
   // いいねとフォロワーは積み上がった総数。期間で切らずに、いまの合計をそのまま出す。
   const nFolNow = lastVal(fn,"note_followers");
   const nLikeNow = lastVal(fn,"note_likes");
