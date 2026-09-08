@@ -336,6 +336,8 @@ function render(){
   const cNote = flowCard("note_clicks");
   const cPv   = stockCard("note_pv");
   const cLine = stockCard("line_followers");
+  const cNfol = stockCard("note_followers");
+  const cNlk  = stockCard("note_likes");
 
   // プロフィールは閲覧に対する率も出す（動線の詰まりがここに出る）
   const profRow = rowsWith(isMon?fnMon:fn,"profile_views");
@@ -352,6 +354,8 @@ function render(){
     statCard("プロフィール閲覧", fmt(cProf.val), "人", cProf.badge, "profile", ftabs) +
     statCard("noteクリック", fmt(cNote.val), "件", cNote.badge, "note", ftabs) +
     statCard("note閲覧", fmt(cPv.val), "回", cPv.badge, "notepv", ftabs) +
+    statCard("noteフォロワー", fmt(cNfol.val), "人", cNfol.badge, "notepv", ftabs) +
+    statCard("noteいいね", fmt(cNlk.val), "件", cNlk.badge, "notepv", ftabs) +
     statCard("公式LINE", fmt(cLine.val), "人", cLine.badge, "line", ftabs);
 
   // flow bars（期間連動：日=投稿ごと / 週=日別平均 / 月=週別平均）
@@ -527,11 +531,11 @@ function openDetail(key){
     const fh=(FUNNEL[CUR]||[]).slice().reverse();
     title=({profile:"プロフィールへのアクセス",note:"noteリンクのクリック",notepv:"noteの閲覧数",line:"公式LINEの友だち数"})[key];
     sub="Threads → note → 公式LINE の推移";
-    body= fh.length? `<table class="tbl"><thead><tr><th>日付</th><th style="text-align:right">閲覧</th><th style="text-align:right">プロフ</th><th style="text-align:right">率</th><th style="text-align:right">noteクリック</th><th style="text-align:right">note閲覧</th><th style="text-align:right">LINE</th></tr></thead><tbody>`+
+    body= fh.length? `<table class="tbl"><thead><tr><th>日付</th><th style="text-align:right">閲覧</th><th style="text-align:right">プロフ</th><th style="text-align:right">率</th><th style="text-align:right">noteクリック</th><th style="text-align:right">note閲覧</th><th style="text-align:right">noteフォロワー</th><th style="text-align:right">noteいいね</th><th style="text-align:right">LINE</th></tr></thead><tbody>`+
       fh.map(r=>{
         const rate=(r.profile_views!=null&&r.views)?(r.profile_views/r.views*100).toFixed(1)+"%":"—";
         const c=v=>v==null?"—":fmt(v);
-        return `<tr><td style="white-space:nowrap">${r.date.slice(5)}</td><td style="text-align:right">${c(r.views)}</td><td style="text-align:right;font-weight:600">${c(r.profile_views)}</td><td style="text-align:right;color:var(--ink2)">${rate}</td><td style="text-align:right">${c(r.note_clicks)}</td><td style="text-align:right">${c(r.note_pv)}</td><td style="text-align:right">${c(r.line_followers)}</td></tr>`;
+        return `<tr><td style="white-space:nowrap">${r.date.slice(5)}</td><td style="text-align:right">${c(r.views)}</td><td style="text-align:right;font-weight:600">${c(r.profile_views)}</td><td style="text-align:right;color:var(--ink2)">${rate}</td><td style="text-align:right">${c(r.note_clicks)}</td><td style="text-align:right">${c(r.note_pv)}</td><td style="text-align:right">${c(r.note_followers)}</td><td style="text-align:right">${c(r.note_likes)}</td><td style="text-align:right">${c(r.line_followers)}</td></tr>`;
       }).join("")+`</tbody></table>`
       +`<p class="note" style="margin-top:12px">プロフィールへのアクセスはThreads APIに無いため、Web版の投稿インサイトから取った実測です。「—」はその日に取得していない項目です。</p>`
       : `<div class="empty">funnel_export.py がまだ動いていません</div>`;
