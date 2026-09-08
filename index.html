@@ -324,6 +324,21 @@ function render(){
         : {cls:"flat", txt: pNow.date+" の投稿"})
     : {cls:"flat", txt:"未取得"};
 
+  // 公式LINEの友だち数。増えた分がそのまま流入数になるので、バッジに前回比を出す。
+  const fnLine = fn.filter(r=>r.line_followers!=null);
+  const lnNow  = fnLine.length?fnLine[fnLine.length-1]:null;
+  const lnPrev = fnLine.length>1?fnLine[fnLine.length-2]:null;
+  const lnVal = lnNow?lnNow.line_followers:null;
+  const lnBadge = lnNow
+    ? (lnPrev
+        ? (lnNow.line_followers>lnPrev.line_followers
+            ? {cls:"up",   txt:"↑ +"+(lnNow.line_followers-lnPrev.line_followers)+" 前回"}
+            : lnNow.line_followers<lnPrev.line_followers
+              ? {cls:"down",txt:"↓ "+(lnNow.line_followers-lnPrev.line_followers)+" 前回"}
+              : {cls:"flat",txt:"前回から動きなし"})
+        : {cls:"flat", txt: lnNow.date+" 時点"})
+    : {cls:"flat", txt:"未取得"};
+
   $("#stats").innerHTML =
     statCard("今日の投稿", todayPosts, "/ "+g.posts, {cls: todayPosts>=g.posts?"up":"flat", txt: (todayPosts>=g.posts?"達成":"あと"+(g.posts-todayPosts)+"件")+" ・ 累計"+fmt(posts.length)+"件"}, "posts") +
     statCard("平均インプレ", fmt(ps.avg), "", impBadge, "imp", ptabs) +
@@ -331,7 +346,8 @@ function render(){
     statCard("オプチャ参加", fmt(chatVal), "人", {cls:"flat", txt: man.some(e=>e.date===tkey&&e.chat!=null)?"今日入力済":"今日未入力"}, "chat") +
     statCard("プロフィール閲覧", fmt(profVal), "人", profBadge, "profile") +
     statCard("noteクリック", fmt(noteClicks), "件", noteBadge, "note") +
-    statCard("note閲覧", fmt(pvVal), "回", pvBadge, "notepv");
+    statCard("note閲覧", fmt(pvVal), "回", pvBadge, "notepv") +
+    statCard("公式LINE", fmt(lnVal), "人", lnBadge, "line");
 
   // flow bars（期間連動：日=投稿ごと / 週=日別平均 / 月=週別平均）
   const bars = buildBars(posts, impPeriod);
@@ -501,10 +517,10 @@ function openDetail(key){
     body= man.length? `<table class="tbl"><thead><tr><th>日付</th><th style="text-align:right">オプチャ</th><th style="text-align:right">${a.kpi2}</th><th></th></tr></thead><tbody>`+
       [...man].reverse().map(e=>`<tr><td>${e.date.slice(5)}</td><td style="text-align:right">${e.chat!=null?fmt(e.chat):"—"}</td><td style="text-align:right">${e.appt!=null?fmt(e.appt):"—"}</td><td style="text-align:right"><button data-delchat="${e.date}" title="削除" style="border:0;background:var(--bg);color:var(--bad);width:26px;height:26px;border-radius:7px;cursor:pointer;font-size:15px;font-family:inherit">×</button></td></tr>`).join("")+`</tbody></table>`
       +`<button id="clearAllChat" style="width:100%;background:none;border:0;color:var(--bad);font-size:13px;margin-top:14px;cursor:pointer;font-family:inherit">この端末の入力を全部消す</button>` : `<div class="empty">まだ入力がありません。下の「＋今日の数値を入力」から</div>`;
-  } else if(key==="profile"||key==="note"||key==="notepv"){
+  } else if(key==="profile"||key==="note"||key==="notepv"||key==="line"){
     // ファネル3枚（プロフィール閲覧／noteクリック／note閲覧）は同じ履歴表を出す。
     const fh=(FUNNEL[CUR]||[]).slice().reverse();
-    title=({profile:"プロフィールへのアクセス",note:"noteリンクのクリック",notepv:"noteの閲覧数"})[key];
+    title=({profile:"プロフィールへのアクセス",note:"noteリンクのクリック",notepv:"noteの閲覧数",line:"公式LINEの友だち数"})[key];
     sub="Threads → note → 公式LINE の推移";
     body= fh.length? `<table class="tbl"><thead><tr><th>日付</th><th style="text-align:right">閲覧</th><th style="text-align:right">プロフ</th><th style="text-align:right">率</th><th style="text-align:right">noteクリック</th><th style="text-align:right">note閲覧</th><th style="text-align:right">LINE</th></tr></thead><tbody>`+
       fh.map(r=>{
