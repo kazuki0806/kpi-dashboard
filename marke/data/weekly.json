@@ -1,15 +1,16 @@
 {
   "version": 1,
-  "generatedAt": "2026-09-02T05:54:26.711Z",
+  "generatedAt": "2026-09-08T14:32:07.524Z",
   "timezone": "Asia/Tokyo",
   "today": {
-    "date": "2026-09-02",
-    "dayOfWeek": "水",
-    "dayNumber": 4,
-    "remainingDays": 4
+    "date": "2026-09-08",
+    "dayOfWeek": "火",
+    "dayNumber": 3,
+    "remainingDays": 5
   },
-  "currentWeek": "2026-08-30",
+  "currentWeek": "2026-09-06",
   "weeks": [
+    "2026-09-06",
     "2026-08-30",
     "2026-08-23",
     "2026-08-16",
@@ -20,8 +21,7 @@
     "2026-07-12",
     "2026-07-05",
     "2026-06-28",
-    "2026-06-21",
-    "2026-06-14"
+    "2026-06-21"
   ],
   "members": [
     {
@@ -33,11 +33,26 @@
       "startedAt": "2026-04-01",
       "employerIdMissing": false,
       "weeks": {
+        "2026-09-06": {
+          "postedCount": 0,
+          "achieved": false,
+          "visibleCount": 0,
+          "applicantTotal": 0,
+          "jobs": [],
+          "pace": {
+            "status": "behind",
+            "expectedByToday": 2,
+            "remainingDays": 5,
+            "remainingRequired": 3,
+            "isCurrentWeek": true,
+            "postingDays": []
+          }
+        },
         "2026-08-30": {
           "postedCount": 2,
           "achieved": false,
           "visibleCount": 2,
-          "applicantTotal": 6,
+          "applicantTotal": 46,
           "jobs": [
             {
               "jobId": 13422186,
@@ -45,7 +60,7 @@
               "url": "https://crowdworks.jp/public/jobs/13422186",
               "postedAt": "2026-09-02T09:09:59+09:00",
               "postedDate": "2026-09-02",
-              "applicantCount": 4,
+              "applicantCount": 41,
               "visible": true,
               "recruiting": true,
               "applyDeadline": "2026-09-09"
@@ -56,18 +71,18 @@
               "url": "https://crowdworks.jp/public/jobs/13418111",
               "postedAt": "2026-09-01T03:57:06+09:00",
               "postedDate": "2026-09-01",
-              "applicantCount": 2,
+              "applicantCount": 5,
               "visible": true,
-              "recruiting": true,
+              "recruiting": false,
               "applyDeadline": "2026-09-07"
             }
           ],
           "pace": {
-            "status": "onTrack",
-            "expectedByToday": 2,
-            "remainingDays": 4,
+            "status": "missed",
+            "expectedByToday": 3,
+            "remainingDays": 0,
             "remainingRequired": 1,
-            "isCurrentWeek": true,
+            "isCurrentWeek": false,
             "postingDays": []
           }
         },
@@ -75,7 +90,7 @@
           "postedCount": 1,
           "achieved": false,
           "visibleCount": 1,
-          "applicantTotal": 50,
+          "applicantTotal": 56,
           "jobs": [
             {
               "jobId": 13410484,
@@ -83,9 +98,9 @@
               "url": "https://crowdworks.jp/public/jobs/13410484",
               "postedAt": "2026-08-28T08:44:04+09:00",
               "postedDate": "2026-08-28",
-              "applicantCount": 50,
+              "applicantCount": 56,
               "visible": true,
-              "recruiting": true,
+              "recruiting": false,
               "applyDeadline": "2026-09-04"
             }
           ],
@@ -324,21 +339,6 @@
             "isCurrentWeek": false,
             "postingDays": []
           }
-        },
-        "2026-06-14": {
-          "postedCount": 0,
-          "achieved": false,
-          "visibleCount": 0,
-          "applicantTotal": 0,
-          "jobs": [],
-          "pace": {
-            "status": "missed",
-            "expectedByToday": 3,
-            "remainingDays": 0,
-            "remainingRequired": 3,
-            "isCurrentWeek": false,
-            "postingDays": []
-          }
         }
       },
       "excludedMismatched": 0,
@@ -353,7 +353,7 @@
       "startedAt": "2026-04-01",
       "employerIdMissing": true,
       "weeks": {
-        "2026-08-30": {
+        "2026-09-06": {
           "postedCount": 0,
           "achieved": false,
           "visibleCount": 0,
@@ -362,9 +362,24 @@
           "pace": {
             "status": "untracked",
             "expectedByToday": 2,
-            "remainingDays": 4,
+            "remainingDays": 5,
             "remainingRequired": 3,
             "isCurrentWeek": true,
+            "postingDays": []
+          }
+        },
+        "2026-08-30": {
+          "postedCount": 0,
+          "achieved": false,
+          "visibleCount": 0,
+          "applicantTotal": 0,
+          "jobs": [],
+          "pace": {
+            "status": "untracked",
+            "expectedByToday": 3,
+            "remainingDays": 0,
+            "remainingRequired": 3,
+            "isCurrentWeek": false,
             "postingDays": []
           }
         },
@@ -517,21 +532,6 @@
             "isCurrentWeek": false,
             "postingDays": []
           }
-        },
-        "2026-06-14": {
-          "postedCount": 0,
-          "achieved": false,
-          "visibleCount": 0,
-          "applicantTotal": 0,
-          "jobs": [],
-          "pace": {
-            "status": "untracked",
-            "expectedByToday": 3,
-            "remainingDays": 0,
-            "remainingRequired": 3,
-            "isCurrentWeek": false,
-            "postingDays": []
-          }
         }
       },
       "excludedMismatched": 0,
@@ -546,19 +546,45 @@
       "startedAt": "2026-04-01",
       "employerIdMissing": false,
       "weeks": {
-        "2026-08-30": {
-          "postedCount": 2,
+        "2026-09-06": {
+          "postedCount": 0,
           "achieved": false,
-          "visibleCount": 2,
-          "applicantTotal": 26,
+          "visibleCount": 0,
+          "applicantTotal": 0,
+          "jobs": [],
+          "pace": {
+            "status": "behind",
+            "expectedByToday": 2,
+            "remainingDays": 5,
+            "remainingRequired": 3,
+            "isCurrentWeek": true,
+            "postingDays": []
+          }
+        },
+        "2026-08-30": {
+          "postedCount": 3,
+          "achieved": true,
+          "visibleCount": 3,
+          "applicantTotal": 111,
           "jobs": [
+            {
+              "jobId": 13431026,
+              "title": "【完全在宅・初心者ok✨】オンライン面談のサポートスタッフ募集｜研修・マニュアル完備",
+              "url": "https://crowdworks.jp/public/jobs/13431026",
+              "postedAt": "2026-09-05T19:34:40+09:00",
+              "postedDate": "2026-09-05",
+              "applicantCount": 0,
+              "visible": true,
+              "recruiting": true,
+              "applyDeadline": "2026-09-19"
+            },
             {
               "jobId": 13418317,
               "title": "【週１～OK×副業】SNS運用スタッフ募集｜Canva初心者×グルメ好き歓迎✨",
               "url": "https://crowdworks.jp/public/jobs/13418317",
               "postedAt": "2026-09-01",
               "postedDate": "2026-09-01",
-              "applicantCount": 13,
+              "applicantCount": 70,
               "visible": true,
               "recruiting": true,
               "applyDeadline": "2026-09-08"
@@ -569,18 +595,18 @@
               "url": "https://crowdworks.jp/public/jobs/13418299",
               "postedAt": "2026-08-31T20:54:26+09:00",
               "postedDate": "2026-08-31",
-              "applicantCount": 13,
+              "applicantCount": 41,
               "visible": true,
               "recruiting": true,
               "applyDeadline": "2026-09-08"
             }
           ],
           "pace": {
-            "status": "onTrack",
-            "expectedByToday": 2,
-            "remainingDays": 4,
-            "remainingRequired": 1,
-            "isCurrentWeek": true,
+            "status": "achieved",
+            "expectedByToday": 3,
+            "remainingDays": 0,
+            "remainingRequired": 0,
+            "isCurrentWeek": false,
             "postingDays": []
           }
         },
@@ -970,21 +996,6 @@
             "isCurrentWeek": false,
             "postingDays": []
           }
-        },
-        "2026-06-14": {
-          "postedCount": 0,
-          "achieved": false,
-          "visibleCount": 0,
-          "applicantTotal": 0,
-          "jobs": [],
-          "pace": {
-            "status": "missed",
-            "expectedByToday": 3,
-            "remainingDays": 0,
-            "remainingRequired": 3,
-            "isCurrentWeek": false,
-            "postingDays": []
-          }
         }
       },
       "excludedMismatched": 0,
@@ -999,12 +1010,72 @@
       "startedAt": "2026-04-01",
       "employerIdMissing": false,
       "weeks": {
-        "2026-08-30": {
+        "2026-09-06": {
           "postedCount": 1,
           "achieved": false,
           "visibleCount": 1,
-          "applicantTotal": 1,
+          "applicantTotal": 0,
           "jobs": [
+            {
+              "jobId": 13431039,
+              "title": "＼未経験・初心者OK！ファッション好きをSNSのお仕事に／",
+              "url": "https://crowdworks.jp/public/jobs/13431039",
+              "postedAt": "2026-09-07",
+              "postedDate": "2026-09-07",
+              "applicantCount": 0,
+              "visible": true,
+              "recruiting": false,
+              "applyDeadline": "2026-09-12"
+            }
+          ],
+          "pace": {
+            "status": "behind",
+            "expectedByToday": 2,
+            "remainingDays": 5,
+            "remainingRequired": 2,
+            "isCurrentWeek": true,
+            "postingDays": []
+          }
+        },
+        "2026-08-30": {
+          "postedCount": 4,
+          "achieved": true,
+          "visibleCount": 4,
+          "applicantTotal": 53,
+          "jobs": [
+            {
+              "jobId": 13427716,
+              "title": "【完全在宅・初心者ok✨】オンライン面談のサポートスタッフ募集｜研修・マニュアル完備",
+              "url": "https://crowdworks.jp/public/jobs/13427716",
+              "postedAt": "2026-09-04T09:40:03+09:00",
+              "postedDate": "2026-09-04",
+              "applicantCount": 1,
+              "visible": true,
+              "recruiting": true,
+              "applyDeadline": "2026-09-11"
+            },
+            {
+              "jobId": 13426968,
+              "title": "これから動画編集を始めたい方へ｜未経験OK・在宅ワーク・マニュアル完備",
+              "url": "https://crowdworks.jp/public/jobs/13426968",
+              "postedAt": "2026-09-03T20:02:36+09:00",
+              "postedDate": "2026-09-03",
+              "applicantCount": 48,
+              "visible": true,
+              "recruiting": true,
+              "applyDeadline": "2026-09-10"
+            },
+            {
+              "jobId": 13410608,
+              "title": "【Canva初心者も歓迎✨】SNSスタッフ募集｜継続あり×週１～OK",
+              "url": "https://crowdworks.jp/public/jobs/13410608",
+              "postedAt": "2026-09-03",
+              "postedDate": "2026-09-03",
+              "applicantCount": 3,
+              "visible": true,
+              "recruiting": false,
+              "applyDeadline": "2026-09-09"
+            },
             {
               "jobId": 13418202,
               "title": "オンライン相談・サービス案内スタッフ募集｜完全在宅・研修あり",
@@ -1013,16 +1084,16 @@
               "postedDate": "2026-08-31",
               "applicantCount": 1,
               "visible": true,
-              "recruiting": true,
+              "recruiting": false,
               "applyDeadline": "2026-09-07"
             }
           ],
           "pace": {
-            "status": "behind",
-            "expectedByToday": 2,
-            "remainingDays": 4,
-            "remainingRequired": 2,
-            "isCurrentWeek": true,
+            "status": "achieved",
+            "expectedByToday": 3,
+            "remainingDays": 0,
+            "remainingRequired": 0,
+            "isCurrentWeek": false,
             "postingDays": []
           }
         },
@@ -1030,7 +1101,7 @@
           "postedCount": 6,
           "achieved": true,
           "visibleCount": 6,
-          "applicantTotal": 80,
+          "applicantTotal": 86,
           "jobs": [
             {
               "jobId": 13410584,
@@ -1038,9 +1109,9 @@
               "url": "https://crowdworks.jp/public/jobs/13410584",
               "postedAt": "2026-08-28T09:43:38+09:00",
               "postedDate": "2026-08-28",
-              "applicantCount": 26,
+              "applicantCount": 32,
               "visible": true,
-              "recruiting": true,
+              "recruiting": false,
               "applyDeadline": "2026-09-04"
             },
             {
@@ -1051,7 +1122,7 @@
               "postedDate": "2026-08-28",
               "applicantCount": 3,
               "visible": true,
-              "recruiting": true,
+              "recruiting": false,
               "applyDeadline": "2026-09-04"
             },
             {
@@ -1300,21 +1371,6 @@
             "isCurrentWeek": false,
             "postingDays": []
           }
-        },
-        "2026-06-14": {
-          "postedCount": 0,
-          "achieved": false,
-          "visibleCount": 0,
-          "applicantTotal": 0,
-          "jobs": [],
-          "pace": {
-            "status": "missed",
-            "expectedByToday": 3,
-            "remainingDays": 0,
-            "remainingRequired": 3,
-            "isCurrentWeek": false,
-            "postingDays": []
-          }
         }
       },
       "excludedMismatched": 0,
@@ -1329,7 +1385,7 @@
       "startedAt": "2026-04-01",
       "employerIdMissing": false,
       "weeks": {
-        "2026-08-30": {
+        "2026-09-06": {
           "postedCount": 0,
           "achieved": false,
           "visibleCount": 0,
@@ -1338,9 +1394,24 @@
           "pace": {
             "status": "behind",
             "expectedByToday": 2,
-            "remainingDays": 4,
+            "remainingDays": 5,
             "remainingRequired": 3,
             "isCurrentWeek": true,
+            "postingDays": []
+          }
+        },
+        "2026-08-30": {
+          "postedCount": 0,
+          "achieved": false,
+          "visibleCount": 0,
+          "applicantTotal": 0,
+          "jobs": [],
+          "pace": {
+            "status": "missed",
+            "expectedByToday": 3,
+            "remainingDays": 0,
+            "remainingRequired": 3,
+            "isCurrentWeek": false,
             "postingDays": []
           }
         },
@@ -1493,21 +1564,6 @@
             "isCurrentWeek": false,
             "postingDays": []
           }
-        },
-        "2026-06-14": {
-          "postedCount": 0,
-          "achieved": false,
-          "visibleCount": 0,
-          "applicantTotal": 0,
-          "jobs": [],
-          "pace": {
-            "status": "missed",
-            "expectedByToday": 3,
-            "remainingDays": 0,
-            "remainingRequired": 3,
-            "isCurrentWeek": false,
-            "postingDays": []
-          }
         }
       },
       "excludedMismatched": 0,
@@ -1522,7 +1578,7 @@
       "startedAt": "2026-04-01",
       "employerIdMissing": false,
       "weeks": {
-        "2026-08-30": {
+        "2026-09-06": {
           "postedCount": 0,
           "achieved": false,
           "visibleCount": 0,
@@ -1531,9 +1587,24 @@
           "pace": {
             "status": "behind",
             "expectedByToday": 2,
-            "remainingDays": 4,
+            "remainingDays": 5,
             "remainingRequired": 3,
             "isCurrentWeek": true,
+            "postingDays": []
+          }
+        },
+        "2026-08-30": {
+          "postedCount": 0,
+          "achieved": false,
+          "visibleCount": 0,
+          "applicantTotal": 0,
+          "jobs": [],
+          "pace": {
+            "status": "missed",
+            "expectedByToday": 3,
+            "remainingDays": 0,
+            "remainingRequired": 3,
+            "isCurrentWeek": false,
             "postingDays": []
           }
         },
@@ -1733,21 +1804,6 @@
             "isCurrentWeek": false,
             "postingDays": []
           }
-        },
-        "2026-06-14": {
-          "postedCount": 0,
-          "achieved": false,
-          "visibleCount": 0,
-          "applicantTotal": 0,
-          "jobs": [],
-          "pace": {
-            "status": "missed",
-            "expectedByToday": 3,
-            "remainingDays": 0,
-            "remainingRequired": 3,
-            "isCurrentWeek": false,
-            "postingDays": []
-          }
         }
       },
       "excludedMismatched": 0,
@@ -1755,17 +1811,23 @@
     }
   ],
   "totals": {
-    "2026-08-30": {
+    "2026-09-06": {
       "membersActive": 5,
       "membersAchieved": 0,
-      "postedCount": 5,
-      "applicantTotal": 33
+      "postedCount": 1,
+      "applicantTotal": 0
+    },
+    "2026-08-30": {
+      "membersActive": 5,
+      "membersAchieved": 2,
+      "postedCount": 9,
+      "applicantTotal": 210
     },
     "2026-08-23": {
       "membersActive": 5,
       "membersAchieved": 1,
       "postedCount": 7,
-      "applicantTotal": 130
+      "applicantTotal": 142
     },
     "2026-08-16": {
       "membersActive": 5,
@@ -1816,12 +1878,6 @@
       "applicantTotal": 0
     },
     "2026-06-21": {
-      "membersActive": 5,
-      "membersAchieved": 0,
-      "postedCount": 0,
-      "applicantTotal": 0
-    },
-    "2026-06-14": {
       "membersActive": 5,
       "membersAchieved": 0,
       "postedCount": 0,
