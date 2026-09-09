@@ -167,7 +167,7 @@ body{margin:0;background:var(--bg);color:var(--ink);
     <p class="note" id="sheetacct">この端末に保存されます</p>
     <div class="field"><label>アポ / 相談</label><input id="in_appt" inputmode="numeric" placeholder="0"><span class="prev" id="prev_appt"></span></div>
     <div class="field"><label>プロフィール閲覧（合計）</label><input id="in_profile" inputmode="numeric" placeholder="0"><span class="prev" id="prev_profile"></span></div>
-    <div class="field"><label>公式LINE追加</label><input id="in_line" inputmode="numeric" placeholder="0"><span class="prev" id="prev_line"></span></div>
+    <div class="field" style="display:none"><label>公式LINE追加</label><input id="in_line" inputmode="numeric" placeholder="0"><span class="prev" id="prev_line"></span></div>
     <button class="save" id="saveInput">保存（今日の日付）</button>
     <button id="clearInput" style="width:100%;background:none;border:0;color:var(--bad);font-size:13px;margin-top:14px;cursor:pointer;font-family:inherit">この端末で入れた数値を全部消す</button>
   </div>
@@ -518,7 +518,7 @@ $("#refresh").onclick=async ()=>{
 $("#openInput").onclick=()=>$("#sheetbg").classList.add("on");
 $("#sheetbg").onclick=e=>{if(e.target===$("#sheetbg"))$("#sheetbg").classList.remove("on");};
 $("#in_appt").addEventListener("keydown",e=>{if(e.key==="Enter")$("#in_profile").focus();});
-$("#in_profile").addEventListener("keydown",e=>{if(e.key==="Enter")$("#in_line").focus();});
+$("#in_profile").addEventListener("keydown",e=>{if(e.key==="Enter")$("#saveInput").click();});
 $("#in_line").addEventListener("keydown",e=>{if(e.key==="Enter")$("#saveInput").click();});
 $("#saveInput").onclick=()=>{
   const appt=$("#in_appt").value.trim(), line=$("#in_line").value.trim(), prof=$("#in_profile").value.trim();
@@ -639,7 +639,7 @@ function openGoalEdit(){
     row("g_impMonth","月間インプレ",g.impMonth)+
     row("g_impAvg","1投稿の平均",g.impAvg)+
     row("g_posts","1日の投稿",g.posts)+
-    row("g_line","公式LINE追加",g.line)+
+    row("g_line","公式LINE追加",g.line).replace('style="margin-bottom:12px"','style="display:none"')+
     row("g_appt",a.kpi2,g.appt)+
     `<button id="g_save" style="width:100%;height:46px;border:0;background:var(--accent);color:#fff;font-weight:700;font-size:15px;border-radius:12px;cursor:pointer;margin-top:6px">保存</button>`;
   $("#detailbg").classList.add("on");
