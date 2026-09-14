@@ -1,15 +1,16 @@
 {
   "version": 1,
-  "generatedAt": "2026-09-08T14:37:43.464Z",
+  "generatedAt": "2026-09-14T09:46:04.309Z",
   "timezone": "Asia/Tokyo",
   "today": {
-    "date": "2026-09-08",
-    "dayOfWeek": "火",
-    "dayNumber": 3,
-    "remainingDays": 5
+    "date": "2026-09-14",
+    "dayOfWeek": "月",
+    "dayNumber": 2,
+    "remainingDays": 6
   },
-  "currentWeek": "2026-09-06",
+  "currentWeek": "2026-09-13",
   "weeks": [
+    "2026-09-13",
     "2026-09-06",
     "2026-08-30",
     "2026-08-23",
@@ -20,8 +21,7 @@
     "2026-07-19",
     "2026-07-12",
     "2026-07-05",
-    "2026-06-28",
-    "2026-06-21"
+    "2026-06-28"
   ],
   "members": [
     {
@@ -33,7 +33,7 @@
       "startedAt": "2026-04-01",
       "employerIdMissing": false,
       "weeks": {
-        "2026-09-06": {
+        "2026-09-13": {
           "postedCount": 0,
           "achieved": false,
           "visibleCount": 0,
@@ -41,10 +41,25 @@
           "jobs": [],
           "pace": {
             "status": "behind",
-            "expectedByToday": 2,
-            "remainingDays": 5,
+            "expectedByToday": 1,
+            "remainingDays": 6,
             "remainingRequired": 3,
             "isCurrentWeek": true,
+            "postingDays": []
+          }
+        },
+        "2026-09-06": {
+          "postedCount": 0,
+          "achieved": false,
+          "visibleCount": 0,
+          "applicantTotal": 0,
+          "jobs": [],
+          "pace": {
+            "status": "missed",
+            "expectedByToday": 3,
+            "remainingDays": 0,
+            "remainingRequired": 3,
+            "isCurrentWeek": false,
             "postingDays": []
           }
         },
@@ -52,7 +67,7 @@
           "postedCount": 2,
           "achieved": false,
           "visibleCount": 2,
-          "applicantTotal": 46,
+          "applicantTotal": 47,
           "jobs": [
             {
               "jobId": 13422186,
@@ -60,9 +75,9 @@
               "url": "https://crowdworks.jp/public/jobs/13422186",
               "postedAt": "2026-09-02T09:09:59+09:00",
               "postedDate": "2026-09-02",
-              "applicantCount": 41,
+              "applicantCount": 42,
               "visible": true,
-              "recruiting": true,
+              "recruiting": false,
               "applyDeadline": "2026-09-09"
             },
             {
@@ -324,21 +339,6 @@
             "isCurrentWeek": false,
             "postingDays": []
           }
-        },
-        "2026-06-21": {
-          "postedCount": 0,
-          "achieved": false,
-          "visibleCount": 0,
-          "applicantTotal": 0,
-          "jobs": [],
-          "pace": {
-            "status": "missed",
-            "expectedByToday": 3,
-            "remainingDays": 0,
-            "remainingRequired": 3,
-            "isCurrentWeek": false,
-            "postingDays": []
-          }
         }
       },
       "excludedMismatched": 0,
@@ -353,6 +353,21 @@
       "startedAt": "2026-04-01",
       "employerIdMissing": true,
       "weeks": {
+        "2026-09-13": {
+          "postedCount": 0,
+          "achieved": false,
+          "visibleCount": 0,
+          "applicantTotal": 0,
+          "jobs": [],
+          "pace": {
+            "status": "untracked",
+            "expectedByToday": 1,
+            "remainingDays": 6,
+            "remainingRequired": 3,
+            "isCurrentWeek": true,
+            "postingDays": []
+          }
+        },
         "2026-09-06": {
           "postedCount": 0,
           "achieved": false,
@@ -361,10 +376,10 @@
           "jobs": [],
           "pace": {
             "status": "untracked",
-            "expectedByToday": 2,
-            "remainingDays": 5,
+            "expectedByToday": 3,
+            "remainingDays": 0,
             "remainingRequired": 3,
-            "isCurrentWeek": true,
+            "isCurrentWeek": false,
             "postingDays": []
           }
         },
@@ -517,21 +532,6 @@
             "isCurrentWeek": false,
             "postingDays": []
           }
-        },
-        "2026-06-21": {
-          "postedCount": 0,
-          "achieved": false,
-          "visibleCount": 0,
-          "applicantTotal": 0,
-          "jobs": [],
-          "pace": {
-            "status": "untracked",
-            "expectedByToday": 3,
-            "remainingDays": 0,
-            "remainingRequired": 3,
-            "isCurrentWeek": false,
-            "postingDays": []
-          }
         }
       },
       "excludedMismatched": 0,
@@ -546,7 +546,7 @@
       "startedAt": "2026-04-01",
       "employerIdMissing": false,
       "weeks": {
-        "2026-09-06": {
+        "2026-09-13": {
           "postedCount": 0,
           "achieved": false,
           "visibleCount": 0,
@@ -554,10 +554,25 @@
           "jobs": [],
           "pace": {
             "status": "behind",
-            "expectedByToday": 2,
-            "remainingDays": 5,
+            "expectedByToday": 1,
+            "remainingDays": 6,
             "remainingRequired": 3,
             "isCurrentWeek": true,
+            "postingDays": []
+          }
+        },
+        "2026-09-06": {
+          "postedCount": 0,
+          "achieved": false,
+          "visibleCount": 0,
+          "applicantTotal": 0,
+          "jobs": [],
+          "pace": {
+            "status": "missed",
+            "expectedByToday": 3,
+            "remainingDays": 0,
+            "remainingRequired": 3,
+            "isCurrentWeek": false,
             "postingDays": []
           }
         },
@@ -565,7 +580,7 @@
           "postedCount": 3,
           "achieved": true,
           "visibleCount": 3,
-          "applicantTotal": 111,
+          "applicantTotal": 112,
           "jobs": [
             {
               "jobId": 13431026,
@@ -573,9 +588,9 @@
               "url": "https://crowdworks.jp/public/jobs/13431026",
               "postedAt": "2026-09-05T19:34:40+09:00",
               "postedDate": "2026-09-05",
-              "applicantCount": 0,
+              "applicantCount": 1,
               "visible": true,
-              "recruiting": true,
+              "recruiting": false,
               "applyDeadline": "2026-09-19"
             },
             {
@@ -586,7 +601,7 @@
               "postedDate": "2026-09-01",
               "applicantCount": 70,
               "visible": true,
-              "recruiting": true,
+              "recruiting": false,
               "applyDeadline": "2026-09-08"
             },
             {
@@ -597,7 +612,7 @@
               "postedDate": "2026-08-31",
               "applicantCount": 41,
               "visible": true,
-              "recruiting": true,
+              "recruiting": false,
               "applyDeadline": "2026-09-08"
             }
           ],
@@ -981,21 +996,6 @@
             "isCurrentWeek": false,
             "postingDays": []
           }
-        },
-        "2026-06-21": {
-          "postedCount": 0,
-          "achieved": false,
-          "visibleCount": 0,
-          "applicantTotal": 0,
-          "jobs": [],
-          "pace": {
-            "status": "missed",
-            "expectedByToday": 3,
-            "remainingDays": 0,
-            "remainingRequired": 3,
-            "isCurrentWeek": false,
-            "postingDays": []
-          }
         }
       },
       "excludedMismatched": 0,
@@ -1010,6 +1010,21 @@
       "startedAt": "2026-04-01",
       "employerIdMissing": false,
       "weeks": {
+        "2026-09-13": {
+          "postedCount": 0,
+          "achieved": false,
+          "visibleCount": 0,
+          "applicantTotal": 0,
+          "jobs": [],
+          "pace": {
+            "status": "behind",
+            "expectedByToday": 1,
+            "remainingDays": 6,
+            "remainingRequired": 3,
+            "isCurrentWeek": true,
+            "postingDays": []
+          }
+        },
         "2026-09-06": {
           "postedCount": 1,
           "achieved": false,
@@ -1029,11 +1044,11 @@
             }
           ],
           "pace": {
-            "status": "behind",
-            "expectedByToday": 2,
-            "remainingDays": 5,
+            "status": "missed",
+            "expectedByToday": 3,
+            "remainingDays": 0,
             "remainingRequired": 2,
-            "isCurrentWeek": true,
+            "isCurrentWeek": false,
             "postingDays": []
           }
         },
@@ -1051,7 +1066,7 @@
               "postedDate": "2026-09-04",
               "applicantCount": 1,
               "visible": true,
-              "recruiting": true,
+              "recruiting": false,
               "applyDeadline": "2026-09-11"
             },
             {
@@ -1062,7 +1077,7 @@
               "postedDate": "2026-09-03",
               "applicantCount": 48,
               "visible": true,
-              "recruiting": true,
+              "recruiting": false,
               "applyDeadline": "2026-09-10"
             },
             {
@@ -1356,21 +1371,6 @@
             "isCurrentWeek": false,
             "postingDays": []
           }
-        },
-        "2026-06-21": {
-          "postedCount": 0,
-          "achieved": false,
-          "visibleCount": 0,
-          "applicantTotal": 0,
-          "jobs": [],
-          "pace": {
-            "status": "missed",
-            "expectedByToday": 3,
-            "remainingDays": 0,
-            "remainingRequired": 3,
-            "isCurrentWeek": false,
-            "postingDays": []
-          }
         }
       },
       "excludedMismatched": 0,
@@ -1385,7 +1385,7 @@
       "startedAt": "2026-04-01",
       "employerIdMissing": false,
       "weeks": {
-        "2026-09-06": {
+        "2026-09-13": {
           "postedCount": 0,
           "achieved": false,
           "visibleCount": 0,
@@ -1393,10 +1393,25 @@
           "jobs": [],
           "pace": {
             "status": "behind",
-            "expectedByToday": 2,
-            "remainingDays": 5,
+            "expectedByToday": 1,
+            "remainingDays": 6,
             "remainingRequired": 3,
             "isCurrentWeek": true,
+            "postingDays": []
+          }
+        },
+        "2026-09-06": {
+          "postedCount": 0,
+          "achieved": false,
+          "visibleCount": 0,
+          "applicantTotal": 0,
+          "jobs": [],
+          "pace": {
+            "status": "missed",
+            "expectedByToday": 3,
+            "remainingDays": 0,
+            "remainingRequired": 3,
+            "isCurrentWeek": false,
             "postingDays": []
           }
         },
@@ -1549,21 +1564,6 @@
             "isCurrentWeek": false,
             "postingDays": []
           }
-        },
-        "2026-06-21": {
-          "postedCount": 0,
-          "achieved": false,
-          "visibleCount": 0,
-          "applicantTotal": 0,
-          "jobs": [],
-          "pace": {
-            "status": "missed",
-            "expectedByToday": 3,
-            "remainingDays": 0,
-            "remainingRequired": 3,
-            "isCurrentWeek": false,
-            "postingDays": []
-          }
         }
       },
       "excludedMismatched": 0,
@@ -1578,7 +1578,7 @@
       "startedAt": "2026-04-01",
       "employerIdMissing": false,
       "weeks": {
-        "2026-09-06": {
+        "2026-09-13": {
           "postedCount": 0,
           "achieved": false,
           "visibleCount": 0,
@@ -1586,10 +1586,25 @@
           "jobs": [],
           "pace": {
             "status": "behind",
-            "expectedByToday": 2,
-            "remainingDays": 5,
+            "expectedByToday": 1,
+            "remainingDays": 6,
             "remainingRequired": 3,
             "isCurrentWeek": true,
+            "postingDays": []
+          }
+        },
+        "2026-09-06": {
+          "postedCount": 0,
+          "achieved": false,
+          "visibleCount": 0,
+          "applicantTotal": 0,
+          "jobs": [],
+          "pace": {
+            "status": "missed",
+            "expectedByToday": 3,
+            "remainingDays": 0,
+            "remainingRequired": 3,
+            "isCurrentWeek": false,
             "postingDays": []
           }
         },
@@ -1789,21 +1804,6 @@
             "isCurrentWeek": false,
             "postingDays": []
           }
-        },
-        "2026-06-21": {
-          "postedCount": 0,
-          "achieved": false,
-          "visibleCount": 0,
-          "applicantTotal": 0,
-          "jobs": [],
-          "pace": {
-            "status": "missed",
-            "expectedByToday": 3,
-            "remainingDays": 0,
-            "remainingRequired": 3,
-            "isCurrentWeek": false,
-            "postingDays": []
-          }
         }
       },
       "excludedMismatched": 0,
@@ -1811,6 +1811,12 @@
     }
   ],
   "totals": {
+    "2026-09-13": {
+      "membersActive": 5,
+      "membersAchieved": 0,
+      "postedCount": 0,
+      "applicantTotal": 0
+    },
     "2026-09-06": {
       "membersActive": 5,
       "membersAchieved": 0,
@@ -1821,7 +1827,7 @@
       "membersActive": 5,
       "membersAchieved": 2,
       "postedCount": 9,
-      "applicantTotal": 210
+      "applicantTotal": 212
     },
     "2026-08-23": {
       "membersActive": 5,
@@ -1872,12 +1878,6 @@
       "applicantTotal": 0
     },
     "2026-06-28": {
-      "membersActive": 5,
-      "membersAchieved": 0,
-      "postedCount": 0,
-      "applicantTotal": 0
-    },
-    "2026-06-21": {
       "membersActive": 5,
       "membersAchieved": 0,
       "postedCount": 0,
