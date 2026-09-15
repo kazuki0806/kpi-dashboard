@@ -201,7 +201,7 @@
     {
       "date": "2026-09-08",
       "profile_views": null,
-      "note_clicks": 3,
+      "note_clicks": 7,
       "line_clicks": 0,
       "line_followers": 2,
       "views": 0,
@@ -209,31 +209,83 @@
       "other_clicks": 3,
       "note_likes": 12,
       "note_followers": 6
+    },
+    {
+      "date": "2026-09-09",
+      "note_clicks": 5,
+      "line_clicks": 0,
+      "other_clicks": 0
+    },
+    {
+      "date": "2026-09-10",
+      "note_clicks": 3,
+      "line_clicks": 0,
+      "other_clicks": 0
+    },
+    {
+      "date": "2026-09-11",
+      "note_clicks": 3,
+      "line_clicks": 0,
+      "other_clicks": 0
+    },
+    {
+      "date": "2026-09-12",
+      "note_clicks": 1,
+      "line_clicks": 0,
+      "other_clicks": 0
+    },
+    {
+      "date": "2026-09-13",
+      "note_clicks": 7,
+      "line_clicks": 0,
+      "other_clicks": 0,
+      "views": 3434,
+      "profile_views": 90,
+      "profile_views_note": "9/13投稿5本の合計（実際の公開は9/14 0:13〜0:16にまとめて。Threads Web版インサイト）"
+    },
+    {
+      "date": "2026-09-14",
+      "note_clicks": 8,
+      "line_clicks": 0,
+      "other_clicks": 0,
+      "views": 1723,
+      "profile_views": 28,
+      "profile_views_note": "9/14投稿5本の合計（Threads Web版インサイト）"
+    },
+    {
+      "date": "2026-09-15",
+      "note_clicks": 2,
+      "line_clicks": 0,
+      "other_clicks": 0,
+      "line_followers": null,
+      "views": 138,
+      "note_pv": 163,
+      "note_likes": 13,
+      "note_followers": 6
     }
   ],
   "demographics": {
     "age": {
       "18-24": 7,
-      "25-34": 64,
-      "35-44": 98,
-      "45-54": 58,
-      "55-64": 18,
-      "65+": 4
+      "25-34": 68,
+      "35-44": 102,
+      "45-54": 66,
+      "55-64": 19,
+      "65+": 5
     },
     "gender": {
-      "F": 99,
-      "M": 38,
-      "U": 112
+      "F": 103,
+      "M": 51,
+      "U": 113
     },
     "country": {
-      "HK": 1,
-      "JP": 243,
-      "CZ": 1,
-      "KR": 1,
       "KH": 1,
       "GE": 1,
-      "CA": 1
+      "CA": 1,
+      "JP": 262,
+      "CZ": 1,
+      "KR": 1
     },
-    "updated": "2026-09-08"
+    "updated": "2026-09-15"
   }
 }
