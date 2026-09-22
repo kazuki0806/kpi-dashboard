@@ -265,7 +265,7 @@
     },
     {
       "date": "2026-09-16",
-      "note_clicks": 1,
+      "note_clicks": 2,
       "line_clicks": 0,
       "other_clicks": 0,
       "line_followers": 4,
@@ -273,30 +273,71 @@
       "note_pv": 168,
       "note_likes": 13,
       "note_followers": 6
+    },
+    {
+      "date": "2026-09-17",
+      "note_clicks": 2,
+      "line_clicks": 0,
+      "other_clicks": 0
+    },
+    {
+      "date": "2026-09-18",
+      "note_clicks": 2,
+      "line_clicks": 0,
+      "other_clicks": 0
+    },
+    {
+      "date": "2026-09-19",
+      "note_clicks": 1,
+      "line_clicks": 0,
+      "other_clicks": 0
+    },
+    {
+      "date": "2026-09-20",
+      "note_clicks": 0,
+      "line_clicks": 0,
+      "other_clicks": 0
+    },
+    {
+      "date": "2026-09-21",
+      "note_clicks": 0,
+      "line_clicks": 0,
+      "other_clicks": 0
+    },
+    {
+      "date": "2026-09-22",
+      "note_clicks": 2,
+      "line_clicks": 0,
+      "other_clicks": 0,
+      "line_followers": 4,
+      "views": 434,
+      "note_pv": 200,
+      "note_likes": 14,
+      "note_followers": 6
     }
   ],
   "demographics": {
     "age": {
       "18-24": 7,
-      "25-34": 68,
-      "35-44": 103,
-      "45-54": 67,
+      "25-34": 69,
+      "35-44": 104,
+      "45-54": 68,
       "55-64": 20,
       "65+": 5
     },
     "gender": {
       "F": 104,
-      "M": 51,
-      "U": 115
+      "M": 52,
+      "U": 117
     },
     "country": {
       "KH": 1,
       "GE": 1,
       "CA": 1,
-      "JP": 265,
+      "JP": 268,
       "CZ": 1,
       "KR": 1
     },
-    "updated": "2026-09-16"
+    "updated": "2026-09-22"
   }
 }
