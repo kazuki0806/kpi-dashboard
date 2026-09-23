@@ -118,10 +118,10 @@ function render(d) {
   html += "</div>";
 
   // 人ごと
-  ["リード獲得先", "クローザー"].forEach(function (g) {
+  ["トスアップ担当", "クローザー"].forEach(function (g) {
     var rows = (d.people || {})[g] || [];
     if (!rows.length) return;
-    html += "<h2>" + (g === "リード獲得先" ? "マーケごと（リード獲得先）" : "クローザーごと") +
+    html += "<h2>" + (g === "トスアップ担当" ? "トスアップ担当ごと" : "クローザーごと") +
       "（" + rows.length + "人）</h2><div class='tw'><table>" +
       "<thead><tr><th>名前</th><th class='r'>アポ着座</th><th class='r'>見込み着座</th>" +
       "<th class='r'>トスアップ率</th><th class='r'>プレ着座</th><th class='r'>ブリッジ率</th>" +
