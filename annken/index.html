@@ -190,11 +190,14 @@ const ACCOUNTS = {
   muneki:{name:"宗木", handle:"", kpi2:"アポ", url:"kpi_data_muneki.json"},
   watanabe:{name:"渡邊", handle:"", kpi2:"アポ", url:"kpi_data_watanabe.json"},
   hayashibara:{name:"林原", handle:"", kpi2:"アポ", url:"kpi_data_hayashibara.json"},
+  ogawa:{name:"小川", handle:"", kpi2:"アポ", url:"kpi_data_ogawa.json"},
+  ozawa:{name:"小澤", handle:"", kpi2:"アポ", url:"kpi_data_ozawa.json"},
+  sakamoto:{name:"坂本", handle:"", kpi2:"アポ", url:"kpi_data_sakamoto.json"},
 };
 const GOAL_DEFAULT = {follower:150, posts:5, chat:100, appt:10, impMonth:0, impAvg:0, line:0};
 // 月次コミット（アカウントごとの目標。端末で編集すると上書きされる）
 const GOAL_BY_ACCT = {
-  all:         {posts:50},
+  all:         {posts:54},
   ikeda:       {posts:4},
   hamada:      {posts:6},
   kono:        {posts:6},
@@ -203,12 +206,15 @@ const GOAL_BY_ACCT = {
   tanimura:    {posts:6},
   sekizawa:    {posts:2},
   minka:       {posts:2},
-  yamazaki:    {posts:2},
+  yamazaki:    {posts:0},
   ueno:        {posts:2},
   tatebayashi: {posts:2},
   muneki:      {posts:4},
   watanabe:    {posts:2},
   hayashibara: {posts:2},
+  ogawa:       {posts:2},
+  ozawa:       {posts:2},
+  sakamoto:    {posts:2},
 };
 const FUNNEL = {};   // funnel_<acct>.json（noteクリック等の自動取得分）
 const DEMO = {};     // 同ファイルの demographics（フォロワーの年齢・性別・国）
