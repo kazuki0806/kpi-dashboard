@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>売上と歩留まり</title>
+<style>
+/* 色はCW業務アプリに合わせている */
+:root{
+  color-scheme: light;
+  --bg:#EDF2F9; --bg-deep:#E1E9F5; --panel:#FFFFFF;
+  --line:rgba(28,58,104,.14); --ink:#0F1B2D; --muted:#52627A; --subtle:#6E7D93;
+  --accent:#2563EB; --accent-soft:#DCE8FB;
+  --ok:#157F3D; --ok-soft:#DDF3E4; --wait:#9A5B00; --wait-soft:#FBEFD6;
+  --err:#B42318; --err-soft:#FBE3E0;
+  --shadow:0 10px 30px -18px rgba(20,48,92,.35);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    color-scheme: dark;
+    --bg:#070C16; --bg-deep:#0B1322; --panel:#101A2B;
+    --line:rgba(255,255,255,.09); --ink:#EAF2FF; --muted:#A3B3CA; --subtle:#8494AC;
+    --accent:#6AA8FF; --accent-soft:rgba(106,168,255,.16);
+    --ok:#5FD08A; --ok-soft:rgba(95,208,138,.14); --wait:#F2B64C; --wait-soft:rgba(242,182,76,.14);
+    --err:#FF8A7A; --err-soft:rgba(255,138,122,.14);
+    --shadow:0 14px 34px -20px rgba(0,0,0,.8);
+  }
+}
+*{box-sizing:border-box}
+body{margin:0;background:linear-gradient(170deg,var(--bg),var(--bg-deep)) fixed;background-color:var(--bg);
+  color:var(--ink);font:14px/1.7 -apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP",sans-serif}
+.wrap{max-width:1000px;margin:0 auto;padding:22px 18px 60px}
+h1{font-size:21px;margin:0 0 2px}
+.sub{color:var(--muted);font-size:13px;margin-bottom:20px}
+h2{font-size:15px;margin:28px 0 10px}
+.cards{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(160px,1fr))}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;box-shadow:var(--shadow)}
+.card .k{font-size:12.5px;color:var(--muted)}
+.card .v{font-size:23px;font-weight:700;letter-spacing:-.01em;margin-top:4px;font-variant-numeric:tabular-nums}
+.card .n{font-size:12.5px;color:var(--subtle);margin-top:2px}
+.card.paid .v{color:var(--ok)} .card.unpaid .v{color:var(--wait)} .card.bad .v{color:var(--err)}
+.funnel{display:grid;gap:8px;margin-top:8px}
+.step{display:grid;grid-template-columns:110px 1fr 84px;align-items:center;gap:10px}
+.step .nm{font-size:13px;color:var(--muted)}
+.step .bar{height:22px;border-radius:8px;background:var(--accent-soft);position:relative;overflow:hidden}
+.step .bar i{position:absolute;inset:0 auto 0 0;background:var(--accent);opacity:.65;border-radius:8px}
+.step .num{text-align:right;font-variant-numeric:tabular-nums;font-weight:700}
+.rate{display:inline-block;margin-left:8px;font-size:12px;color:var(--subtle);font-weight:400}
+table{border-collapse:collapse;width:100%;min-width:620px;font-size:13.5px}
+.tw{overflow-x:auto;background:var(--panel);border:1px solid var(--line);border-radius:14px}
+th,td{text-align:left;padding:9px 13px;border-bottom:1px solid var(--line);white-space:nowrap}
+th{font-size:12.5px;color:var(--muted);background:var(--accent-soft)}
+tr:last-child td{border-bottom:0}
+td.r{text-align:right;font-variant-numeric:tabular-nums}
+.pill{display:inline-block;padding:1px 9px;border-radius:999px;font-size:12px;font-weight:700}
+.pill.paid{color:var(--ok);background:var(--ok-soft)} .pill.unpaid{color:var(--wait);background:var(--wait-soft)}
+.pill.other{color:var(--subtle);background:var(--line)}
+.note{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;color:var(--muted);font-size:13px}
+.note b{color:var(--ink)}
+.warn{border-left:3px solid var(--err)}
+.foot{margin-top:26px;color:var(--subtle);font-size:12px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>売上と歩留まり</h1>
+  <div class="sub" id="sub">読み込んでいます</div>
+  <div id="app"></div>
+  <div class="foot">AGシートから自動で作っています。数字を直すときはシート側を直してください。</div>
+</div>
+
+<script>
+var yen = function (n) { return "¥" + Number(n || 0).toLocaleString("ja-JP"); };
+var esc = function (s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) {
+  return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); };
+var pct = function (v) { return v == null ? "—" : v + "%"; };
+
+fetch("./data.json?t=" + Date.now(), { cache: "no-store" })
+  .then(function (r) { return r.json(); })
+  .then(render)
+  .catch(function (e) { document.getElementById("sub").textContent = "データを読み込めませんでした: " + e; });
+
+function render(d) {
+  document.getElementById("sub").textContent =
+    d.month + "分（" + d.generated_at + " 時点）";
+
+  var m = d.money, f = d.funnel, r = d.rates;
+  var html = "";
+
+  // 売上
+  html += '<div class="cards">' +
+    card("入金済み", yen(m["入金済み"].金額), m["入金済み"].件数 + "件", "paid") +
+    card("未入金（契約済・資金繰り中）", yen(m["未入金"].金額), m["未入金"].件数 + "件", "unpaid") +
+    card("資金繰り難", yen(m["資金繰り難"].金額), m["資金繰り難"].件数 + "件", "bad") +
+    card("契約の合計", yen(m["入金済み"].金額 + m["未入金"].金額 + m["資金繰り難"].金額),
+         (m["入金済み"].件数 + m["未入金"].件数 + m["資金繰り難"].件数) + "件", "") +
+    "</div>";
+
+  // 率
+  html += "<h2>率</h2><div class='cards'>" +
+    card("トスアップ率", pct(r["トスアップ率"]), "見込み着座 ÷ アポ着座", "") +
+    card("ブリッジ率", pct(r["ブリッジ率"]), "プレ着座 ÷ 見込み着座", "") +
+    card("契約率", pct(r["契約率"]), "契約 ÷ プレ着座", "") +
+    card("入金率", pct(r["入金率"]), "入金 ÷ 契約", "") +
+    "</div>";
+
+  // 歩留まり
+  var names = Object.keys(f), top = f[names[0]] || 1;
+  html += "<h2>歩留まり</h2><div class='funnel'>";
+  names.forEach(function (n, i) {
+    var prev = i ? f[names[i - 1]] : null;
+    var rate = prev ? Math.round(f[n] / prev * 1000) / 10 + "%" : "";
+    html += '<div class="step"><span class="nm">' + esc(n) + "</span>" +
+      '<span class="bar"><i style="width:' + (f[n] / top * 100) + '%"></i></span>' +
+      '<span class="num">' + f[n] + (rate ? '<span class="rate">' + rate + "</span>" : "") + "</span></div>";
+  });
+  html += "</div>";
+
+  // 契約者
+  html += "<h2>契約した人（" + d.contracts.length + "件）</h2><div class='tw'><table>" +
+    "<thead><tr><th>クライアント</th><th>コース</th><th class='r'>金額</th><th>状況</th>" +
+    "<th>リード獲得先</th><th>トスアップ</th><th>担当</th></tr></thead><tbody>";
+  d.contracts.forEach(function (c) {
+    var cls = c.state.indexOf("入金済") === 0 ? "paid" : (c.state.indexOf("契約済") === 0 ? "unpaid" : "other");
+    html += "<tr><td>" + esc(c.client) + "</td><td>" + esc(c.course) + "</td>" +
+      "<td class='r'>" + yen(c.yen) + "</td>" +
+      "<td><span class='pill " + cls + "'>" + esc(c.state) + "</span></td>" +
+      "<td>" + esc(c.lead) + "</td><td>" + esc(c.toss) + "</td><td>" + esc(c.closer) + "</td></tr>";
+  });
+  html += "</tbody></table></div>";
+
+  // 要確認
+  var checks = [];
+  Object.keys(d.check || {}).forEach(function (k) {
+    (d.check[k] || []).forEach(function (row) {
+      checks.push(k + "：" + row.client + "（契約者タブ " + (row["契約者タブ"] || "空欄") + "）");
+    });
+  });
+  if (checks.length) {
+    html += "<h2>要確認</h2><div class='note warn'>" +
+      "契約者タブと営業タブで、コースの記入が合っていない人です。<br>" +
+      checks.map(esc).join("<br>") + "</div>";
+  }
+
+  // 数え方
+  html += "<h2>数え方</h2><div class='note'>" +
+    "<b>アポ被り</b> は分母から外しています（" + (d.excluded["アポ被り"] || 0) + "件）。" +
+    "見込み外は「座ったが見込みが無かった人」として、アポ着座にだけ数えています。<br>" +
+    d.stages.map(function (s) {
+      return "<b>" + esc(s.name) + "</b>：" + s.statuses.map(esc).join("、");
+    }).join("<br>") +
+    (Object.keys(d.unknownStatuses || {}).length
+      ? "<br><b>どの段階か決めていないステータス</b>：" + Object.keys(d.unknownStatuses).map(esc).join("、")
+      : "") +
+    "</div>";
+
+  document.getElementById("app").innerHTML = html;
+}
+
+function card(k, v, n, cls) {
+  return '<div class="card ' + cls + '"><div class="k">' + esc(k) + '</div>' +
+    '<div class="v">' + esc(v) + '</div><div class="n">' + esc(n) + "</div></div>";
+}
+</script>
+</body>
+</html>
