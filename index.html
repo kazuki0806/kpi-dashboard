@@ -589,6 +589,12 @@ function openDetail(key){
       }).join("")+`</tbody></table>`
       +`<p class="note" style="margin-top:12px">プロフィールへのアクセスはThreads APIに無いため、Web版の投稿インサイトから取った実測です。「—」はその日に取得していない項目です。</p>`
       : `<div class="empty">funnel_export.py がまだ動いていません</div>`;
+    // 記事ごとの数値は別ページ（note/）にある。ここから開けるようにする
+    if(key==="notepv"){
+      body = `<p style="margin:0 0 14px"><a href="note/" target="_blank" rel="noopener"
+        style="display:inline-block;background:var(--brand,#7c5cff);color:#fff;text-decoration:none;
+        font-weight:700;font-size:13px;padding:10px 16px;border-radius:10px">記事ごとの数値をひらく ↗</a></p>` + body;
+    }
   }
   $("#dtitle").textContent=title; $("#dsub").textContent=sub; $("#dbody").innerHTML=body;
   $("#detailbg").classList.add("on");
