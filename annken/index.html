@@ -405,6 +405,8 @@ function render(){
   }
 
   const cPv   = stockCard("note_pv","grow");
+  // noteの画面は既定で「過去28日間」を出す。累計だけだと画面と数が合わないので両方持つ
+  const pv28  = lastVal(fn,"note_pv_28d");
   const cLine = stockCard("line_followers","total");
   // いいねとフォロワーは積み上がった総数。期間で切らずに、いまの合計をそのまま出す。
   const nFolNow = lastVal(fn,"note_followers");
@@ -608,11 +610,11 @@ function openDetail(key){
     const fh=(FUNNEL[CUR]||[]).slice().reverse();
     title=({profile:"プロフィールへのアクセス",note:"noteリンクのクリック",notepv:"noteの閲覧数",line:"公式LINEの友だち数"})[key];
     sub="Threads → note → 公式LINE の推移";
-    body= fh.length? `<table class="tbl"><thead><tr><th>日付</th><th style="text-align:right">閲覧</th><th style="text-align:right">プロフ</th><th style="text-align:right">率</th><th style="text-align:right">noteクリック</th><th style="text-align:right">note閲覧</th><th style="text-align:right">noteフォロワー</th><th style="text-align:right">noteいいね</th><th style="text-align:right">LINE</th></tr></thead><tbody>`+
+    body= fh.length? `<table class="tbl"><thead><tr><th>日付</th><th style="text-align:right">閲覧</th><th style="text-align:right">プロフ</th><th style="text-align:right">率</th><th style="text-align:right">noteクリック</th><th style="text-align:right">note閲覧<br><span style="font-weight:400;font-size:11px">累計</span></th><th style="text-align:right">note閲覧<br><span style="font-weight:400;font-size:11px">28日</span></th><th style="text-align:right">noteフォロワー</th><th style="text-align:right">noteいいね</th><th style="text-align:right">LINE</th></tr></thead><tbody>`+
       fh.map(r=>{
         const rate=(r.profile_views!=null&&r.views)?(r.profile_views/r.views*100).toFixed(1)+"%":"—";
         const c=v=>v==null?"—":fmt(v);
-        return `<tr><td style="white-space:nowrap">${r.date.slice(5)}</td><td style="text-align:right">${c(r.views)}</td><td style="text-align:right;font-weight:600">${c(r.profile_views)}</td><td style="text-align:right;color:var(--ink2)">${rate}</td><td style="text-align:right">${c(r.note_clicks)}</td><td style="text-align:right">${c(r.note_pv)}</td><td style="text-align:right">${c(r.note_followers)}</td><td style="text-align:right">${c(r.note_likes)}</td><td style="text-align:right">${c(r.line_followers)}</td></tr>`;
+        return `<tr><td style="white-space:nowrap">${r.date.slice(5)}</td><td style="text-align:right">${c(r.views)}</td><td style="text-align:right;font-weight:600">${c(r.profile_views)}</td><td style="text-align:right;color:var(--ink2)">${rate}</td><td style="text-align:right">${c(r.note_clicks)}</td><td style="text-align:right">${c(r.note_pv)}</td><td style="text-align:right;color:var(--ink2)">${c(r.note_pv_28d)}</td><td style="text-align:right">${c(r.note_followers)}</td><td style="text-align:right">${c(r.note_likes)}</td><td style="text-align:right">${c(r.line_followers)}</td></tr>`;
       }).join("")+`</tbody></table>`
       +`<p class="note" style="margin-top:12px">プロフィールへのアクセスはThreads APIに無いため、Web版の投稿インサイトから取った実測です。「—」はその日に取得していない項目です。</p>`
       : `<div class="empty">funnel_export.py がまだ動いていません</div>`;
