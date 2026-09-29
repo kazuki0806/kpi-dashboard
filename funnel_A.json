@@ -272,13 +272,17 @@
    "views": 3,
    "note_pv": 168,
    "note_likes": 13,
-   "note_followers": 6
+   "note_followers": 6,
+   "profile_views": 0,
+   "profile_views_note": "09-16投稿1本の合計（Threads Web版インサイト・2026-09-29読み取り）"
   },
   {
    "date": "2026-09-17",
    "note_clicks": 2,
    "line_clicks": 0,
-   "other_clicks": 0
+   "other_clicks": 0,
+   "profile_views": 208,
+   "profile_views_note": "09-17投稿4本の合計（Threads Web版インサイト・2026-09-29読み取り）"
   },
   {
    "date": "2026-09-18",
@@ -313,43 +317,57 @@
    "views": 434,
    "note_pv": 200,
    "note_likes": 14,
-   "note_followers": 6
+   "note_followers": 6,
+   "profile_views": 44,
+   "profile_views_note": "09-22投稿5本の合計（Threads Web版インサイト・2026-09-29読み取り）"
   },
   {
    "date": "2026-09-23",
    "note_clicks": 11,
    "line_clicks": 0,
-   "other_clicks": 0
+   "other_clicks": 0,
+   "profile_views": 365,
+   "profile_views_note": "09-23投稿6本の合計（Threads Web版インサイト・2026-09-29読み取り）"
   },
   {
    "date": "2026-09-24",
    "note_clicks": 17,
    "line_clicks": 0,
-   "other_clicks": 0
+   "other_clicks": 0,
+   "profile_views": 240,
+   "profile_views_note": "09-24投稿5本の合計（Threads Web版インサイト・2026-09-29読み取り）"
   },
   {
    "date": "2026-09-25",
    "note_clicks": 11,
    "line_clicks": 0,
-   "other_clicks": 0
+   "other_clicks": 0,
+   "profile_views": 165,
+   "profile_views_note": "09-25投稿2本の合計（Threads Web版インサイト・2026-09-29読み取り）"
   },
   {
    "date": "2026-09-26",
    "note_clicks": 5,
    "line_clicks": 0,
-   "other_clicks": 0
+   "other_clicks": 0,
+   "profile_views": 37,
+   "profile_views_note": "09-26投稿3本の合計（Threads Web版インサイト・2026-09-29読み取り）"
   },
   {
    "date": "2026-09-27",
    "note_clicks": 4,
    "line_clicks": 0,
-   "other_clicks": 0
+   "other_clicks": 0,
+   "profile_views": 466,
+   "profile_views_note": "09-27投稿4本の合計（Threads Web版インサイト・2026-09-29読み取り）"
   },
   {
    "date": "2026-09-28",
    "note_clicks": 4,
    "line_clicks": 0,
-   "other_clicks": 0
+   "other_clicks": 0,
+   "profile_views": 388,
+   "profile_views_note": "09-28投稿5本の合計（Threads Web版インサイト・2026-09-29読み取り）"
   },
   {
    "date": "2026-09-29",
@@ -361,7 +379,9 @@
    "note_pv": 282,
    "note_pv_28d": 229,
    "note_likes": 16,
-   "note_followers": 8
+   "note_followers": 8,
+   "profile_views": 0,
+   "profile_views_note": "09-29投稿1本の合計（Threads Web版インサイト・2026-09-29読み取り）"
   }
  ],
  "demographics": {
