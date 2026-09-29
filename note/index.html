@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>note 記事ごとの数値</title>
+<style>
+:root{
+  --accent:#2cb696; --accent-soft:#e3f6f1; --bg:#f4f5f7; --card:#ffffff;
+  --ink:#1c1b29; --ink2:#6b6980; --ink3:#9d9bb0; --line:#ebeaf0;
+  --good:#16a06a; --good-bg:#e6f6ef; --radius:16px; --shadow:0 1px 3px rgba(30,25,60,.05);
+}
+:root[data-theme=dark]{
+  --accent:#3fd3af; --accent-soft:#1d3b36; --bg:#141320; --card:#1e1c2e;
+  --ink:#f0eefb; --ink2:#a6a3c0; --ink3:#75729a; --line:#2b2940;
+  --good:#4cd196; --good-bg:#173a2c; --shadow:0 1px 3px rgba(0,0,0,.3);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);padding:18px;
+  font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP",sans-serif;
+  -webkit-font-smoothing:antialiased}
+.wrap{max-width:1000px;margin:0 auto}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:18px}
+.logo{width:34px;height:34px;border-radius:10px;background:var(--accent);color:#fff;display:grid;place-items:center;font-weight:800;font-size:13px}
+.iconbtn{width:38px;height:38px;border-radius:10px;border:0;background:var(--card);color:var(--ink2);cursor:pointer;font-size:16px;box-shadow:var(--shadow)}
+.sub{color:var(--ink2);font-size:13px;margin-bottom:16px}
+.grid{display:grid;gap:14px;grid-template-columns:repeat(3,1fr);margin-bottom:16px}
+.card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px 20px}
+.lab{color:var(--ink2);font-size:13px;font-weight:600}
+.val{font-size:26px;font-weight:800;margin:8px 0 6px;letter-spacing:-.5px}
+.val small{font-size:14px;color:var(--ink3);font-weight:600}
+.badge{display:inline-flex;font-size:12px;font-weight:700;padding:3px 8px;border-radius:20px;color:var(--ink2);background:var(--line)}
+.badge.up{color:var(--good);background:var(--good-bg)}
+.h{font-size:16px;font-weight:700;margin:0 0 2px}
+.hsub{color:var(--ink3);font-size:12px}
+.head{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:14px;gap:10px}
+.art{padding:14px 0;border-bottom:1px solid var(--line)}
+.art:last-child{border-bottom:0}
+.art .t{font-weight:700;font-size:14px;line-height:1.5;margin-bottom:4px}
+.art .t a{color:inherit;text-decoration:none}
+.art .t a:hover{text-decoration:underline}
+.art .d{color:var(--ink3);font-size:12px;margin-bottom:10px}
+.nums{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.num{background:var(--bg);border-radius:12px;padding:10px 12px}
+.num .k{color:var(--ink2);font-size:11px;font-weight:600}
+.num .v{font-size:20px;font-weight:800;margin-top:3px;font-variant-numeric:tabular-nums}
+.num .v small{font-size:11px;font-weight:600;color:var(--good);margin-left:4px}
+.bars{display:flex;align-items:flex-end;gap:8px;height:130px;padding-top:6px}
+.bars > div{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:6px}
+.bars i{display:block;width:100%;border-radius:8px 8px 0 0;background:var(--accent)}
+.bars span{color:var(--ink3);font-size:11px}
+.empty{color:var(--ink3);font-size:13px;text-align:center;padding:26px 0}
+.foot{color:var(--ink3);font-size:12px;margin-top:14px;line-height:1.7}
+@media(max-width:760px){.grid{grid-template-columns:1fr}.nums{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <div class="brand"><div class="logo">note</div>note 記事ごとの数値</div>
+    <div style="display:flex;gap:8px">
+      <button class="iconbtn" id="refresh" title="saikoushin">⟳</button>
+      <button class="iconbtn" id="theme" title="theme">☾</button>
+    </div>
+  </div>
+  <div class="sub" id="sub">読み込み中…</div>
+  <div class="grid" id="stats"></div>
+  <div class="card" style="margin-bottom:16px">
+    <div class="head"><div><p class="h">記事ごと</p><span class="hsub" id="artsub"></span></div></div>
+    <div id="arts"></div>
+  </div>
+  <div class="card">
+    <div class="head"><div><p class="h">読まれた数の伸び</p><span class="hsub">日ごとの合計ページビュー</span></div></div>
+    <div id="hist"></div>
+  </div>
+  <div class="foot" id="foot"></div>
+</div>
+<script>
+var $ = function (s) { return document.querySelector(s); };
+var fmt = function (n) { return (n == null) ? "—" : Number(n).toLocaleString("ja-JP"); };
+
+try {
+  var th = localStorage.getItem("noteTheme");
+  if (th) document.documentElement.setAttribute("data-theme", th);
+} catch (e) {}
+$("#theme").onclick = function () {
+  var cur = document.documentElement.getAttribute("data-theme") === "dark" ? "" : "dark";
+  document.documentElement.setAttribute("data-theme", cur);
+  try { localStorage.setItem("noteTheme", cur); } catch (e) {}
+};
+$("#refresh").onclick = function () { location.reload(); };
+
+function dates(h) { return Object.keys(h || {}).sort(); }
+
+// 前日との差。履歴が1日分しか無い日は差を出さない（0と区別できないため）
+function diff(hist, key, field) {
+  var ds = dates(hist);
+  if (ds.length < 2) return null;
+  var a = (hist[ds[ds.length - 2]] || {})[key], b = (hist[ds[ds.length - 1]] || {})[key];
+  if (!a || !b) return null;
+  if (a[field] == null || b[field] == null) return null;
+  return b[field] - a[field];
+}
+
+fetch("note_data.json?" + Date.now()).then(function (r) { return r.json(); }).then(function (d) {
+  var t = d.totals || {};
+  var nh = d.note_history || {};
+  $("#sub").textContent = "note側の集計 " + (d.last_calculate_at || "—") + " ／ 取得 " + (d.generated_at || "—");
+
+  var totalDiff = (function () {
+    var ds = dates(d.history);
+    if (ds.length < 2) return null;
+    var a = d.history[ds[ds.length - 2]], b = d.history[ds[ds.length - 1]];
+    return (a && b && a.pv != null && b.pv != null) ? b.pv - a.pv : null;
+  })();
+
+  $("#stats").innerHTML =
+    '<div class="card"><div class="lab">ページビュー</div><div class="val">' + fmt(t.pv) +
+      ' <small>回</small></div><span class="badge' + (totalDiff > 0 ? ' up' : '') + '">' +
+      (totalDiff == null ? "全期間の合計" : (totalDiff > 0 ? "昨日から +" + totalDiff : "昨日から動きなし")) + '</span></div>' +
+    '<div class="card"><div class="lab">スキ</div><div class="val">' + fmt(t.like) +
+      ' <small>件</small></div><span class="badge">全期間の合計</span></div>' +
+    '<div class="card"><div class="lab">公開した記事</div><div class="val">' + fmt((d.notes || []).length) +
+      ' <small>本</small></div><span class="badge">コメント ' + fmt(t.comment) + '件</span></div>';
+
+  var notes = (d.notes || []).slice().sort(function (a, b) { return (b.read || 0) - (a.read || 0); });
+  $("#artsub").textContent = "ページビューとスキは全期間、インプレッションは直近28日";
+  $("#arts").innerHTML = notes.length ? notes.map(function (n) {
+    var dp = diff(nh, n.key, "read"), dl = diff(nh, n.key, "like");
+    var url = n.key ? "https://note.com/" + (d.urlname || "novel_dietes168") + "/n/" + n.key : null;
+    return '<div class="art">' +
+      '<div class="t">' + (url ? '<a href="' + url + '" target="_blank" rel="noopener">' + n.name + '</a>' : n.name) + '</div>' +
+      '<div class="d">' + (n.published ? "公開 " + n.published : "") + '</div>' +
+      '<div class="nums">' +
+        '<div class="num"><div class="k">インプレッション</div><div class="v">' + fmt(n.imp28) + '</div></div>' +
+        '<div class="num"><div class="k">ページビュー</div><div class="v">' + fmt(n.read) +
+          (dp > 0 ? '<small>+' + dp + '</small>' : '') + '</div></div>' +
+        '<div class="num"><div class="k">スキ</div><div class="v">' + fmt(n.like) +
+          (dl > 0 ? '<small>+' + dl + '</small>' : '') + '</div></div>' +
+        '<div class="num"><div class="k">コメント</div><div class="v">' + fmt(n.comment) + '</div></div>' +
+      '</div></div>';
+  }).join("") : '<div class="empty">まだ記事のデータがありません</div>';
+
+  var ds = dates(d.history).slice(-14);
+  var vals = ds.map(function (x) { return (d.history[x] || {}).pv || 0; });
+  var max = Math.max.apply(null, vals.concat([1]));
+  $("#hist").innerHTML = ds.length > 1
+    ? '<div class="bars">' + ds.map(function (x, i) {
+        return '<div><i style="height:' + Math.max(4, Math.round(vals[i] / max * 105)) + 'px"></i><span>' +
+               x.slice(5).replace("-", "/") + '</span></div>';
+      }).join("") + '</div>'
+    : '<div class="empty">2日分たまると、ここに伸びが出ます</div>';
+
+  $("#foot").textContent = d.imp_at
+    ? "インプレッションは " + d.imp_at + " 時点の直近28日の数字です。ページビューとスキは毎日自動で更新されます。"
+    : "";
+}).catch(function () {
+  $("#sub").textContent = "note_data.json を読めませんでした";
+});
+</script>
+</body>
+</html>
