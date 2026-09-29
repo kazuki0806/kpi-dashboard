@@ -1,343 +1,391 @@
 {
-  "history": [
-    {
-      "date": "2026-08-09",
-      "note_clicks": 0,
-      "line_clicks": 0,
-      "other_clicks": 2
-    },
-    {
-      "date": "2026-08-10",
-      "note_clicks": 0,
-      "line_clicks": 0,
-      "other_clicks": 6
-    },
-    {
-      "date": "2026-08-11",
-      "note_clicks": 0,
-      "line_clicks": 0,
-      "other_clicks": 12
-    },
-    {
-      "date": "2026-08-12",
-      "note_clicks": 0,
-      "line_clicks": 0,
-      "other_clicks": 11
-    },
-    {
-      "date": "2026-08-13",
-      "note_clicks": 0,
-      "line_clicks": 0,
-      "other_clicks": 7
-    },
-    {
-      "date": "2026-08-14",
-      "note_clicks": 0,
-      "line_clicks": 0,
-      "other_clicks": 5
-    },
-    {
-      "date": "2026-08-15",
-      "note_clicks": 0,
-      "line_clicks": 0,
-      "other_clicks": 15
-    },
-    {
-      "date": "2026-08-16",
-      "note_clicks": 0,
-      "line_clicks": 0,
-      "other_clicks": 15
-    },
-    {
-      "date": "2026-08-17",
-      "note_clicks": 0,
-      "line_clicks": 0,
-      "other_clicks": 4
-    },
-    {
-      "date": "2026-08-18",
-      "note_clicks": 0,
-      "line_clicks": 0,
-      "other_clicks": 4
-    },
-    {
-      "date": "2026-08-19",
-      "note_clicks": 0,
-      "line_clicks": 0,
-      "other_clicks": 17
-    },
-    {
-      "date": "2026-08-20",
-      "note_clicks": 0,
-      "line_clicks": 0,
-      "other_clicks": 22
-    },
-    {
-      "date": "2026-08-21",
-      "note_clicks": 0,
-      "line_clicks": 0,
-      "other_clicks": 9
-    },
-    {
-      "date": "2026-08-22",
-      "note_clicks": 0,
-      "line_clicks": 0,
-      "other_clicks": 2
-    },
-    {
-      "date": "2026-08-23",
-      "note_clicks": 0,
-      "line_clicks": 0,
-      "other_clicks": 5
-    },
-    {
-      "date": "2026-08-24",
-      "note_clicks": 0,
-      "line_clicks": 0,
-      "other_clicks": 4
-    },
-    {
-      "date": "2026-08-25",
-      "note_clicks": 0,
-      "line_clicks": 0,
-      "other_clicks": 3
-    },
-    {
-      "date": "2026-08-26",
-      "note_clicks": 0,
-      "line_clicks": 0,
-      "other_clicks": 7
-    },
-    {
-      "date": "2026-08-27",
-      "note_clicks": 0,
-      "line_clicks": 0,
-      "other_clicks": 4
-    },
-    {
-      "date": "2026-08-28",
-      "note_clicks": 0,
-      "line_clicks": 0,
-      "other_clicks": 5
-    },
-    {
-      "date": "2026-08-29",
-      "note_clicks": 0,
-      "line_clicks": 0,
-      "other_clicks": 12
-    },
-    {
-      "date": "2026-08-30",
-      "note_clicks": 0,
-      "line_clicks": 0,
-      "other_clicks": 8
-    },
-    {
-      "date": "2026-08-31",
-      "profile_views": 487,
-      "views": 5092,
-      "note_clicks": 0,
-      "line_clicks": 0,
-      "note_pv": null,
-      "line_followers": null,
-      "profile_views_note": "8/31投稿5本の合計（Threads Web版インサイト）",
-      "other_clicks": 3
-    },
-    {
-      "date": "2026-09-01",
-      "note_clicks": 0,
-      "line_clicks": 0,
-      "other_clicks": 5
-    },
-    {
-      "date": "2026-09-02",
-      "profile_views": 270,
-      "views": 4186,
-      "note_clicks": 4,
-      "line_clicks": 0,
-      "note_pv": null,
-      "line_followers": null,
-      "profile_views_note": "9/2投稿5本の合計（Threads Web版インサイト）",
-      "other_clicks": 3
-    },
-    {
-      "date": "2026-09-03",
-      "note_clicks": 4,
-      "line_clicks": 0,
-      "other_clicks": 0
-    },
-    {
-      "date": "2026-09-04",
-      "profile_views": 444,
-      "views": 12010,
-      "note_clicks": 2,
-      "line_clicks": 0,
-      "note_pv": 96,
-      "line_followers": 2,
-      "profile_views_note": "9/4投稿5本の合計（Threads Web版インサイト）",
-      "other_clicks": 1
-    },
-    {
-      "date": "2026-09-05",
-      "note_clicks": 6,
-      "line_clicks": 0,
-      "other_clicks": 1
-    },
-    {
-      "date": "2026-09-06",
-      "profile_views": 516,
-      "views": 15992,
-      "profile_views_note": "9/6投稿5本のうち4本の合計（B4はThreads側がエラーで未取得）。全5本を23:55〜23:59に固めて投稿した回",
-      "note_clicks": 8,
-      "line_clicks": 0,
-      "other_clicks": 31
-    },
-    {
-      "date": "2026-09-07",
-      "note_clicks": 7,
-      "line_clicks": 0,
-      "other_clicks": 34
-    },
-    {
-      "date": "2026-09-08",
-      "profile_views": null,
-      "note_clicks": 7,
-      "line_clicks": 0,
-      "line_followers": 2,
-      "views": 0,
-      "note_pv": 128,
-      "other_clicks": 3,
-      "note_likes": 12,
-      "note_followers": 6
-    },
-    {
-      "date": "2026-09-09",
-      "note_clicks": 5,
-      "line_clicks": 0,
-      "other_clicks": 0
-    },
-    {
-      "date": "2026-09-10",
-      "note_clicks": 3,
-      "line_clicks": 0,
-      "other_clicks": 0
-    },
-    {
-      "date": "2026-09-11",
-      "note_clicks": 3,
-      "line_clicks": 0,
-      "other_clicks": 0
-    },
-    {
-      "date": "2026-09-12",
-      "note_clicks": 1,
-      "line_clicks": 0,
-      "other_clicks": 0
-    },
-    {
-      "date": "2026-09-13",
-      "note_clicks": 7,
-      "line_clicks": 0,
-      "other_clicks": 0,
-      "views": 3434,
-      "profile_views": 90,
-      "profile_views_note": "9/13投稿5本の合計（実際の公開は9/14 0:13〜0:16にまとめて。Threads Web版インサイト）"
-    },
-    {
-      "date": "2026-09-14",
-      "note_clicks": 8,
-      "line_clicks": 0,
-      "other_clicks": 0,
-      "views": 1723,
-      "profile_views": 28,
-      "profile_views_note": "9/14投稿5本の合計（Threads Web版インサイト）"
-    },
-    {
-      "date": "2026-09-15",
-      "note_clicks": 2,
-      "line_clicks": 0,
-      "other_clicks": 0,
-      "line_followers": null,
-      "views": 138,
-      "note_pv": 163,
-      "note_likes": 13,
-      "note_followers": 6
-    },
-    {
-      "date": "2026-09-16",
-      "note_clicks": 2,
-      "line_clicks": 0,
-      "other_clicks": 0,
-      "line_followers": 4,
-      "views": 3,
-      "note_pv": 168,
-      "note_likes": 13,
-      "note_followers": 6
-    },
-    {
-      "date": "2026-09-17",
-      "note_clicks": 2,
-      "line_clicks": 0,
-      "other_clicks": 0
-    },
-    {
-      "date": "2026-09-18",
-      "note_clicks": 2,
-      "line_clicks": 0,
-      "other_clicks": 0
-    },
-    {
-      "date": "2026-09-19",
-      "note_clicks": 1,
-      "line_clicks": 0,
-      "other_clicks": 0
-    },
-    {
-      "date": "2026-09-20",
-      "note_clicks": 0,
-      "line_clicks": 0,
-      "other_clicks": 0
-    },
-    {
-      "date": "2026-09-21",
-      "note_clicks": 0,
-      "line_clicks": 0,
-      "other_clicks": 0
-    },
-    {
-      "date": "2026-09-22",
-      "note_clicks": 2,
-      "line_clicks": 0,
-      "other_clicks": 0,
-      "line_followers": 4,
-      "views": 434,
-      "note_pv": 200,
-      "note_likes": 14,
-      "note_followers": 6
-    }
-  ],
-  "demographics": {
-    "age": {
-      "18-24": 7,
-      "25-34": 69,
-      "35-44": 104,
-      "45-54": 68,
-      "55-64": 20,
-      "65+": 5
-    },
-    "gender": {
-      "F": 104,
-      "M": 52,
-      "U": 117
-    },
-    "country": {
-      "KH": 1,
-      "GE": 1,
-      "CA": 1,
-      "JP": 268,
-      "CZ": 1,
-      "KR": 1
-    },
-    "updated": "2026-09-22"
+ "history": [
+  {
+   "date": "2026-08-09",
+   "note_clicks": 0,
+   "line_clicks": 0,
+   "other_clicks": 2
+  },
+  {
+   "date": "2026-08-10",
+   "note_clicks": 0,
+   "line_clicks": 0,
+   "other_clicks": 6
+  },
+  {
+   "date": "2026-08-11",
+   "note_clicks": 0,
+   "line_clicks": 0,
+   "other_clicks": 12
+  },
+  {
+   "date": "2026-08-12",
+   "note_clicks": 0,
+   "line_clicks": 0,
+   "other_clicks": 11
+  },
+  {
+   "date": "2026-08-13",
+   "note_clicks": 0,
+   "line_clicks": 0,
+   "other_clicks": 7
+  },
+  {
+   "date": "2026-08-14",
+   "note_clicks": 0,
+   "line_clicks": 0,
+   "other_clicks": 5
+  },
+  {
+   "date": "2026-08-15",
+   "note_clicks": 0,
+   "line_clicks": 0,
+   "other_clicks": 15
+  },
+  {
+   "date": "2026-08-16",
+   "note_clicks": 0,
+   "line_clicks": 0,
+   "other_clicks": 15
+  },
+  {
+   "date": "2026-08-17",
+   "note_clicks": 0,
+   "line_clicks": 0,
+   "other_clicks": 4
+  },
+  {
+   "date": "2026-08-18",
+   "note_clicks": 0,
+   "line_clicks": 0,
+   "other_clicks": 4
+  },
+  {
+   "date": "2026-08-19",
+   "note_clicks": 0,
+   "line_clicks": 0,
+   "other_clicks": 17
+  },
+  {
+   "date": "2026-08-20",
+   "note_clicks": 0,
+   "line_clicks": 0,
+   "other_clicks": 22
+  },
+  {
+   "date": "2026-08-21",
+   "note_clicks": 0,
+   "line_clicks": 0,
+   "other_clicks": 9
+  },
+  {
+   "date": "2026-08-22",
+   "note_clicks": 0,
+   "line_clicks": 0,
+   "other_clicks": 2
+  },
+  {
+   "date": "2026-08-23",
+   "note_clicks": 0,
+   "line_clicks": 0,
+   "other_clicks": 5
+  },
+  {
+   "date": "2026-08-24",
+   "note_clicks": 0,
+   "line_clicks": 0,
+   "other_clicks": 4
+  },
+  {
+   "date": "2026-08-25",
+   "note_clicks": 0,
+   "line_clicks": 0,
+   "other_clicks": 3
+  },
+  {
+   "date": "2026-08-26",
+   "note_clicks": 0,
+   "line_clicks": 0,
+   "other_clicks": 7
+  },
+  {
+   "date": "2026-08-27",
+   "note_clicks": 0,
+   "line_clicks": 0,
+   "other_clicks": 4
+  },
+  {
+   "date": "2026-08-28",
+   "note_clicks": 0,
+   "line_clicks": 0,
+   "other_clicks": 5
+  },
+  {
+   "date": "2026-08-29",
+   "note_clicks": 0,
+   "line_clicks": 0,
+   "other_clicks": 12
+  },
+  {
+   "date": "2026-08-30",
+   "note_clicks": 0,
+   "line_clicks": 0,
+   "other_clicks": 8
+  },
+  {
+   "date": "2026-08-31",
+   "profile_views": 487,
+   "views": 5092,
+   "note_clicks": 0,
+   "line_clicks": 0,
+   "note_pv": null,
+   "line_followers": null,
+   "profile_views_note": "8/31投稿5本の合計（Threads Web版インサイト）",
+   "other_clicks": 3
+  },
+  {
+   "date": "2026-09-01",
+   "note_clicks": 0,
+   "line_clicks": 0,
+   "other_clicks": 5
+  },
+  {
+   "date": "2026-09-02",
+   "profile_views": 270,
+   "views": 4186,
+   "note_clicks": 4,
+   "line_clicks": 0,
+   "note_pv": null,
+   "line_followers": null,
+   "profile_views_note": "9/2投稿5本の合計（Threads Web版インサイト）",
+   "other_clicks": 3
+  },
+  {
+   "date": "2026-09-03",
+   "note_clicks": 4,
+   "line_clicks": 0,
+   "other_clicks": 0
+  },
+  {
+   "date": "2026-09-04",
+   "profile_views": 444,
+   "views": 12010,
+   "note_clicks": 2,
+   "line_clicks": 0,
+   "note_pv": 96,
+   "line_followers": 2,
+   "profile_views_note": "9/4投稿5本の合計（Threads Web版インサイト）",
+   "other_clicks": 1
+  },
+  {
+   "date": "2026-09-05",
+   "note_clicks": 6,
+   "line_clicks": 0,
+   "other_clicks": 1
+  },
+  {
+   "date": "2026-09-06",
+   "profile_views": 516,
+   "views": 15992,
+   "profile_views_note": "9/6投稿5本のうち4本の合計（B4はThreads側がエラーで未取得）。全5本を23:55〜23:59に固めて投稿した回",
+   "note_clicks": 8,
+   "line_clicks": 0,
+   "other_clicks": 31
+  },
+  {
+   "date": "2026-09-07",
+   "note_clicks": 7,
+   "line_clicks": 0,
+   "other_clicks": 34
+  },
+  {
+   "date": "2026-09-08",
+   "profile_views": null,
+   "note_clicks": 7,
+   "line_clicks": 0,
+   "line_followers": 2,
+   "views": 0,
+   "note_pv": 128,
+   "other_clicks": 3,
+   "note_likes": 12,
+   "note_followers": 6
+  },
+  {
+   "date": "2026-09-09",
+   "note_clicks": 5,
+   "line_clicks": 0,
+   "other_clicks": 0
+  },
+  {
+   "date": "2026-09-10",
+   "note_clicks": 3,
+   "line_clicks": 0,
+   "other_clicks": 0
+  },
+  {
+   "date": "2026-09-11",
+   "note_clicks": 3,
+   "line_clicks": 0,
+   "other_clicks": 0
+  },
+  {
+   "date": "2026-09-12",
+   "note_clicks": 1,
+   "line_clicks": 0,
+   "other_clicks": 0
+  },
+  {
+   "date": "2026-09-13",
+   "note_clicks": 7,
+   "line_clicks": 0,
+   "other_clicks": 0,
+   "views": 3434,
+   "profile_views": 90,
+   "profile_views_note": "9/13投稿5本の合計（実際の公開は9/14 0:13〜0:16にまとめて。Threads Web版インサイト）"
+  },
+  {
+   "date": "2026-09-14",
+   "note_clicks": 8,
+   "line_clicks": 0,
+   "other_clicks": 0,
+   "views": 1723,
+   "profile_views": 28,
+   "profile_views_note": "9/14投稿5本の合計（Threads Web版インサイト）"
+  },
+  {
+   "date": "2026-09-15",
+   "note_clicks": 2,
+   "line_clicks": 0,
+   "other_clicks": 0,
+   "line_followers": null,
+   "views": 138,
+   "note_pv": 163,
+   "note_likes": 13,
+   "note_followers": 6
+  },
+  {
+   "date": "2026-09-16",
+   "note_clicks": 2,
+   "line_clicks": 0,
+   "other_clicks": 0,
+   "line_followers": 4,
+   "views": 3,
+   "note_pv": 168,
+   "note_likes": 13,
+   "note_followers": 6
+  },
+  {
+   "date": "2026-09-17",
+   "note_clicks": 2,
+   "line_clicks": 0,
+   "other_clicks": 0
+  },
+  {
+   "date": "2026-09-18",
+   "note_clicks": 2,
+   "line_clicks": 0,
+   "other_clicks": 0
+  },
+  {
+   "date": "2026-09-19",
+   "note_clicks": 1,
+   "line_clicks": 0,
+   "other_clicks": 0
+  },
+  {
+   "date": "2026-09-20",
+   "note_clicks": 0,
+   "line_clicks": 0,
+   "other_clicks": 0
+  },
+  {
+   "date": "2026-09-21",
+   "note_clicks": 0,
+   "line_clicks": 0,
+   "other_clicks": 0
+  },
+  {
+   "date": "2026-09-22",
+   "note_clicks": 2,
+   "line_clicks": 0,
+   "other_clicks": 0,
+   "line_followers": 4,
+   "views": 434,
+   "note_pv": 200,
+   "note_likes": 14,
+   "note_followers": 6
+  },
+  {
+   "date": "2026-09-23",
+   "note_clicks": 11,
+   "line_clicks": 0,
+   "other_clicks": 0
+  },
+  {
+   "date": "2026-09-24",
+   "note_clicks": 17,
+   "line_clicks": 0,
+   "other_clicks": 0
+  },
+  {
+   "date": "2026-09-25",
+   "note_clicks": 11,
+   "line_clicks": 0,
+   "other_clicks": 0
+  },
+  {
+   "date": "2026-09-26",
+   "note_clicks": 5,
+   "line_clicks": 0,
+   "other_clicks": 0
+  },
+  {
+   "date": "2026-09-27",
+   "note_clicks": 4,
+   "line_clicks": 0,
+   "other_clicks": 0
+  },
+  {
+   "date": "2026-09-28",
+   "note_clicks": 4,
+   "line_clicks": 0,
+   "other_clicks": 0
+  },
+  {
+   "date": "2026-09-29",
+   "note_clicks": 2,
+   "line_clicks": 0,
+   "other_clicks": 0,
+   "line_followers": 7,
+   "views": 2704,
+   "note_pv": 282,
+   "note_pv_28d": 229,
+   "note_likes": 16,
+   "note_followers": 8
   }
+ ],
+ "demographics": {
+  "age": {
+   "18-24": 8,
+   "25-34": 73,
+   "35-44": 113,
+   "45-54": 74,
+   "55-64": 21,
+   "65+": 6
+  },
+  "gender": {
+   "F": 112,
+   "M": 59,
+   "U": 124
+  },
+  "country": {
+   "PH": 1,
+   "KH": 1,
+   "CA": 1,
+   "GE": 1,
+   "JP": 290,
+   "CZ": 1
+  },
+  "updated": "2026-09-29"
+ }
 }
