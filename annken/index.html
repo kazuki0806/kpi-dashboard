@@ -524,6 +524,21 @@ async function load(){
         if(jf&&Array.isArray(jf.history)) FUNNEL[k]=jf.history;
         if(jf&&jf.demographics) DEMO[k]=jf.demographics;}
     }catch(e){}
+    // 公式LINEの友だち数・ブロック数（line_insight.py が LINE API から取る）。
+    // funnel の手入力より API の値を優先して、日付ごとに重ねる。
+    try{
+      const rl=await fetch("line/line_"+k+".json?t="+Date.now(),{cache:"no-store"});
+      if(rl.ok){const jl=await rl.json();
+        if(jl&&Array.isArray(jl.history)){
+          const h=FUNNEL[k]||(FUNNEL[k]=[]);
+          jl.history.forEach(x=>{
+            let row=h.find(r=>r.date===x.date);
+            if(!row){row={date:x.date};h.push(row);}
+            row.line_followers=x.followers; row.line_blocks=x.blocks;
+          });
+          h.sort((a,b)=>a.date<b.date?-1:1);
+        }}
+    }catch(e){}
   }));
   render();
 }
