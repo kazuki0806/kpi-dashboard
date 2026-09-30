@@ -59,6 +59,13 @@ jobs:
         env:
           SITE_DIR: ${{ github.workspace }}
 
+      # 失敗しても他のダッシュボードの公開は止めない（前回の値が残る）
+      - name: 売上と歩留まり（週次・月次）を集計
+        continue-on-error: true
+        run: python3 scripts/sales_kpi_export.py
+        env:
+          SITE_DIR: ${{ github.workspace }}
+
       - name: 生成物を公開
         run: |
           rm -f scripts/sheets.json scripts/.env
