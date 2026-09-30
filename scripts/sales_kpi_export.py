@@ -27,8 +27,11 @@ Addness の KPI（営業/CW フォルダ）と同じ数え方にそろえてい�
 読めた月の日付だけを書き換え、それ以外の日（過去の月）は前回の値を残す。
 7〜9月の値は、2026-09-30 に Addness へ入れたのと同じ値で始めている。
 
-実行: python3 sales_kpi_export.py          … 書き出す
+実行: python3 sales_kpi_export.py          … 書き出す（sheets.json のIDを gviz で読む）
       python3 sales_kpi_export.py --dry    … 月の合計を表示するだけ
+      python3 sales_kpi_export.py --xlsx 2026-10=ag10.xlsx [--xlsx 2026-09=ag9.xlsx]
+          … Drive から書き出した xlsx を読む（毎日の定期実行はこれを使う。
+            gviz に届かない環境でも動く。openpyxl が要る）
 """
 
 import csv
@@ -110,6 +113,17 @@ def course_yen(course):
     return int(round(float(m.group(1)) * 10000 * 1.1)) if m else 0
 
 
+def read_xlsx(path, tab):
+    """xlsx のタブを、gviz の CSV と同じ「文字列の行のリスト」にする。"""
+    import openpyxl
+    wb = openpyxl.load_workbook(path, read_only=True, data_only=True)
+    out = []
+    for r in wb[tab].iter_rows(values_only=True):
+        out.append([c.strftime("%Y/%m/%d %H:%M:%S") if isinstance(c, datetime)
+                    else ("" if c is None else str(c)) for c in r])
+    return out
+
+
 def cell(row, i):
     return row[i] if i < len(row) else ""
 
@@ -154,12 +168,20 @@ def count_month(ledger, contracts, ym):
 def main():
     dry = "--dry" in sys.argv
     now = datetime.now(JST)
-    sheets = _sheets()
-    months = sorted(k[3:] for k in sheets if re.fullmatch(r"ag_\d{4}-\d{2}", k))
-    # 締まっていない今月と先月だけ読み直す（それより前は前回の値を残す）
-    months = [m for m in months if m >= (now.replace(day=1) - timedelta(days=1)).strftime("%Y-%m")]
+    xlsx = {}
+    for i, a in enumerate(sys.argv):
+        if a == "--xlsx" and i + 1 < len(sys.argv):
+            ym, path = sys.argv[i + 1].split("=", 1)
+            xlsx[ym] = path
+    if xlsx:
+        months = sorted(xlsx)
+    else:
+        sheets = _sheets()
+        months = sorted(k[3:] for k in sheets if re.fullmatch(r"ag_\d{4}-\d{2}", k))
+        # 締まっていない今月と先月だけ読み直す（それより前は前回の値を残す）
+        months = [m for m in months if m >= (now.replace(day=1) - timedelta(days=1)).strftime("%Y-%m")]
     if now.strftime("%Y-%m") not in months:
-        print("★%s のAGシートが sheets.json に未登録です（ag_%s を足してください）"
+        print("★%s のAGシートがありません（sheets.json の ag_%s か --xlsx で渡してください）"
               % (now.strftime("%Y-%m"), now.strftime("%Y-%m")))
 
     try:
@@ -169,10 +191,14 @@ def main():
         data = {"days": {}}
 
     for ym in months:
-        sid = sheets["ag_%s" % ym]
         try:
-            ledger = fetch(sid, "営業(CWトスアップ)")
-            contracts = fetch(sid, "契約者")
+            if ym in xlsx:
+                ledger = read_xlsx(xlsx[ym], "営業(CWトスアップ)")
+                contracts = read_xlsx(xlsx[ym], "契約者")
+            else:
+                sid = sheets["ag_%s" % ym]
+                ledger = fetch(sid, "営業(CWトスアップ)")
+                contracts = fetch(sid, "契約者")
         except Exception as e:
             print("%s のAGシートを読めませんでした: %s（前回の値を残します）" % (ym, e))
             continue
