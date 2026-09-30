@@ -412,7 +412,9 @@ function render(){
     statCard("note", fmt(cPv.val), "回 閲覧", cPv.badge, "notepv", ftabs,
              [[fmt(pv28),"直近28日"],[fmt(nLikeNow),"いいね"],[fmt(nFolNow),"フォロワー"]]) +
     statCard("公式LINE", fmt(cLine.val), "人", cLine.badge, "line", ftabs,
-             [[fmt(cLnk.val),"LINEクリック"],[lnRate,"note閲覧から"]],
+             (lastVal(fn,"line_blocks")!=null
+               ? [[fmt(lastVal(fn,"line_blocks")),"ブロック"],[fmt(cLine.val-lastVal(fn,"line_blocks")),"声をかけられる"],[lnRate,"note閲覧から"]]
+               : [[fmt(cLnk.val),"LINEクリック"],[lnRate,"note閲覧から"]]),
              {cur:lineGrow, target:g.line, unit:"人", note:"今月の追加"});
 
   // flow bars（期間連動：日=投稿ごと / 週=日別平均 / 月=週別平均）
@@ -496,6 +498,21 @@ async function load(){
       if(rf.ok){const jf=await rf.json();
         if(jf&&Array.isArray(jf.history)) FUNNEL[k]=jf.history;
         if(jf&&jf.demographics) DEMO[k]=jf.demographics;}
+    }catch(e){}
+    // 公式LINEの友だち数・ブロック数（line_insight.py が LINE API から取る）。
+    // funnel の手入力より API の値を優先して、日付ごとに重ねる。
+    try{
+      const rl=await fetch("line/line_"+k+".json?t="+Date.now(),{cache:"no-store"});
+      if(rl.ok){const jl=await rl.json();
+        if(jl&&Array.isArray(jl.history)){
+          const h=FUNNEL[k]||(FUNNEL[k]=[]);
+          jl.history.forEach(x=>{
+            let row=h.find(r=>r.date===x.date);
+            if(!row){row={date:x.date};h.push(row);}
+            row.line_followers=x.followers; row.line_blocks=x.blocks;
+          });
+          h.sort((a,b)=>a.date<b.date?-1:1);
+        }}
     }catch(e){}
   }));
   render();

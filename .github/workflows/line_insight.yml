@@ -1,0 +1,51 @@
+name: 公式LINEの友だち数
+
+# 毎朝、公式LINEの友だち数・ブロック数を取って line/line_A.json に書く。
+# 「ダッシュボード更新」（dashboards.yml）とは別にしてある。あちらは止めてあるため。
+#
+# 必要な Secrets（リポジトリの Settings → Secrets and variables → Actions）
+#   LINE_TOKEN_A … 属人アカウント用の公式LINE（「いけ」から始まるもの）のチャネルアクセストークン
+
+on:
+  schedule:
+    - cron: '5 23 * * *'     # 毎朝 8:05（日本時間）。前日分が確定したあと
+  workflow_dispatch:
+
+concurrency:
+  group: line-insight
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 友だち数を取る
+        run: python3 scripts/line_insight.py
+        env:
+          SITE_DIR: ${{ github.workspace }}
+          LINE_TOKEN_A: ${{ secrets.LINE_TOKEN_A }}
+
+      - name: 公開
+        run: |
+          git config user.name  "dashboard-bot"
+          git config user.email "dashboard-bot@users.noreply.github.com"
+          git add line/
+          if git diff --cached --quiet; then
+            echo "変化なし"
+          else
+            git commit -m "公式LINEの友だち数 $(TZ=Asia/Tokyo date '+%Y-%m-%d')"
+            for i in 1 2 3; do
+              git pull --rebase origin main && git push origin main && break
+              sleep 10
+            done
+          fi
