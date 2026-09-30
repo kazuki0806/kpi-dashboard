@@ -51,6 +51,7 @@ table{border-collapse:collapse;width:100%;min-width:620px;font-size:13.5px}
 .tw{overflow-x:auto;background:var(--panel);border:1px solid var(--line);border-radius:14px}
 th,td{text-align:left;padding:9px 13px;border-bottom:1px solid var(--line);white-space:nowrap}
 th{font-size:12.5px;color:var(--muted);background:var(--accent-soft)}
+th.r{text-align:right}
 tr:last-child td{border-bottom:0}
 td.r{text-align:right;font-variant-numeric:tabular-nums}
 .pill{display:inline-block;padding:1px 9px;border-radius:999px;font-size:12px;font-weight:700}
@@ -60,12 +61,34 @@ td.r{text-align:right;font-variant-numeric:tabular-nums}
 .note b{color:var(--ink)}
 .warn{border-left:3px solid var(--err)}
 .foot{margin-top:26px;color:var(--subtle);font-size:12px}
+
+.seg{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 14px}
+.seg button{font:inherit;font-size:12.5px;padding:4px 12px;border-radius:999px;border:1px solid var(--line);
+  background:var(--panel);color:var(--muted);cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+.goal{height:10px;border-radius:999px;background:var(--accent-soft);overflow:hidden;margin-top:10px}
+.goal i{display:block;height:100%;background:var(--accent);border-radius:999px}
+.cards.kc{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+.card.hero{grid-column:1/-1}
+.card.hero .v{font-size:30px}
+.up{color:var(--ok)} .down{color:var(--err)}
+.d{font-size:11.5px;margin-left:6px;font-weight:400}
+tr.cur td{background:var(--accent-soft)}
+.mbar{display:grid;grid-template-columns:70px 1fr 110px;gap:10px;align-items:center;margin:6px 0}
+.mbar .bar{height:20px;border-radius:7px;background:var(--accent-soft);position:relative;overflow:hidden}
+.mbar .bar i{position:absolute;inset:0 auto 0 0;background:var(--accent);opacity:.7;border-radius:7px}
+.mbar .bar b{position:absolute;top:-2px;bottom:-2px;width:2px;background:var(--err)}
+.mbar .num{text-align:right;font-variant-numeric:tabular-nums;font-weight:700}
+.sep{margin:40px 0 0;padding-top:6px;border-top:1px solid var(--line)}
 </style>
 </head>
 <body>
 <div class="wrap">
   <h1>売上と歩留まり</h1>
-  <div class="sub" id="sub">読み込んでいます</div>
+  <div class="sub" id="ksub">読み込んでいます</div>
+  <div id="kpi"></div>
+  <div class="sep"><h2>今月の内訳（入金・担当者ごと）</h2>
+  <div class="sub" id="sub">読み込んでいます</div></div>
   <div id="app"></div>
   <div class="foot">AGシートから自動で作っています。数字を直すときはシート側を直してください。</div>
 </div>
@@ -76,6 +99,148 @@ var esc = function (s) { return String(s == null ? "" : s).replace(/[&<>"]/g, fu
   return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); };
 var pct = function (v) { return v == null ? "—" : v + "%"; };
 
+// ── 週次・月次（kpi_daily.json。Addness の KPI と同じ数え方） ──
+var KPI = null, KMONTH = null;
+fetch("./kpi_daily.json?t=" + Date.now(), { cache: "no-store" })
+  .then(function (r) { return r.json(); })
+  .then(function (k) {
+    KPI = k;
+    var ms = months(k), now = jstToday().slice(0, 7);
+    KMONTH = ms.indexOf(now) >= 0 ? now : ms[ms.length - 1];
+    renderKpi();
+  })
+  .catch(function (e) { document.getElementById("ksub").textContent = "週次の数字を読み込めませんでした: " + e; });
+
+function jstToday() { return new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 10); }
+function months(k) {
+  var s = {};
+  Object.keys(k.days).forEach(function (d) { s[d.slice(0, 7)] = 1; });
+  return Object.keys(s).sort();
+}
+function monthEnd(ym) {               // "2026-09" → "2026-09-30"
+  var y = +ym.slice(0, 4), m = +ym.slice(5);
+  return ym + "-" + String(new Date(Date.UTC(y, m, 0)).getUTCDate()).padStart(2, "0");
+}
+function sum(from, to) {              // from〜to（両端を含む）の合計
+  var t = {};
+  KPI.metrics.forEach(function (m) { t[m] = 0; });
+  Object.keys(KPI.days).forEach(function (d) {
+    if (d >= from && d <= to) KPI.metrics.forEach(function (m) { t[m] += KPI.days[d][m] || 0; });
+  });
+  return t;
+}
+function addDays(iso, n) {
+  var d = new Date(iso + "T00:00:00Z"); d.setUTCDate(d.getUTCDate() + n);
+  return d.toISOString().slice(0, 10);
+}
+function rate(a, b) { return b ? Math.round(a / b * 1000) / 10 : null; }
+function man(n) { return (Math.round(n / 1000) / 10).toLocaleString("ja-JP") + "万"; }
+function diff(cur, prev, lowerIsBetter) {
+  if (prev == null) return "";
+  var d = cur - prev;
+  if (!d) return '<span class="d">±0</span>';
+  var good = lowerIsBetter ? d < 0 : d > 0;
+  return '<span class="d ' + (good ? "up" : "down") + '">' + (d > 0 ? "+" : "") + d + "</span>";
+}
+
+function renderKpi() {
+  var k = KPI, ym = KMONTH, today = jstToday();
+  var last = Object.keys(k.days).sort().pop();
+  var target = k.target_monthly_sales || 0;
+  document.getElementById("ksub").textContent =
+    "CWトスアップ経由（キャンセル除く）・" + k.generated_at + " 時点。数え方は Addness の KPI と同じです。";
+
+  var html = '<div class="seg">' + months(k).map(function (m) {
+    return '<button type="button" data-m="' + m + '" aria-pressed="' + (m === ym) + '">' +
+      Number(m.slice(5)) + "月</button>";
+  }).join("") + "</div>";
+
+  // 選んだ月のカード
+  var end = monthEnd(ym), t = sum(ym + "-01", end), dim = +end.slice(8);
+  var isCur = today.slice(0, 7) === ym && last.slice(0, 7) === ym;
+  var pace = isCur ? Math.round(t.sales / +last.slice(8) * dim) : null;
+  html += '<div class="cards kc">' +
+    '<div class="card hero"><div class="k">' + Number(ym.slice(5)) + "月の売上（目標 " + man(target) + "）</div>" +
+    '<div class="v">' + yen(t.sales) + "</div>" +
+    '<div class="n">達成 ' + (target ? Math.round(t.sales / target * 100) : 0) + "%・あと " +
+    man(Math.max(0, target - t.sales)) + (pace != null ? "・このペースだと月末 " + man(pace) : "") + "</div>" +
+    '<div class="goal"><i style="width:' + (target ? Math.min(100, t.sales / target * 100) : 0) + '%"></i></div></div>' +
+    card("契約", t.contracts + "件", t.contracts ? "平均単価 " + man(Math.round(t.sales / t.contracts)) : "—", "paid") +
+    card("着座", t.seated + "件", "着座率 " + pct(rate(t.seated, t.scheduled)) + "（面談予定 " + t.scheduled + "）", "") +
+    card("プレ", t.pre + "件", "プレ→契約 " + pct(rate(t.contracts, t.pre)), "") +
+    card("トスアップ飛び", t.noshow + "件", "飛び率 " + pct(rate(t.noshow, t.scheduled)), "bad") +
+    "</div>";
+
+  // 週ごと（月曜はじまり・直近8週）
+  var monday = addDays(last, -((new Date(last + "T00:00:00Z").getUTCDay() + 6) % 7)), weeks = [];
+  for (var i = 7; i >= 0; i--) {
+    var s = addDays(monday, -7 * i);
+    weeks.push({ s: s, e: addDays(s, 6), t: sum(s, addDays(s, 6)) });
+  }
+  html += "<h2>週ごと（月曜はじまり・直近8週）</h2><div class='tw'><table><thead><tr>" +
+    "<th>週</th><th class='r'>面談予定</th><th class='r'>着座</th><th class='r'>着座率</th>" +
+    "<th class='r'>クローザーへ</th><th class='r'>プレ</th><th class='r'>契約</th><th class='r'>売上</th>" +
+    "<th class='r'>飛び</th><th class='r'>飛び率</th></tr></thead><tbody>";
+  weeks.forEach(function (w, i) {
+    var open = w.e > last, p = i && !open ? weeks[i - 1].t : null, x = w.t;
+    html += "<tr" + (i === weeks.length - 1 ? " class='cur'" : "") + "><td>" +
+      Number(w.s.slice(5, 7)) + "/" + Number(w.s.slice(8)) + "〜" + (open ? "（途中）" : "") + "</td>" +
+      "<td class='r'>" + x.scheduled + diff(x.scheduled, p && p.scheduled) + "</td>" +
+      "<td class='r'>" + x.seated + diff(x.seated, p && p.seated) + "</td>" +
+      "<td class='r'>" + pct(rate(x.seated, x.scheduled)) + "</td>" +
+      "<td class='r'>" + x.handoff + diff(x.handoff, p && p.handoff) + "</td>" +
+      "<td class='r'>" + x.pre + "</td>" +
+      "<td class='r'>" + x.contracts + diff(x.contracts, p && p.contracts) + "</td>" +
+      "<td class='r'>" + (x.sales ? yen(x.sales) : "—") + "</td>" +
+      "<td class='r'>" + x.noshow + diff(x.noshow, p && p.noshow, true) + "</td>" +
+      "<td class='r'>" + pct(rate(x.noshow, x.scheduled)) + "</td></tr>";
+  });
+  html += "</tbody></table></div>";
+
+  // 月ごとの売上（赤い線が目標）
+  var mt = months(k).map(function (m) { return { m: m, t: sum(m + "-01", monthEnd(m)) }; });
+  var top = Math.max.apply(null, [target].concat(mt.map(function (x) { return x.t.sales; }))) || 1;
+  html += "<h2>月ごとの売上（赤い線が目標 " + man(target) + "）</h2><div class='note'>";
+  mt.forEach(function (x) {
+    html += '<div class="mbar"><span>' + Number(x.m.slice(5)) + "月</span>" +
+      '<span class="bar"><i style="width:' + (x.t.sales / top * 100) + '%"></i>' +
+      (target ? '<b style="left:' + (target / top * 100) + '%"></b>' : "") + "</span>" +
+      '<span class="num">' + man(x.t.sales) + "</span></div>";
+  });
+  html += "</div>";
+
+  // 月ごとの歩留まり
+  html += "<h2>月ごとの歩留まり</h2><div class='tw'><table><thead><tr><th>月</th>" +
+    "<th class='r'>面談予定</th><th class='r'>着座</th><th class='r'>着座率</th><th class='r'>クローザーへ</th>" +
+    "<th class='r'>プレ</th><th class='r'>契約</th><th class='r'>プレ→契約</th><th class='r'>売上</th>" +
+    "<th class='r'>飛び率</th><th class='r'>threads契約</th></tr></thead><tbody>";
+  mt.forEach(function (x) {
+    var y = x.t;
+    html += "<tr" + (x.m === ym ? " class='cur'" : "") + "><td>" + Number(x.m.slice(5)) + "月</td>" +
+      "<td class='r'>" + y.scheduled + "</td><td class='r'>" + y.seated + "</td>" +
+      "<td class='r'>" + pct(rate(y.seated, y.scheduled)) + "</td><td class='r'>" + y.handoff + "</td>" +
+      "<td class='r'>" + y.pre + "</td><td class='r'>" + y.contracts + "</td>" +
+      "<td class='r'>" + pct(rate(y.contracts, y.pre)) + "</td><td class='r'>" + yen(y.sales) + "</td>" +
+      "<td class='r'>" + pct(rate(y.noshow, y.scheduled)) + "</td>" +
+      "<td class='r'>" + y.threads_contracts + "</td></tr>";
+  });
+  html += "</tbody></table></div>";
+
+  html += "<h2>この数字の数え方</h2><div class='note'>" +
+    "<b>面談予定</b>：1回目の面談（トスアップ担当との面談）の予定日で数える。アポ被りは除く。<br>" +
+    "<b>着座</b>・<b>クローザーへ</b>：1回目の面談を実施した日で数える。クローザーへは、着座してクローザーのアポ予定が入った件数。<br>" +
+    "<b>プレ</b>：プレを実施した日。<b>契約</b>・<b>売上</b>：契約者タブの契約日（種別がCWトスアップ、キャンセルを除く、金額は税込）。<br>" +
+    "<b>トスアップ飛び</b>：ステータスが「トスアップ飛び」の件数（予定日で数える）。<br>" +
+    "下の「今月の内訳」はAGシートの集計タブの考え方なので、件数が少しずれることがあります。</div>";
+
+  var box = document.getElementById("kpi");
+  box.innerHTML = html;
+  box.querySelectorAll(".seg button").forEach(function (b) {
+    b.addEventListener("click", function () { KMONTH = b.getAttribute("data-m"); renderKpi(); });
+  });
+}
+
+// ── 今月の内訳（data.json） ──
 fetch("./data.json?t=" + Date.now(), { cache: "no-store" })
   .then(function (r) { return r.json(); })
   .then(render)
