@@ -39,6 +39,8 @@ jobs:
         run: |
           git config user.name  "dashboard-bot"
           git config user.email "dashboard-bot@users.noreply.github.com"
+          # トークン未登録などで何も取れなかった日は、ここで終える
+          [ -d line ] || { echo "line/ がありません（トークン未登録）"; exit 0; }
           git add line/
           if git diff --cached --quiet; then
             echo "変化なし"
