@@ -83,7 +83,9 @@ def make_menu():
         "name": MENU_NAME, "chatBarText": "メニュー",
         "areas": [
             {"bounds": {"x": 0, "y": 0, "width": 1350, "height": 1686},
-             "action": {"type": "uri", "label": "3分チェック", "uri": check}},
+             "action": ({"type": "message", "label": "3分チェック", "text": check[len("message:"):]}
+                        if check.startswith("message:") else
+                        {"type": "uri", "label": "3分チェック", "uri": check})},
             {"bounds": {"x": 1350, "y": 0, "width": 1150, "height": 843},
              "action": ({"type": "uri", "label": "無料相談", "uri": os.environ["BOOK_URL"]}
                         if os.environ.get("BOOK_URL") else
@@ -117,8 +119,8 @@ def try_it(uid):
 
     greet = ("追加ありがとうございます！\nThreadsで「ClaudeCode×高単価クライアントワーク」を発信している、いけです。\n\n"
              "さっそく、お約束の特典をお渡しします👇\n\n"
-             "【3分チェック】\nClaude Code×クライアントワーク\nあなたはいま、どの壁にいる？\n▶ " + check + "\n\n"
-             "15問にチェックを入れるだけで、\n「案件選び」「納品」「単価」のどこで止まっているかが分かります。\n\n"
+             "【3分チェック】\nClaude Code×クライアントワーク\nあなたはいま、どの壁にいる？\n" + ("▶ 下のメニューの「3分チェック」を押してください（トークの中でボタンを押して答えられます）" if check.startswith("message:") else "▶ " + check) + "\n\n"
+             "4つの質問に答えるだけで、\n「案件選び」「納品」「単価」のどこで止まっているか、あなたの課題が分かります。\n\n"
              "結果をもとに、\n・どの案件から始めればいいか\n・いまの納品物で単価を上げるには何が足りないか\n"
              "を一緒に整理したい方は、このLINEで「相談」と送ってください。\n（無料・30分・オンライン。希望した方だけです）")
     call("POST", API + "/message/push",

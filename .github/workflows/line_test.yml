@@ -13,8 +13,8 @@ on:
         description: "試す人のユーザーID（U〜。LINE Developers のチャネル基本設定「あなたのユーザーID」）"
         default: ""
       check_url:
-        description: "3分チェックのURL"
-        default: "https://www.addness.com/f/JrhuB6fm4tsLCHw0iPVpID2oOuWPQw5gy5-TxrRctEg"
+        description: "3分チェック（message:言葉 でトーク内チェック、URLならそのページを開く）"
+        default: "message:3分チェック"
       note_url:
         description: "note記事のURL"
         default: "https://note.com/novel_dietes168/n/na894a753e677"
