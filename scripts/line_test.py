@@ -110,11 +110,12 @@ def make_default():
 
 def try_it(uid):
     check = os.environ["CHECK_URL"]
+    undo(uid)
     mid = make_menu()
     call("POST", API + "/user/%s/richmenu/%s" % (uid, mid))
     print("リッチメニューを付けました:", mid)
 
-    greet = ("追加ありがとうございます！\nクラウドワークス裏側（@cw_uragawa）のいけです。\n\n"
+    greet = ("追加ありがとうございます！\nThreadsで「ClaudeCode×高単価クライアントワーク」を発信している、いけです。\n\n"
              "さっそく、お約束の特典をお渡しします👇\n\n"
              "【3分チェック】\nClaude Code×クライアントワーク\nあなたはいま、どの壁にいる？\n▶ " + check + "\n\n"
              "15問にチェックを入れるだけで、\n「案件選び」「納品」「単価」のどこで止まっているかが分かります。\n\n"
