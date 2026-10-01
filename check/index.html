@@ -218,7 +218,7 @@ function finish(){
   log(main, others);
 }
 function consultUrl(){
-  return LINE_ID ? 'https://line.me/R/oaMessage/' + encodeURIComponent(LINE_ID) + '/?' + encodeURIComponent(CONSULT_WORD) : LINE_ADD_URL;
+  return LINE_ID ? 'https://line.me/R/oaMessage/' + LINE_ID + '/?' + encodeURIComponent(CONSULT_WORD) : LINE_ADD_URL;
 }
 function log(main, others){
   if (!LOG_URL) return;
