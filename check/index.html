@@ -93,7 +93,7 @@ footer{margin-top:28px;text-align:center;font-size:12px;color:var(--sub)}
       <p style="font-size:15px;margin:0">「自分の場合は、どこから手をつければいいか」を、無料相談（30分・オンライン）で一緒に整理します。</p>
       <div class="gift"><div class="ico">🎁</div><div id="gift"></div></div>
       <a class="btn line" id="consult" href="#">LINEで相談する</a>
-      <p class="note" id="consultNote">ボタンを押すとLINEが開き、「相談」と入った状態になります。<br>そのまま送信すると、日程の決め方が届きます。</p>
+      <p class="note" id="consultNote">ボタンを押すとLINEが開き、「3分チェック」と入った状態になります。<br>そのまま送信すると、日程の決め方が届きます。</p>
     </div>
     <button class="back" style="display:block;margin:16px auto 0" onclick="restart()">もう一度チェックする</button>
   </section>
@@ -111,10 +111,10 @@ let LINE_ID = '';
 // 回答を残す先（Google Apps Script のウェブアプリURL）。空なら残さない
 const LOG_URL = '';
 // LIFF ID（LINE Developers の LINEログインチャネル →「LIFF」で作ったもの）。
-// 入れると、LINEの中で開いたときに「相談」が自動で送られ、トークに戻る
+// 入れると、LINEの中で開いたときに「3分チェック」が自動で送られ、トークに戻る
 const LIFF_ID = '2011815132-w52mWmUD';
 // 相談ボタンで送られる言葉
-const CONSULT_WORD = '相談';
+const CONSULT_WORD = '3分チェック';
 // 友だち追加のURL（LINE IDが分からないときの予備）
 const LINE_ADD_URL = 'https://lin.ee/QUaUhwa';
 
@@ -227,17 +227,17 @@ let inLine = false;
   if (!/iPhone|iPad|Android/i.test(navigator.userAgent)){
     $('consult').href = LINE_ADD_URL;
     $('consult').target = '_blank';
-    $('consultNote').innerHTML = 'パソコンからは自動で送れません。<br>スマホのLINEで公式LINEのトークを開き、「相談」と送ってください。';
+    $('consultNote').innerHTML = 'パソコンからは自動で送れません。<br>スマホのLINEで公式LINEのトークを開き、「3分チェック」と送ってください。';
   }
   if (LIFF_ID && window.liff){
     try {
       await liff.init({liffId: LIFF_ID});
       inLine = liff.isInClient();
-      if (inLine) $('consultNote').innerHTML = 'ボタンを押すとトークに戻り、「相談」が自動で送られます。<br>すぐに日程の決め方が届きます。';
+      if (inLine) $('consultNote').innerHTML = 'ボタンを押すとトークに戻り、「3分チェック」が自動で送られます。<br>すぐに日程の決め方が届きます。';
     } catch(e){}
   }
 })();
-// LINEの中で開いているときは、本人のトークから「相談」を送ってページを閉じる
+// LINEの中で開いているときは、本人のトークから「3分チェック」を送ってページを閉じる
 $('consult').addEventListener('click', async ev => {
   if (!inLine) return;            // LINEの外なら、リンク（oaMessage）のまま
   ev.preventDefault();
