@@ -14,13 +14,13 @@ on:
         default: ""
       check_url:
         description: "3分チェック（message:言葉 でトーク内チェック、URLならそのページを開く）"
-        default: "message:3分チェック"
+        default: "https://liff.line.me/2011815132-w52mWmUD"
       note_url:
         description: "note記事のURL"
         default: "https://note.com/novel_dietes168/n/na894a753e677"
       book_url:
         description: "無料相談の日程調整URL（空なら「相談」と送られる）"
-        default: ""
+        default: "https://timerex.net/s/kazuki8063825_f733/b0e0734a"
       mode:
         description: "try（1人で試す）/ default（全員に出す）/ undo（元に戻す）"
         default: "try"
