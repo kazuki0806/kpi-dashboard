@@ -1,0 +1,42 @@
+name: 公式LINEの導線を1人で試す
+
+# 手動でだけ動く。指定した1人にだけ、新しいリッチメニューとあいさつ文を出す。
+# 元に戻すときは mode を undo にして動かす。
+
+on:
+  workflow_dispatch:
+    inputs:
+      test_name:
+        description: "試す人の表示名"
+        default: "池田和喜"
+      check_url:
+        description: "3分チェックのURL"
+        default: "https://app.notion.com/p/3ecb9ba8cb15815eabefc3e5b46c9eed"
+      note_url:
+        description: "note記事のURL"
+        default: "https://note.com/novel_dietes168/n/na894a753e677"
+      book_url:
+        description: "無料相談の日程調整URL（空なら「相談」と送られる）"
+        default: ""
+      mode:
+        description: "try（1人で試す）/ default（全員に出す）/ undo（元に戻す）"
+        default: "try"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: 試す
+        run: python3 scripts/line_test.py
+        env:
+          LINE_TOKEN_A: ${{ secrets.LINE_TOKEN_A }}
+          TEST_NAME: ${{ inputs.test_name }}
+          CHECK_URL: ${{ inputs.check_url }}
+          NOTE_URL: ${{ inputs.note_url }}
+          BOOK_URL: ${{ inputs.book_url }}
+          MODE: ${{ inputs.mode }}
