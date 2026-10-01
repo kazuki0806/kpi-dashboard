@@ -1,5 +1,5 @@
 {
-"generated_at":"2026-09-30 21:33",
+"generated_at":"2026-10-01 10:41",
 "target_monthly_sales":10000000,
 "metrics":[
 "scheduled",
@@ -494,7 +494,7 @@
 },
 "2026-08-18":{
 "scheduled":18,
-"seated":13,
+"seated":12,
 "handoff":3,
 "pre":0,
 "noshow":4,
@@ -633,7 +633,7 @@
 "threads_contracts":0
 },
 "2026-09-01":{
-"scheduled":26,
+"scheduled":29,
 "seated":13,
 "handoff":5,
 "pre":2,
@@ -876,7 +876,7 @@
 "scheduled":18,
 "seated":9,
 "handoff":2,
-"pre":2,
+"pre":3,
 "noshow":5,
 "contracts":0,
 "sales":0,
@@ -917,17 +917,27 @@
 "seated":7,
 "handoff":0,
 "pre":0,
-"noshow":5,
+"noshow":7,
 "contracts":0,
 "sales":0,
 "threads_contracts":0
 },
 "2026-09-30":{
 "scheduled":25,
-"seated":13,
+"seated":14,
 "handoff":3,
 "pre":0,
-"noshow":4,
+"noshow":5,
+"contracts":0,
+"sales":0,
+"threads_contracts":0
+},
+"2026-10-01":{
+"scheduled":15,
+"seated":0,
+"handoff":0,
+"pre":0,
+"noshow":0,
 "contracts":0,
 "sales":0,
 "threads_contracts":0
