@@ -238,14 +238,24 @@ let inLine = false;
   }
 })();
 // LINEの中で開いているときは、本人のトークから「3分チェック」を送ってページを閉じる
+let sending = false;
 $('consult').addEventListener('click', async ev => {
   if (!inLine) return;            // LINEの外なら、リンク（oaMessage）のまま
   ev.preventDefault();
+  if (sending) return;            // 2回押されても1回しか送らない
+  sending = true;
+  $('consult').textContent = '送信しています…';
+  $('consult').style.opacity = '.6';
+  let sent = false;
   try {
     await liff.sendMessages([{type:'text', text: CONSULT_WORD}]);
-    liff.closeWindow();
-  } catch(e){
-    location.href = consultUrl();  // 送れなかったときは、入力欄に入れて開く
+    sent = true;
+  } catch(e){}
+  if (sent){
+    try { liff.closeWindow(); } catch(e){}   // 閉じられなくても、もう送ってあるので何もしない
+    $('consult').textContent = '送信しました。トークに戻ってください';
+  } else {
+    location.href = consultUrl();  // 送れなかったときだけ、入力欄に入れて開く
   }
 });
 </script>
