@@ -65,6 +65,15 @@ def run(key, token):
                                         "targetedReaches": j.get("targetedReaches")})
                 added += 1
         day += timedelta(days=1)
+    # LINE ID（@から始まる）。診断ページの「相談する」ボタンが、この公式LINEのトークを開くのに使う
+    try:
+        req = urllib.request.Request("https://api.line.me/v2/bot/info", headers={"Authorization": "Bearer " + token})
+        with urllib.request.urlopen(req, timeout=30) as r:
+            info = json.load(r)
+        data["basicId"] = info.get("basicId")
+        data["displayName"] = info.get("displayName")
+    except urllib.error.HTTPError as e:
+        print(key, "LINE IDを取れませんでした", e.code)
     data["history"].sort(key=lambda h: h["date"])
     data["generated_at"] = datetime.now(JST).strftime("%Y-%m-%d %H:%M")
     os.makedirs(os.path.dirname(out), exist_ok=True)
