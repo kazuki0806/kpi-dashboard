@@ -40,8 +40,6 @@ ul.points li:before{content:"✔";position:absolute;left:4px;color:var(--accent)
 .box{background:var(--soft);border-radius:12px;padding:14px 16px;margin:16px 0;font-size:15px}
 .box b{display:block;margin-bottom:4px}
 .why li{font-size:14px;color:#444}
-ol.todo{padding-left:20px;margin:8px 0 0}
-ol.todo li{margin:6px 0;font-size:15px}
 .also{font-size:14px;color:var(--sub)}
 .also span{display:inline-block;border:1px solid var(--line);border-radius:99px;padding:2px 10px;margin:4px 4px 0 0;background:#fff;color:var(--ink)}
 .cta{margin-top:20px;border:2px solid var(--green)}
@@ -57,7 +55,7 @@ footer{margin-top:28px;text-align:center;font-size:12px;color:var(--sub)}
   <section id="intro" class="card">
     <span class="tag">無料・約3分</span>
     <h1>Claude Code×クライアントワーク<br>あなたはいま、どこで止まっている？</h1>
-    <p class="lead">9つの質問に答えるだけで、案件が取れない・続かない・単価が上がらない<b>原因</b>と、次にやることが分かります。</p>
+    <p class="lead">9つの質問に答えるだけで、案件が取れない・続かない・単価が上がらない<b>原因</b>が分かります。</p>
     <ul class="points">
       <li>応募しても返事が来ない</li>
       <li>単発で終わって、次につながらない</li>
@@ -87,10 +85,6 @@ footer{margin-top:28px;text-align:center;font-size:12px;color:var(--sub)}
         <b>こう答えた方に多い結果です</b>
         <ul class="why" id="rwhy" style="margin:4px 0 0;padding-left:18px"></ul>
       </div>
-      <div class="box" style="background:#fff;border:1px solid var(--line)">
-        <b>▼ 次にやること</b>
-        <ol class="todo" id="rtodo"></ol>
-      </div>
       <p class="also" id="ralso"></p>
     </div>
 
@@ -99,7 +93,7 @@ footer{margin-top:28px;text-align:center;font-size:12px;color:var(--sub)}
       <p style="font-size:15px;margin:0">「自分の場合は、どこから手をつければいいか」を、無料相談（30分・オンライン）で一緒に整理します。</p>
       <div class="gift"><div class="ico">🎁</div><div id="gift"></div></div>
       <a class="btn line" id="consult" href="#">LINEで相談する</a>
-      <p class="note">ボタンを押すとLINEが開き、「相談」と入った状態になります。<br>そのまま送信すると、日程の決め方が届きます。</p>
+      <p class="note" id="consultNote">ボタンを押すとLINEが開き、「相談」と入った状態になります。<br>そのまま送信すると、日程の決め方が届きます。</p>
     </div>
     <button class="back" style="display:block;margin:16px auto 0" onclick="restart()">もう一度チェックする</button>
   </section>
@@ -107,6 +101,7 @@ footer{margin-top:28px;text-align:center;font-size:12px;color:var(--sub)}
   <footer>いけ｜ClaudeCode×高単価クライアントワーク</footer>
 </div>
 
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 <script>
 // ===== ここを変えると、ページの中身が変わる =====
 // 相談した人に渡すもの
@@ -115,6 +110,9 @@ const GIFT = '相談された方には<b>【特典】Claude Code×高単価ク�
 let LINE_ID = '';
 // 回答を残す先（Google Apps Script のウェブアプリURL）。空なら残さない
 const LOG_URL = '';
+// LIFF ID（LINE Developers の LINEログインチャネル →「LIFF」で作ったもの）。
+// 入れると、LINEの中で開いたときに「相談」が自動で送られ、トークに戻る
+const LIFF_ID = '';
 // 相談ボタンで送られる言葉
 const CONSULT_WORD = '相談';
 // 友だち追加のURL（LINE IDが分からないときの予備）
@@ -149,38 +147,31 @@ const CAUSES = [
   {id:'action', title:'行動量の壁',
    when:a => (a.status==='zero' || a.status==='apply') && (a.volume==='v0' || a.volume==='v1'),
    why:a => ['まだ受注がない', '応募が週5件以下'],
-   body:'いまは「やり方」より先に、数が足りていない段階です。クラウドワークスでは、最初の1件までに数十件の応募が必要になることも珍しくありません。',
-   todo:['1日に応募する件数を決めて、2週間だけ続ける','応募した案件と返事の有無を、表に1行ずつ残す','10件出したら、返事が来た案件の共通点を探す']},
+   body:'いまは「やり方」より先に、応募の数が足りていない状態です。数が少ないので、何がうまくいっていないのかも見えてきません。',},
   {id:'letter', title:'応募文の壁',
    when:a => ['r0','r1'].includes(a.reply) && ['v2','v3'].includes(a.volume) && ['tpl','edit'].includes(a.letter),
    why:a => ['週6件以上応募している', '返事が来るのは1割以下', '応募文がほぼ同じ文'],
-   body:'数は出せているのに、読まれる前に閉じられている状態です。選ぶ側は1行目で「この人は募集文を読んだか」を見ています。',
-   todo:['応募文の1行目に「募集文を読んで分かったこと」を書く','自己紹介とスキルの説明は最後に回す','相手が毎月困っていそうな作業を1つ挙げて、どう楽にできるかを書く']},
+   body:'応募の数は出せているのに、応募文が読まれる前に閉じられている状態です。頑張って数を増やしても、返事が増えにくくなっています。',},
   {id:'pick', title:'案件選びの壁',
    when:a => ['r0','r1'].includes(a.reply) && ['pay','can','any'].includes(a.pick),
    why:a => ['返事が来るのは1割以下', '案件を「' + label('pick', a.pick) + '」で選んでいる'],
-   body:'入口の案件がずれている状態です。報酬の高さや「できそうか」で選ぶと、ライバルが多く、続きもしない案件に集まりがちです。',
-   todo:['募集文に「毎月」「継続」「担当者1名」とある案件に絞る','相手が毎月同じ作業に時間を取られているかを見て選ぶ','報酬は、まず1件目は気にしすぎない']},
+   body:'応募している案件そのものがずれている状態です。ライバルが多く、選ばれにくい案件に応募が集まってしまっています。',},
   {id:'show', title:'実績の見せ方の壁',
    when:a => ['r0','r1','r2'].includes(a.reply) && ['no','mine'].includes(a.portfolio),
    why:a => ['返事が来るのは3割以下', a.portfolio==='no' ? 'ポートフォリオがまだない' : 'ポートフォリオが「自分が作りたいもの」中心'],
-   body:'選ぶ側が「この人に頼んだら何が楽になるか」を想像できていない状態です。技術の高さより、相手の手間が減った話のほうが選ばれます。',
-   todo:['作品ごとに「相手の何が楽になったか」を1行で書く','実績がなければ、架空の会社の作業を1つ仕組みにして見せる','応募する案件に近いものだけを上に並べる']},
+   body:'実績を見た相手が、「この人に頼んだら何が楽になるか」を想像できていない状態です。スキルがあっても、それが相手に伝わっていません。',},
   {id:'keep', title:'継続の壁',
    when:a => a.status==='single' && ['nothing','thanks'].includes(a.after),
    why:a => ['単発の案件はある', '納品のあと「' + label('after', a.after) + '」'],
-   body:'1件目は取れているのに、納品で終わってしまっている状態です。継続は、頼まれるのを待つのではなく、納品のときに自分から次を提案して生まれます。',
-   todo:['納品物と一緒に「気づいたこと1つ」を添えて送る','周りの作業（投稿文・サムネ・数字の振り返りなど）もまとめて引き受けると提案する','月額にしたときの金額と範囲を、先に決めておく']},
+   body:'1件目は取れているのに、納品で関係が終わってしまっている状態です。毎回新しい案件を探し直すことになり、収入が積み上がっていません。',},
   {id:'price', title:'単価の壁',
    when:a => ['single','monthly'].includes(a.status) && ['p1','p2'].includes(a.price) && a.cc!=='system',
    why:a => ['受注はできている', '時給にすると' + label('price', a.price), 'Claude Codeを「' + label('cc', a.cc) + '」'],
-   body:'スキルはあるのに、「作業」を売っているので単価が止まっている状態です。単価は作業の速さではなく、相手の作業をどれだけ要らなくしたかで決まります。',
-   todo:['相手が毎月手を止めている作業を1つ見つける','その作業をClaude Codeで「来月から要らない形」にして納品する','金額は作業時間ではなく「相手が浮く時間」で話す']},
+   body:'受注はできているのに、「作業」として受けているため単価が止まっている状態です。作業量を増やさないと収入が増えない形になっています。',},
   {id:'grow', title:'広げ方の壁',
    when:a => true,
    why:a => ['案件選び・納品・単価の基本はできている'],
-   body:'大きな穴は見当たりません。ここからは、1社の中で仕事を広げることと、同じ仕組みを別の相手に持っていくことで、月額を増やす段階です。',
-   todo:['いまの取引先で、相手が毎月手を止めている作業を洗い出す','その作業を仕組みにして、別の仕事として提案する','同じ業種の別の相手に、同じ仕組みを持っていく']},
+   body:'案件選び・納品・単価の基本はできています。いまの課題は、1社ごとの取引額と取引先の数が伸びきっていないことです。',},
 ];
 
 // ===== 動き =====
@@ -210,7 +201,6 @@ function finish(){
   $('rtitle').textContent = '【' + main.title + '】';
   $('rbody').textContent = main.body;
   $('rwhy').innerHTML = main.why(ans).map(t => '<li>' + t + '</li>').join('');
-  $('rtodo').innerHTML = main.todo.map(t => '<li>' + t + '</li>').join('');
   const others = hits.slice(1).filter(c => c.id!=='grow');
   $('ralso').innerHTML = others.length ? 'ほかにも当てはまっている壁：' + others.map(c => '<span>' + c.title + '</span>').join('') : '';
   $('gift').innerHTML = GIFT;
@@ -227,12 +217,31 @@ function log(main, others){
   fetch(LOG_URL, {method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain'}, body}).catch(() => {});
 }
 // LINE ID を読み込んで、相談ボタンの行き先を決める
+let inLine = false;
 (async () => {
   if (!LINE_ID){
     try { const j = await (await fetch('../line/line_A.json', {cache:'no-store'})).json(); LINE_ID = j.basicId || ''; } catch(e){}
   }
   $('consult').href = consultUrl();
+  if (LIFF_ID && window.liff){
+    try {
+      await liff.init({liffId: LIFF_ID});
+      inLine = liff.isInClient();
+      if (inLine) $('consultNote').innerHTML = 'ボタンを押すとトークに戻り、「相談」が自動で送られます。<br>すぐに日程の決め方が届きます。';
+    } catch(e){}
+  }
 })();
+// LINEの中で開いているときは、本人のトークから「相談」を送ってページを閉じる
+$('consult').addEventListener('click', async ev => {
+  if (!inLine) return;            // LINEの外なら、リンク（oaMessage）のまま
+  ev.preventDefault();
+  try {
+    await liff.sendMessages([{type:'text', text: CONSULT_WORD}]);
+    liff.closeWindow();
+  } catch(e){
+    location.href = consultUrl();  // 送れなかったときは、入力欄に入れて開く
+  }
+});
 </script>
 </body>
 </html>
