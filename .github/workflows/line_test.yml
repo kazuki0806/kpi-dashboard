@@ -9,6 +9,9 @@ on:
       test_name:
         description: "試す人の表示名"
         default: "池田和喜"
+      test_user_id:
+        description: "試す人のユーザーID（U〜。LINE Developers のチャネル基本設定「あなたのユーザーID」）"
+        default: ""
       check_url:
         description: "3分チェックのURL"
         default: "https://app.notion.com/p/3ecb9ba8cb15815eabefc3e5b46c9eed"
@@ -36,6 +39,7 @@ jobs:
         env:
           LINE_TOKEN_A: ${{ secrets.LINE_TOKEN_A }}
           TEST_NAME: ${{ inputs.test_name }}
+          TEST_USER_ID: ${{ inputs.test_user_id }}
           CHECK_URL: ${{ inputs.check_url }}
           NOTE_URL: ${{ inputs.note_url }}
           BOOK_URL: ${{ inputs.book_url }}

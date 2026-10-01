@@ -12,6 +12,8 @@
 環境変数
   LINE_TOKEN_A … チャネルアクセストークン（GitHub Secrets）
   TEST_NAME    … 試す人の表示名（例: 池田和喜）
+  TEST_USER_ID … 試す人のユーザーID（U〜）。友だち一覧のAPIは認証済みアカウントでないと使えないので、
+                 自分で試すときは LINE Developers の「あなたのユーザーID」を入れる
   CHECK_URL    … 3分チェックのURL
   NOTE_URL     … note記事のURL
   BOOK_URL     … 無料相談の日程調整URL（空なら、押すと「相談」と送られる）
@@ -47,6 +49,9 @@ def call(method, url, body=None, ctype="application/json", raw=False):
 
 
 def find_user(name):
+    # LINE Developers の「チャネル基本設定」→「あなたのユーザーID」（U から始まる）を渡せば、一覧を探さない
+    if os.environ.get("TEST_USER_ID", "").startswith("U"):
+        return os.environ["TEST_USER_ID"].strip()
     ids, start = [], None
     while True:
         url = API + "/followers/ids?limit=1000" + ("&start=" + start if start else "")
