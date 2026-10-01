@@ -42,7 +42,9 @@ Addness の KPI（営業/CW フォルダ）と同じ数え方にそろえてい�
       --points DIR [--from YYYY-MM-DD] [--to YYYY-MM-DD]
           … Addness に入れる点（合計＋内訳）を KPI ごとに DIR/<キー>.json と
             DIR/<キー>.parquet に書き出す（pyarrow が要る）。期間の既定は、
-            読んだ月の初日から昨日まで。DIR はリポジトリの外にすること
+            読んだ月の初日から昨日まで。DIR はリポジトリの外にすること。
+            DIR/summary.json に、点の数・期間・parquet の size_bytes と checksum が入る
+      --dry と一緒に使うと、kpi_daily.json は書き換えずに点だけ書き出す
 """
 
 import csv
@@ -329,7 +331,7 @@ def main():
             xlsx[ym] = path
         elif a in ("--points", "--from", "--to") and i + 1 < len(sys.argv):
             opt[a] = sys.argv[i + 1]
-    breakdown, read_ok = {}, []
+    breakdown, read_ok, changed = {}, [], []
     if xlsx:
         months = sorted(xlsx)
     else:
@@ -373,7 +375,11 @@ def main():
                    now.date())
         d = first
         while d <= last:
-            data["days"][d.isoformat()] = fresh.get(d.isoformat(), dict.fromkeys(METRICS, 0))
+            val = fresh.get(d.isoformat(), dict.fromkeys(METRICS, 0))
+            old = data["days"].get(d.isoformat())
+            if old is not None and old != val and d < now.date():
+                changed.append(d.isoformat())
+            data["days"][d.isoformat()] = val
             d += timedelta(days=1)
         tot = {k: sum(v[k] for kk, v in data["days"].items() if kk.startswith(ym)) for k in METRICS}
         print(ym, tot)
@@ -383,6 +389,8 @@ def main():
     data["target_monthly_sales"] = TARGET_MONTHLY_SALES
     data["metrics"] = METRICS
     data["days"] = dict(sorted(data["days"].items()))
+    # 毎日の取り込みは、この日から後を Addness に入れ直す（締めでの書き換えを拾うため）
+    print("前回から合計が変わった日（今日を除く）:", ", ".join(changed) or "なし")
     if "--points" in opt:
         d_from = opt.get("--from", min(read_ok) + "-01" if read_ok else "9999")
         d_to = opt.get("--to", (now - timedelta(days=1)).strftime("%Y-%m-%d"))
