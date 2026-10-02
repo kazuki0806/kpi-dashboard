@@ -43,7 +43,8 @@ Addness の KPI（営業/CW フォルダ）と同じ数え方にそろえてい�
           … Addness に入れる点（合計＋内訳）を KPI ごとに DIR/<キー>.json と
             DIR/<キー>.parquet に書き出す（pyarrow が要る）。期間の既定は、
             読んだ月の初日から昨日まで。DIR はリポジトリの外にすること。
-            DIR/summary.json に、点の数・期間・parquet の size_bytes と checksum が入る
+            DIR/summary.json に、点の数・期間と、証憑ごとの期間・ファイル名・size_bytes・checksum が入る。
+            証憑の期間は evidence_block() の固定の区切り（Addness が部分的に重なる証憑を受け付けないため）
       --dry と一緒に使うと、kpi_daily.json は書き換えずに点だけ書き出す
 """
 
@@ -284,8 +285,25 @@ def build_points(data, breakdown, months, d_from, d_to):
     return pts
 
 
+def evidence_block(day):
+    """その日の点を入れる証憑（Addness の lake file）の期間。
+    Addness は、既にある証憑と期間がまったく同じか、まったく重ならない証憑しか受け付けない。
+    そのため期間は日付から決まる固定の区切りにする（月の途中でも月末までを期間にしてよい）。
+    2026-09-30 までと 2026-10-01 は、最初に入れた時の区切りに合わせている。"""
+    d = date.fromisoformat(day)
+    if d <= date(2026, 9, 30):
+        return "2026-07-01", "2026-09-30"
+    if d == date(2026, 10, 1):
+        return "2026-10-01", "2026-10-01"
+    if d <= date(2026, 10, 31):
+        return "2026-10-02", "2026-10-31"
+    end = (d.replace(day=28) + timedelta(days=4)).replace(day=1) - timedelta(days=1)
+    return d.replace(day=1).isoformat(), end.isoformat()
+
+
 def write_points(pts, out_dir):
-    """KPIごとの点を json と parquet（period, dim_key, dim_value, value）に書く。"""
+    """KPIごとの点を DIR/<キー>.json に、証憑を区切りごとの parquet
+    （period, dim_key, dim_value, value）に書く。summary.json に証憑の一覧を書く。"""
     import hashlib
     os.makedirs(out_dir, exist_ok=True)
     try:
@@ -300,25 +318,32 @@ def write_points(pts, out_dir):
             continue
         with open(os.path.join(out_dir, k + ".json"), "w", encoding="utf-8") as f:
             json.dump(rows, f, ensure_ascii=False)
-        info = {"points": len(rows), "from": rows[0]["period"], "to": max(r["period"] for r in rows)}
-        if pa is not None:
-            path = os.path.join(out_dir, k + ".parquet")
-            dk = [next(iter(r["dims"])) if r.get("dims") else "" for r in rows]
-            table = pa.table({
-                "period": [r["period"] for r in rows],
-                "dim_key": dk,
-                "dim_value": [r["dims"][d] if d else "" for r, d in zip(rows, dk)],
-                "value": [float(r["value"]) for r in rows],
-            })
-            pq.write_table(table, path)
-            raw = open(path, "rb").read()
-            info.update(size_bytes=len(raw), checksum=hashlib.sha256(raw).hexdigest(),
-                        rows=len(rows))
+        info = {"points": len(rows), "from": min(r["period"] for r in rows),
+                "to": max(r["period"] for r in rows), "evidence": []}
+        blocks = {}
+        for r in rows:
+            blocks.setdefault(evidence_block(r["period"]), []).append(r)
+        for (b_from, b_to), brows in sorted(blocks.items()):
+            ev = {"period_from": b_from, "period_to": b_to, "rows": len(brows)}
+            if pa is not None:
+                path = os.path.join(out_dir, "%s__%s_%s.parquet" % (k, b_from, b_to))
+                dk = [next(iter(r["dims"])) if r.get("dims") else "" for r in brows]
+                pq.write_table(pa.table({
+                    "period": [r["period"] for r in brows],
+                    "dim_key": dk,
+                    "dim_value": [r["dims"][d] if d else "" for r, d in zip(brows, dk)],
+                    "value": [float(r["value"]) for r in brows],
+                }), path)
+                raw = open(path, "rb").read()
+                ev.update(file=os.path.basename(path), size_bytes=len(raw),
+                          checksum=hashlib.sha256(raw).hexdigest())
+            info["evidence"].append(ev)
         summary[k] = info
     with open(os.path.join(out_dir, "summary.json"), "w", encoding="utf-8") as f:
         json.dump(summary, f, ensure_ascii=False, indent=1)
     for k, v in summary.items():
-        print("点", k, v)
+        print("点", k, v["points"], "件", v["from"], "〜", v["to"], "／証憑",
+              ", ".join("%s〜%s" % (e["period_from"], e["period_to"]) for e in v["evidence"]))
 
 
 def main():
