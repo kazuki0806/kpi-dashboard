@@ -87,6 +87,9 @@ body{margin:0;background:var(--bg);color:var(--ink);
   <div class="secLab">アポ取り → 着座 → 契約（インフルエンサーDM）</div>
   <div class="grid cards3" id="funnel" style="margin-bottom:14px"></div>
 
+  <div class="secLab">契約後の進み具合（インフルエンサー・全期間）</div>
+  <div class="card" id="inflStatus" style="margin-bottom:14px"></div>
+
   <div class="grid two" style="margin-bottom:14px">
     <div class="card">
       <div class="head"><div><p class="h">日別のDM送信数</p><span class="hsub" id="flowsub">今月</span></div></div>
@@ -184,6 +187,28 @@ function statCard(lab, val, unit, badge, extra){
     <div class="val">${val}${unit ? `<small> ${unit}</small>` : ""}</div>${b}${extra || ""}</div>`;
 }
 
+// 契約後の進み具合。AGシート「インフルエンサーDM」のS列（ステータス）を、月をまたいで集めたもの。
+// 担当者のタブ切り替えには関係なく、全体で出す。
+const INFL_COLORS = {"契約済み":"#dbeafe","キックオフ済み":"#cffafe","育成中":"#fef3c7","構成完成":"#dcfce7",
+                     "販促中":"#bbf7d0","終了":"#e5e7eb","停止中":"#fee2e2"};
+function drawInflStatus(){
+  const st = (DATA && DATA.status) || {order:[], counts:{}, items:[]};
+  const chips = st.order.map(k =>
+    `<div style="flex:1;min-width:92px;border-radius:12px;padding:10px 12px;background:${INFL_COLORS[k]||"var(--line)"};color:#1f2937">
+       <div style="font-size:12px;font-weight:600">${esc(k)}</div>
+       <div style="font-size:22px;font-weight:800;margin-top:2px">${fmt(st.counts[k]||0)}<span style="font-size:12px;font-weight:600;margin-left:2px">人</span></div>
+     </div>`).join("");
+  const rows = (st.items||[]).map(x =>
+    `<tr><td>${esc(x.account)}</td><td>${esc(x.owner)}</td>
+       <td><span style="padding:2px 9px;border-radius:999px;font-size:12px;font-weight:700;background:${INFL_COLORS[x.status]||"var(--line)"};color:#1f2937">${esc(x.status)}</span></td>
+       <td>${esc(x.month)}</td></tr>`).join("");
+  $("#inflStatus").innerHTML =
+    `<div style="display:flex;flex-wrap:wrap;gap:8px">${chips}</div>` +
+    (rows
+      ? `<div style="overflow-x:auto;margin-top:14px"><table class="tbl"><thead><tr><th>アカウント</th><th>担当者</th><th>ステータス</th><th>面談した月</th></tr></thead><tbody>${rows}</tbody></table></div>`
+      : `<p style="margin:12px 2px 0;color:var(--ink3);font-size:13px">まだステータスが入っている人はいません。AGシートの「インフルエンサーDM」タブのS列（ステータス）で選ぶと、ここに出ます。</p>`);
+}
+
 function render(){
   const p = personData(CUR);
   $("#hello").textContent = (PEOPLE[CUR] ? PEOPLE[CUR].name : "") + "の稼働量";
@@ -261,6 +286,8 @@ function render(){
       statCard("採用（見込み）", fmt(hire), `/ ${GOAL.hirePerMonth}人`,
                {cls: hire >= GOAL.hirePerMonth ? "up" : "flat", txt: "アポ4件で1人の想定"});
   }
+
+  drawInflStatus();
 
   $("#funnel").innerHTML =
     statCard("アポ取り", fmt(f.appt), "件", {cls:"flat", txt:"面談が入った数"}) +
