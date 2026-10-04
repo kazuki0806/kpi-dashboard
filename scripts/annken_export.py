@@ -119,12 +119,9 @@ def _sheets():
 
 SHEETS = _sheets()
 
-# AGシートは月ごとにファイルが分かれる。月が替わったらここに1行足す。
-# 8月に固定されていたせいで、9月は全員0件のまま出ていた（2026-09-07 修正）。
-APO_SHEETS = {
-    "2026-08": SHEETS["ag_2026-08"],
-    "2026-09": SHEETS["ag_2026-09"],
-}
+# AGシートは月ごとにファイルが分かれる。sheets.json の ag_YYYY-MM をそのまま全部使う。
+# （以前はここに月を手で足していて、足し忘れた月は全員0件のまま出ていた。2026-10-04 修正）
+APO_SHEETS = {k[3:]: v for k, v in SHEETS.items() if re.match(r"^ag_\d{4}-\d{2}$", k)}
 
 
 def apo_sheet_id(when=None):
@@ -137,16 +134,24 @@ def apo_sheet_id(when=None):
     print(f"⚠ {ym} のAGシートが未登録です。{max(APO_SHEETS)} のシートで数えます")
     return latest
 APO_TABS = ["営業(threads)"]  # threadsのアポだけを読む（CW等は含めない）
-APO_NAME_MAP = {"池田和喜": "池田", "谷村亮介": "谷村", "河野碧": "河野",
-                "八千古嶋陽": "八千古嶋", "濱田": "濱田", "姫路加奈子": "姫路"}
+CONTRACT_TAB = "契約者"        # 契約は契約者タブ（種別に threads を含む行）で数える
+# リード獲得先（G列）の名前の先頭 → ダッシュボードの表示名。案件掲載アカウントを持つ人を全部並べる。
+# 舘林さんは「舘」「館」のどちらで書かれることもあるので両方入れる。
+APO_NAME_MAP = {"池田": "池田", "谷村": "谷村", "河野": "河野", "八千古嶋": "八千古嶋",
+                "濱田": "濱田", "姫路": "姫路", "関澤": "関澤", "上野": "上野", "小川": "小川",
+                "渡邊": "渡邊", "小澤": "小澤", "舘林": "舘林", "館林": "舘林", "宗木": "宗木",
+                "林原": "林原", "民家": "民家", "坂本": "坂本", "山﨑": "山﨑", "山崎": "山﨑"}
 
-# 列は0始まり。シートの見出しと必ず一致させること。
+# 列は0始まり。見出し（「顧客名」のある行）から探し、見つからない時だけこの位置を使う。
 # A顧客名 B性別 C年齢 D職業 E観覧数 F投稿内容 Gリード獲得先 Hトスアップ
-# Iクローザー Jクローザーアポ Kランク Lステータス Mアポ取り日 N予定 O時間
-APO_COL_NAME, APO_COL_LEAD, APO_COL_STATUS, APO_COL_DATE = 0, 6, 11, 12
+# Iクローザー Jクローザーアポ Kランク Lステータス Mアポ取り日 N予定 O時間 P実際（トスアップ）
+APO_COL_NAME, APO_COL_LEAD, APO_COL_STATUS, APO_COL_DATE, APO_COL_SEATED = 0, 6, 11, 12, 15
 
-# 取り消しになったものは数えない。飛びや見込み外は「アポは取れている」ので数える。
+# アポ取り：取り消しになったものは数えない。飛びや見込み外は「アポは取れている」ので数える。
 APO_SKIP = ["キャンセル", "被り"]
+# 着座：トスアップの「実際」に日付が入った行。**見込み外になった人も着座に数える**
+# （AGシートの集計と Addness の「threads 着座数」と同じ数え方。以前は見込み外を除いていて、
+#   9月が実際の17より少ない3と出ていた。2026-10-04 修正）
 
 
 def apo_month(v):
@@ -161,42 +166,101 @@ def apo_month(v):
     return int(m.group(1)) if m else None
 
 
-def read_apo(month=None):
-    month = month or datetime.now().month
-    counts = {v: 0 for v in APO_NAME_MAP.values()}
-    for tab in APO_TABS:
-        try:
-            url = (f"https://docs.google.com/spreadsheets/d/{apo_sheet_id()}"
-                   f"/gviz/tq?tqx=out:csv&sheet={urllib.parse.quote(tab)}")
-            d = urllib.request.urlopen(url, timeout=25).read().decode("utf-8", "replace")
-        except Exception as e:
-            # 黙って0にすると「アポが無い月」と見分けがつかない。必ず声を出す。
-            print(f"⚠ 営業シート({tab})を読めませんでした: {e}")
+def _clean(v):
+    return re.sub(r"\s+", "", str(v or ""))
+
+
+def _who(lead):
+    """リード獲得先の名前 → 表示名。見つからなければ None。"""
+    lead = _clean(lead)
+    for head, short in APO_NAME_MAP.items():
+        if lead.startswith(head):
+            return short
+    return None
+
+
+def _ledger_cols(rows):
+    """営業(threads) の見出し行（「顧客名」と「リード獲得先」がある行）から列の位置を探す。
+    トスアップの「実際」は、ステータス列より右で最初に出てくる「実際」。"""
+    for r in rows[:10]:
+        c = [_clean(x) for x in r]
+        if "顧客名" in c and "リード獲得先" in c and "ステータス" in c:
+            status = c.index("ステータス")
+            seated = next((i for i in range(status, len(c)) if c[i] == "実際"), APO_COL_SEATED)
+            return {"name": c.index("顧客名"), "lead": c.index("リード獲得先"), "status": status,
+                    "date": c.index("アポ取り日") if "アポ取り日" in c else APO_COL_DATE,
+                    "seated": seated}
+    return {"name": APO_COL_NAME, "lead": APO_COL_LEAD, "status": APO_COL_STATUS,
+            "date": APO_COL_DATE, "seated": APO_COL_SEATED}
+
+
+def fetch_rows(sheet_id, tab):
+    url = (f"https://docs.google.com/spreadsheets/d/{sheet_id}"
+           f"/gviz/tq?tqx=out:csv&sheet={urllib.parse.quote(tab)}")
+    d = urllib.request.urlopen(url, timeout=25).read().decode("utf-8", "replace")
+    return list(csv.reader(io.StringIO(d)))
+
+
+def count_funnel(ledger_rows, contract_rows, month):
+    """1か月分の 営業(threads) と 契約者 の行から、人ごとの アポ取り・着座・契約 を数える。
+    アポ取り＝アポ取り日がその月（キャンセル・被りは除く）、着座＝トスアップ実際がその月、
+    契約＝契約者タブで種別に threads を含み契約日がその月でキャンセル日が空。"""
+    counts = {v: {"apo": 0, "sat": 0, "contract": 0} for v in set(APO_NAME_MAP.values())}
+    L = _ledger_cols(ledger_rows)
+    need = max(L.values())
+    for r in ledger_rows:
+        if len(r) <= need or not str(r[L["name"]]).strip():
+            continue                       # 顧客名が無い行は見出しや空行
+        who = _who(r[L["lead"]])
+        if not who:
+            continue                       # 案件掲載の人以外（空欄など）は数えない
+        status = str(r[L["status"]])
+        if apo_month(r[L["date"]]) == month and not any(k in status for k in APO_SKIP):
+            counts[who]["apo"] += 1
+        if apo_month(r[L["seated"]]) == month:
+            counts[who]["sat"] += 1
+    hdr = None
+    for r in contract_rows:
+        c = [_clean(x) for x in r]
+        if hdr is None:
+            if "種別" in c and "契約日" in c:
+                hdr = {k: c.index(k) for k in ("種別", "契約日", "キャンセル日", "リード獲得先") if k in c}
             continue
-        for r in csv.reader(io.StringIO(d)):
-            if len(r) <= APO_COL_DATE:
-                continue
-            if not str(r[APO_COL_NAME]).strip():
-                continue                       # 顧客名が無い行は見出しや空行
-            if apo_month(r[APO_COL_DATE]) != month:
-                continue                       # 対象月のアポ取り日だけ
-            status = str(r[APO_COL_STATUS])
-            if any(k in status for k in APO_SKIP):
-                continue
-            lead = str(r[APO_COL_LEAD])
-            for full, short in APO_NAME_MAP.items():
-                if full in lead:
-                    counts[short] += 1
-                    break                      # 1行は1人にしか数えない
+        if len(hdr) < 4 or len(r) <= max(hdr.values()):
+            continue
+        if "threads" not in str(r[hdr["種別"]]).lower() or str(r[hdr["キャンセル日"]]).strip():
+            continue
+        who = _who(r[hdr["リード獲得先"]])
+        if who and apo_month(r[hdr["契約日"]]) == month:
+            counts[who]["contract"] += 1
     return counts
 
 
-APO = read_apo()
+def read_funnel(month=None):
+    month = month or datetime.now().month
+    sheet = apo_sheet_id()
+    ledger, contracts = [], []
+    for tab in APO_TABS:
+        try:
+            ledger += fetch_rows(sheet, tab)
+        except Exception as e:
+            # 黙って0にすると「アポが無い月」と見分けがつかない。必ず声を出す。
+            print(f"⚠ 営業シート({tab})を読めませんでした: {e}")
+    try:
+        contracts = fetch_rows(sheet, CONTRACT_TAB)
+    except Exception as e:
+        print(f"⚠ 契約者タブを読めませんでした: {e}")
+    return count_funnel(ledger, contracts, month)
 
 
-def write(key, posts, apo=0):
+FUNNEL = read_funnel() if __name__ == "__main__" else {}
+
+
+def write(key, posts, funnel=None):
+    f = funnel or {"apo": 0, "sat": 0, "contract": 0}
     out = {"generated_at": datetime.now().strftime("%Y-%m-%d %H:%M"),
-           "posts": posts, "followers": [], "apo": apo}
+           "posts": posts, "followers": [],
+           "apo": f["apo"], "sat": f["sat"], "contract": f["contract"]}
     with open(os.path.join(BASE, f"kpi_data_{key}.json"), "w", encoding="utf-8") as f:
         json.dump(out, f, ensure_ascii=False)
 
@@ -208,7 +272,7 @@ def export():
         if not page_id:
             print(f"⚠ {name}: Notionの投稿管理ページが未登録です（.env の DB_{name}）。"
                   f"投稿は0件、アポ取り数だけ書き出します")
-            write(key, [], APO.get(name, 0))
+            write(key, [], FUNNEL.get(name))
             summary[name] = 0
             continue
         dbs = find_inner_dbs(page_id)
@@ -242,10 +306,10 @@ def export():
                     # 全体ページでは「誰の・どのアカウントか」を頭に付ける
                     who = f"{name}/{sub}" if sub else name
                     all_posts.append({**p, "content": f"[{who}] {hook}"})
-        write(key, posts, APO.get(name, 0))
+        write(key, posts, FUNNEL.get(name))
         summary[name] = len(posts)
     all_posts.sort(key=lambda p: p["date"])
-    write("all", all_posts, sum(APO.values()))
+    write("all", all_posts, {k: sum(v[k] for v in FUNNEL.values()) for k in ("apo", "sat", "contract")})
     print(f"✅ 書き出し完了（全体 {len(all_posts)}件）")
     for name, c in summary.items():
         print(f"   - {name}: {c}件")
