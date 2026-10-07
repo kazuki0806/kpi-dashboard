@@ -27,6 +27,9 @@ Addness の KPI（営業/CW フォルダ）と同じ数え方にそろえてい�
   tossup … トスアップ担当（台帳の「トスアップ」、契約は契約者タブの「トスアップ」）
   closer … クローザー（プレは台帳の「クローザー」、契約は契約者タブの「担当」）
   course … ライト／スタンダード／プレミアム（契約者タブの「コース」）
+  case_type … 案件の種類（動画編集／SNS運用／デザイン）。台帳の見出し「案件の種類」の列（シートのGASが
+              TimeRexの予約から書く。AF列）。契約は、契約者タブの「クライアント名」と同じ名前の台帳の行の種類
+              （前の月の台帳の行も見る）。台帳にこの列が無い月は case_type の内訳を作らない
   空欄は「未記入」にする。当月累計の率も作る（close_rate_mtd・pre_close_rate_mtd・avg_price_mtd）。
   内訳には担当者の名前が入るので、--points の書き出し先はリポジトリの外にする（公開しない）。
 
@@ -71,15 +74,16 @@ L_FIRST_ROW = 4   # 台帳のデータは5行目から
 BLANK = "未記入"
 # 内訳のキー（Addness の KPI の declared_dims と同じ名前）
 DIMS = {
-    "scheduled": ["tossup"], "seated": ["tossup"], "handoff": ["tossup"],
-    "noshow": ["tossup"], "pre": ["tossup", "closer"],
-    "contracts": ["tossup", "closer", "course"],
-    "sales": ["tossup", "closer", "course"],
+    "scheduled": ["tossup", "case_type"], "seated": ["tossup", "case_type"],
+    "handoff": ["tossup", "case_type"], "noshow": ["tossup", "case_type"],
+    "pre": ["tossup", "closer"],
+    "contracts": ["tossup", "closer", "course", "case_type"],
+    "sales": ["tossup", "closer", "course", "case_type"],
     "threads_contracts": [],
 }
 # 当月累計の率（分子, 分母, 倍率, 内訳のキー）
 RATES = {
-    "close_rate_mtd": ("contracts", "seated", 100, ["tossup"]),        # 着座→契約 %
+    "close_rate_mtd": ("contracts", "seated", 100, ["tossup", "case_type"]),  # 着座→契約 %
     "pre_close_rate_mtd": ("contracts", "pre", 100, ["closer"]),       # プレ→契約 %
     "avg_price_mtd": ("sales", "contracts", 1, ["closer"]),            # 平均単価 円
 }
@@ -180,6 +184,8 @@ def ledger_cols(ledger):
         "closer": _find(head, "クローザー", "台帳"),
         "tu_plan": stage("トスアップ"), "tu_done": stage("トスアップ") + 2,
         "apo_plan": stage("アポ"), "pre_done": stage("プレ") + 2,
+        "name": 0,
+        "case_type": next((j for j, c in enumerate(head) if _norm(c) == "案件の種類"), None),
     }
 
 
@@ -187,7 +193,16 @@ def contract_cols(contracts):
     head = contracts[0]
     return {k: _find(head, n, "契約者タブ") for k, n in [
         ("course", "コース"), ("kind", "種別"), ("tossup", "トスアップ"),
-        ("closer", "担当"), ("date", "契約日"), ("cancel", "キャンセル日")]}
+        ("closer", "担当"), ("date", "契約日"), ("cancel", "キャンセル日"),
+        ("client", "クライアント名")]}
+
+
+# 顧客名 → 案件の種類（台帳から。月をまたいだ契約に使うので、古い月から順に読んで足していく）
+NAME_TYPE = {}
+
+
+def _name_key(v):
+    return re.sub(r"[\s　・.\-_|｜()（）]|さん$|様$", "", str(v or "")).lower()
 
 
 def course_name(course):
@@ -211,6 +226,8 @@ def count_month(ledger, contracts, ym, breakdown=None):
         if breakdown is not None:
             day = breakdown.setdefault(d.isoformat(), {})
             for dk in DIMS[key]:
+                if dk == "case_type" and "case_type" not in (dims or {}):
+                    continue  # 台帳に「案件の種類」の列が無い月は内訳を作らない
                 v = str((dims or {}).get(dk) or "").strip() or BLANK
                 b = day.setdefault(key, {}).setdefault(dk, {})
                 b[v] = b.get(v, 0) + n
@@ -220,6 +237,10 @@ def count_month(ledger, contracts, ym, breakdown=None):
         plan = to_date(cell(row, L["tu_plan"]), ym)
         done = to_date(cell(row, L["tu_done"]), ym)
         who = {"tossup": cell(row, L["tossup"]), "closer": cell(row, L["closer"])}
+        if L["case_type"] is not None:
+            who["case_type"] = cell(row, L["case_type"])
+            if str(who["case_type"]).strip():
+                NAME_TYPE[_name_key(cell(row, L["name"]))] = str(who["case_type"]).strip()
         if plan and status != "アポ被り":
             add(plan, "scheduled", dims=who)
         if status == "トスアップ飛び":
@@ -238,6 +259,8 @@ def count_month(ledger, contracts, ym, breakdown=None):
         if kind == "CWトスアップ":
             who = {"tossup": cell(row, K["tossup"]), "closer": cell(row, K["closer"]),
                    "course": course_name(cell(row, K["course"]))}
+            if L["case_type"] is not None:
+                who["case_type"] = NAME_TYPE.get(_name_key(cell(row, K["client"])), "")
             add(d, "contracts", dims=who)
             add(d, "sales", course_yen(cell(row, K["course"])), dims=who)
         elif "threads" in kind.lower():
