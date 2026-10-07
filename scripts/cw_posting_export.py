@@ -20,6 +20,11 @@
 内訳（dims）
   member … メンバーの名前（members.json の name）。posted と applicants に付ける。
            名前が入るので、書き出し先はリポジトリの外にすること（公開しない）
+  case_type … 案件の種類（動画編集／SNS運用／デザイン／その他）。posted と applicants に付ける。
+           案件タイトルから case_type() の順で決める（「SNS運用」と書いてあれば SNS運用、
+           次に動画・リール・ショートなどで動画編集、次にデザイン・画像・Canva などでデザイン、
+           残りの SNS・Instagram は SNS運用、どれも無ければその他）。
+           配分（2026-10-07 決定：動画編集60%・SNS運用25%・デザイン15%）と比べるための内訳
 
 実行:
   python3 cw_posting_export.py --tracker /path/to/cw-tracker --points DIR [--from YYYY-MM-DD] [--to YYYY-MM-DD]
@@ -34,6 +39,7 @@
 import hashlib
 import json
 import os
+import re
 import sys
 from datetime import date, datetime, timedelta, timezone
 
@@ -48,7 +54,8 @@ METRICS = {
     "quota_rate": "CW ノルマ達成率（今週累計）",
     "apo_rate_mtd": "CW 応募→アポ率（当月累計）",
 }
-DIMS = {"posted": ["member"], "applicants": ["member"]}
+DIMS = {"posted": ["member", "case_type"], "applicants": ["member", "case_type"]}
+CASE_TYPES = ["動画編集", "SNS運用", "デザイン", "その他"]
 
 
 def jst_date(posted_at, precision):
@@ -57,6 +64,20 @@ def jst_date(posted_at, precision):
         return posted_at[:10]
     ts = datetime.fromisoformat(posted_at.replace("Z", "+00:00"))
     return ts.astimezone(JST).date().isoformat()
+
+
+def case_type(title):
+    """案件タイトルから種類を決める。上から順に見る（「Canva」入りの SNS運用 の募集は SNS運用 にする）。"""
+    t = title or ""
+    if "SNS運用" in t:
+        return "SNS運用"
+    if re.search(r"動画|リール|ショート|YouTube|映像|TikTok", t, re.I):
+        return "動画編集"
+    if re.search(r"デザイン|画像|Canva|バナー|サムネ", t, re.I):
+        return "デザイン"
+    if re.search(r"SNS|Instagram|インスタ|Threads", t, re.I):
+        return "SNS運用"
+    return "その他"
 
 
 def week_start(d):
@@ -74,7 +95,7 @@ def load(tracker):
 
 
 def daily(jobs, members):
-    """日 → {posted, applicants, by_member:{name:{posted, applicants}}}。発注者ID一致だけ。"""
+    """日 → {posted, applicants, by_member:{name:{...}}, by_case:{種類:{...}}}。発注者ID一致だけ。"""
     name = {x["id"]: x["name"] for x in members}
     days = {}
     for j in jobs.values():
@@ -84,12 +105,13 @@ def daily(jobs, members):
         last = j["observations"][-1] if j.get("observations") else {}
         app = last.get("applicantCount") or 0
         who = name.get(j["memberId"], j["memberId"])
-        rec = days.setdefault(day, {"posted": 0, "applicants": 0, "by_member": {}})
+        rec = days.setdefault(day, {"posted": 0, "applicants": 0, "by_member": {}, "by_case": {}})
         rec["posted"] += 1
         rec["applicants"] += app
-        bm = rec["by_member"].setdefault(who, {"posted": 0, "applicants": 0})
-        bm["posted"] += 1
-        bm["applicants"] += app
+        for group, key in (("by_member", who), ("by_case", case_type(j.get("title")))):
+            b = rec[group].setdefault(key, {"posted": 0, "applicants": 0})
+            b["posted"] += 1
+            b["applicants"] += app
     return days
 
 
@@ -116,12 +138,16 @@ def build_points(jobs, members, d_from, d_to, apo=None):
     d = d_from
     while d <= d_to:
         key = d.isoformat()
-        rec = days.get(key, {"posted": 0, "applicants": 0, "by_member": {}})
+        rec = days.get(key, {"posted": 0, "applicants": 0, "by_member": {}, "by_case": {}})
         for k in ("posted", "applicants"):
             pts[k].append({"period": key, "value": rec[k]})
             for who, v in sorted(rec["by_member"].items()):
                 if v[k]:
                     pts[k].append({"period": key, "value": v[k], "dims": {"member": who}})
+            # 種類は実績0の日も0を入れる（ダッシュボードの内訳グラフで取得失敗と区別するため）
+            for ct in CASE_TYPES:
+                v = rec["by_case"].get(ct, {}).get(k, 0)
+                pts[k].append({"period": key, "value": v, "dims": {"case_type": ct}})
         done, n = quota(jobs, members, d)
         pts["quota_done"].append({"period": key, "value": done})
         if n:
