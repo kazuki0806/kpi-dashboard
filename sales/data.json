@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-10-10 22:12",
+ "generated_at": "2026-10-10 22:21",
  "month": "2026-10",
  "sheetId": "1hQumkp2ICnDhc0wBpSOvVTIkoXeWnB2l3W8hVDeczxE",
  "funnel": {
@@ -272,7 +272,7 @@
   ]
  },
  "excluded": {
-  "アポ被り": 35
+  "アポ被り": 37
  },
  "unknownStatuses": {},
  "stages": [
