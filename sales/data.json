@@ -1,9 +1,9 @@
 {
- "generated_at": "2026-10-20 16:13",
+ "generated_at": "2026-10-20 16:21",
  "month": "2026-10",
  "sheetId": "1hQumkp2ICnDhc0wBpSOvVTIkoXeWnB2l3W8hVDeczxE",
  "funnel": {
-  "アポ着座": 547,
+  "アポ着座": 546,
   "見込み着座": 88,
   "プレ着座": 24,
   "契約予定": 9,
@@ -401,7 +401,7 @@
  ],
  "tabRows": {
   "営業(CWトスアップ)": 502,
-  "営業(CW)": 30,
+  "営業(CW)": 29,
   "営業(threads)": 15
  }
 }
