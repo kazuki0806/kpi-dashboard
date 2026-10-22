@@ -1,5 +1,5 @@
 {
-"generated_at":"2026-10-22 08:59",
+"generated_at":"2026-10-23 08:53",
 "target_monthly_sales":10000000,
 "metrics":[
 "scheduled",
@@ -953,7 +953,7 @@
 "threads_contracts":0
 },
 "2026-10-03":{
-"scheduled":30,
+"scheduled":28,
 "seated":22,
 "handoff":8,
 "pre":1,
@@ -973,7 +973,7 @@
 "threads_contracts":0
 },
 "2026-10-05":{
-"scheduled":26,
+"scheduled":24,
 "seated":17,
 "handoff":6,
 "pre":1,
@@ -993,7 +993,7 @@
 "threads_contracts":0
 },
 "2026-10-07":{
-"scheduled":29,
+"scheduled":24,
 "seated":16,
 "handoff":5,
 "pre":2,
@@ -1033,7 +1033,7 @@
 "threads_contracts":0
 },
 "2026-10-11":{
-"scheduled":28,
+"scheduled":26,
 "seated":14,
 "handoff":2,
 "pre":0,
@@ -1043,7 +1043,7 @@
 "threads_contracts":0
 },
 "2026-10-12":{
-"scheduled":31,
+"scheduled":29,
 "seated":16,
 "handoff":4,
 "pre":0,
@@ -1053,7 +1053,7 @@
 "threads_contracts":0
 },
 "2026-10-13":{
-"scheduled":22,
+"scheduled":21,
 "seated":15,
 "handoff":4,
 "pre":1,
@@ -1063,7 +1063,7 @@
 "threads_contracts":0
 },
 "2026-10-14":{
-"scheduled":22,
+"scheduled":20,
 "seated":13,
 "handoff":7,
 "pre":5,
@@ -1073,7 +1073,7 @@
 "threads_contracts":0
 },
 "2026-10-15":{
-"scheduled":15,
+"scheduled":14,
 "seated":8,
 "handoff":1,
 "pre":2,
@@ -1083,7 +1083,7 @@
 "threads_contracts":0
 },
 "2026-10-16":{
-"scheduled":17,
+"scheduled":15,
 "seated":11,
 "handoff":4,
 "pre":2,
@@ -1093,7 +1093,7 @@
 "threads_contracts":0
 },
 "2026-10-17":{
-"scheduled":25,
+"scheduled":24,
 "seated":12,
 "handoff":3,
 "pre":0,
@@ -1103,7 +1103,7 @@
 "threads_contracts":0
 },
 "2026-10-18":{
-"scheduled":22,
+"scheduled":18,
 "seated":8,
 "handoff":4,
 "pre":0,
@@ -1113,7 +1113,7 @@
 "threads_contracts":0
 },
 "2026-10-19":{
-"scheduled":25,
+"scheduled":23,
 "seated":16,
 "handoff":5,
 "pre":1,
@@ -1123,7 +1123,7 @@
 "threads_contracts":0
 },
 "2026-10-20":{
-"scheduled":17,
+"scheduled":16,
 "seated":12,
 "handoff":2,
 "pre":1,
@@ -1133,21 +1133,31 @@
 "threads_contracts":0
 },
 "2026-10-21":{
-"scheduled":15,
+"scheduled":14,
 "seated":5,
 "handoff":0,
 "pre":2,
-"noshow":6,
-"contracts":0,
-"sales":0,
+"noshow":7,
+"contracts":1,
+"sales":495000,
 "threads_contracts":0
 },
 "2026-10-22":{
 "scheduled":18,
+"seated":9,
+"handoff":2,
+"pre":0,
+"noshow":1,
+"contracts":1,
+"sales":660000,
+"threads_contracts":0
+},
+"2026-10-23":{
+"scheduled":24,
 "seated":0,
 "handoff":0,
 "pre":0,
-"noshow":1,
+"noshow":0,
 "contracts":0,
 "sales":0,
 "threads_contracts":0
