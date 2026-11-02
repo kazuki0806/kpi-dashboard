@@ -1,5 +1,5 @@
 {
-"generated_at":"2026-11-02 08:54",
+"generated_at":"2026-11-03 08:52",
 "target_monthly_sales":10000000,
 "metrics":[
 "scheduled",
@@ -1254,6 +1254,16 @@
 },
 "2026-11-02":{
 "scheduled":8,
+"seated":2,
+"handoff":0,
+"pre":0,
+"noshow":0,
+"contracts":0,
+"sales":0,
+"threads_contracts":0
+},
+"2026-11-03":{
+"scheduled":9,
 "seated":0,
 "handoff":0,
 "pre":0,
